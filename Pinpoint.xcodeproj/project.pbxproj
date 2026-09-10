@@ -267,6 +267,7 @@
 				INFOPLIST_KEY_LSRequiresIPhoneOS = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Pinpoint uses the camera to record golf swings in slow motion.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Pinpoint records audio along with your swing videos.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Pinpoint transcribes your end-of-hole dictations into structured shot data.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -303,6 +304,7 @@
 				INFOPLIST_KEY_LSRequiresIPhoneOS = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Pinpoint uses the camera to record golf swings in slow motion.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Pinpoint records audio along with your swing videos.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Pinpoint transcribes your end-of-hole dictations into structured shot data.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
