@@ -189,7 +189,7 @@ struct ScorecardView: View {
     }
 
     private func statRow(title: String, holes: [HoleScore],
-                         value: (HoleScore) -> String, total: () -> String) -> some View {
+                         value: @escaping (HoleScore) -> String, total: @escaping () -> String) -> some View {
         GridRow {
             Text(title).font(.caption).foregroundStyle(PinpointTheme.secondaryText).padding(8)
             ForEach(holes) { hs in

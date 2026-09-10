@@ -433,14 +433,21 @@ struct HoleScore: Identifiable, Codable, Hashable, Equatable {
         return second.lie == .fairway || second.lie == .green
     }
 
+    /// True when the ball reached the green (or fringe) within par-2 strokes,
+    /// or was holed out in par-2 or fewer (ace, chip-in). Nil while the hole
+    /// is still in progress and the outcome can't be judged yet.
     func greenInRegulation(par: Int) -> Bool? {
         guard !shots.isEmpty else { return nil }
         let target = max(1, par - 2)
-        guard shots.count >= target else { return false }
-        // On the green in regulation if a shot within the first `target` shots
-        // was played from the green/fringe, or the approach left <= green.
-        let window = shots.prefix(target)
-        return window.contains { $0.lie == .green || $0.lie == .fringe }
+        if shots.count > target {
+            // The (target+1)-th shot exists: GIR iff it was played from the
+            // green or fringe, meaning the ball arrived in regulation.
+            let next = shots[target]
+            return next.lie == .green || next.lie == .fringe
+        }
+        // Holed out in <= target strokes implies the green was reached in
+        // regulation; an unfinished hole can't be judged yet.
+        return isComplete ? true : nil
     }
 }
 
@@ -519,6 +526,21 @@ struct GolfRound: Identifiable, Codable, Hashable, Equatable {
     var toParLabel: String {
         if toPar == 0 { return "E" }
         return toPar > 0 ? "+\(toPar)" : "\(toPar)"
+    }
+
+    /// Holes the player has finished. Mid-round, to-par over *all* holes is
+    /// meaningless (e.g. 3 strokes on hole 1 of 18 reads "-69"), so the resume
+    /// card scores only completed holes.
+    var completedHoles: [HoleScore] { holeScores.filter(\.isComplete) }
+
+    var completedToPar: Int {
+        completedHoles.reduce(0) { $0 + $1.grossScore - (hole($1.holeNumber)?.par ?? 4) }
+    }
+
+    var completedToParLabel: String {
+        let v = completedToPar
+        if v == 0 { return "E" }
+        return v > 0 ? "+\(v)" : "\(v)"
     }
 
     var durationLabel: String {
