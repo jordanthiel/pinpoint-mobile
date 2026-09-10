@@ -85,7 +85,7 @@ enum GolfClub: String, Codable, CaseIterable, Identifiable, Hashable {
             .replacingOccurrences(of: ".", with: " ")
         let t = " \(squashed) "
         func has(_ words: String...) -> Bool { words.contains { t.contains($0) } }
-        if has(" putter ", " putt ", " pt ") { return .putter }
+        if has(" putter ", " putts ", " putt ", " pt ") { return .putter }
         if has(" driver ", " dr ") { return .driver }
         if has(" 3 wood ", " 3w ", " three wood ") { return .wood3 }
         if has(" 5 wood ", " 5w ", " five wood ") { return .wood5 }

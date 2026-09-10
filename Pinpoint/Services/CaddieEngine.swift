@@ -70,8 +70,10 @@ enum CaddieEngine {
         var summary: String
     }
 
-    /// Deterministic green read derived from the hole number + pin position,
-    /// so the same hole reads the same way every visit but holes differ.
+    /// Placeholder green read: deterministic per hole number + pin position so
+    /// the same hole reads the same way every visit, but the break is a
+    /// heuristic estimate — not measured from green scans. The UI presents it
+    /// as an estimate, never as AI analysis.
     static func readGreen(holeNumber: Int, pinX: Double, pinY: Double, puttFeet: Double?) -> GreenRead {
         var seed = UInt64(holeNumber &* 2_654_435_761 &+ 0x9E3779B9)
         func next() -> Double {

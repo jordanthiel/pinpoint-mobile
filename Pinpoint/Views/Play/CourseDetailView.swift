@@ -26,7 +26,7 @@ struct CourseDetailView: View {
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(PrimaryButtonStyle())
-                        infoCard(title: "Course Tips", subtitle: "Based on insights from 981 golfers.", icon: "lightbulb")
+                        infoCard(title: "Course Tips", subtitle: "Local tips for this course.", icon: "lightbulb")
                         myCourseStats
                         watchCard
                     }

@@ -48,7 +48,9 @@ final class CameraService: NSObject, @unchecked Sendable {
     private var rotationCoordinator: AVCaptureDevice.RotationCoordinator?
     private var rotationObservation: NSKeyValueObservation?
 
-    static let maxRecordingDuration: TimeInterval = 30
+    /// Hard cap on a single swing recording. Long enough to set the phone down,
+    /// take practice swings, and hit without the session cutting off mid-routine.
+    static let maxRecordingDuration: TimeInterval = 120
 
     var isCameraAvailable: Bool {
         cameraUnavailableReason == nil && authorizationStatus == .authorized && isConfigured && isRunning

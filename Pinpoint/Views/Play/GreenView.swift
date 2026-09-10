@@ -88,11 +88,14 @@ struct GreenView: View {
             let read = CaddieEngine.readGreen(holeNumber: holeNumber, pinX: pinX, pinY: pinY,
                                               puttFeet: firstPuttFeet)
             PlayUI.card {
-                Label("AI Green Read", systemImage: "sparkles")
+                Label("Green Read", systemImage: "flag")
                     .font(.subheadline.weight(.bold))
                     .foregroundStyle(PinpointTheme.accent)
                 Text(read.summary)
                     .font(.subheadline)
+                Text("Estimated break — not measured from green data.")
+                    .font(.caption)
+                    .foregroundStyle(PinpointTheme.secondaryText)
             }
 
             Button {
