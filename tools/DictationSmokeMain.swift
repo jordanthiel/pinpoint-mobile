@@ -41,8 +41,11 @@ struct DictationSmokeMain {
         }
         check("standing on the tee", GeorgetownGPS.isStanding(on: 1, at: hole1.tee))
         check("standing on the pin", GeorgetownGPS.isStanding(on: 1, at: hole1.pin))
-        let far = hole1.tee.offset(eastYards: 250, northYards: 80)
-        check("250 yards off is not this hole", !GeorgetownGPS.isStanding(on: 1, at: far))
+        // 200 yards left of the playing line — not down the fairway.
+        let heading = hole1.headingDegrees
+        let rad = (heading + 90) * .pi / 180
+        let beside = hole1.tee.offset(eastYards: 200 * sin(rad), northYards: 200 * cos(rad))
+        check("200 yards beside the hole is ignored", !GeorgetownGPS.isStanding(on: 1, at: beside))
         if let hole2 = GeorgetownGPS.layouts[2] {
             check("hole 2 tee is not hole 1", !GeorgetownGPS.isStanding(on: 1, at: hole2.tee))
             check("hole 2 tee is hole 2", GeorgetownGPS.isStanding(on: 2, at: hole2.tee))
