@@ -197,7 +197,7 @@ final class RoundStore {
         for parsed in result.shots {
             let isApproach = remaining < 220 && nextNumber > 1
             let club = parsed.club ?? (isApproach ? .sandWedge : .iron7)
-            let shotLie: Lie = club.isPutter ? .green : lie
+            let shotLie: Lie = parsed.lie ?? (club.isPutter ? .green : lie)
             let shot = TrackedShot(
                 number: nextNumber,
                 club: club,
@@ -207,7 +207,8 @@ final class RoundStore {
                 contact: parsed.contact,
                 shape: parsed.shape,
                 quality: parsed.quality,
-                source: .dictation
+                source: .dictation,
+                note: parsed.note
             )
             hole.shots.append(shot)
             nextNumber += 1
@@ -220,21 +221,38 @@ final class RoundStore {
                 lie = remaining <= 25 ? .green : .fairway
             }
         }
-        if let putts = result.puttsMentioned {
-            for _ in 0..<putts {
+        let structuredPutts = result.shots.filter { $0.club?.isPutter == true }.count
+        if let putts = result.puttsMentioned, putts > structuredPutts {
+            for _ in 0..<(putts - structuredPutts) {
                 hole.shots.append(TrackedShot(number: nextNumber, club: .putter,
                                               lie: .green, distanceToPinBeforeYards: remaining,
                                               source: .dictation))
                 nextNumber += 1
                 added += 1
             }
-            if hole.firstPuttFeet == nil {
-                hole.firstPuttFeet = max(2, remaining * 3)
+        }
+        if hole.firstPuttFeet == nil, result.puttsMentioned != nil || structuredPutts > 0 {
+            hole.firstPuttFeet = result.shots.compactMap(\.leftFeet).last ?? max(2, remaining * 3)
+        }
+        var analysis = result.leftoverNote
+        if let call = result.scoreCall {
+            let line = "Called \(call)"
+            if analysis.isEmpty {
+                analysis = line
+            } else if !analysis.localizedCaseInsensitiveContains("called \(call)") {
+                analysis += " · " + line
             }
         }
-        updateHole(holeNumber) { $0.shots = hole.shots }
-        if result.puttsMentioned != nil || !result.shots.isEmpty {
-            updateHole(holeNumber) { $0.dictateTranscript = $0.dictateTranscript }
+        updateHole(holeNumber) {
+            $0.shots = hole.shots
+            $0.firstPuttFeet = hole.firstPuttFeet
+            if !analysis.isEmpty {
+                if let existing = $0.analysisNote, !existing.isEmpty, existing != analysis {
+                    $0.analysisNote = existing + " · " + analysis
+                } else {
+                    $0.analysisNote = analysis
+                }
+            }
         }
         return added
     }

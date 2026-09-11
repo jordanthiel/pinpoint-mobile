@@ -85,7 +85,7 @@ enum GolfClub: String, Codable, CaseIterable, Identifiable, Hashable {
             .replacingOccurrences(of: ".", with: " ")
         let t = " \(squashed) "
         func has(_ words: String...) -> Bool { words.contains { t.contains($0) } }
-        if has(" putter ", " putts ", " putt ", " pt ") { return .putter }
+        // Clubs first. "putt" is last so "sand wedge … putt" stays a wedge.
         if has(" driver ", " dr ") { return .driver }
         if has(" 3 wood ", " 3w ", " three wood ") { return .wood3 }
         if has(" 5 wood ", " 5w ", " five wood ") { return .wood5 }
@@ -110,6 +110,7 @@ enum GolfClub: String, Codable, CaseIterable, Identifiable, Hashable {
             }
         }
         if has(" nine iron ", " 9 iron ") { return .iron9 }
+        if has(" putter ", " putts ", " putt ", " pt ") { return .putter }
         return nil
     }
 }
@@ -398,6 +399,8 @@ struct HoleScore: Identifiable, Codable, Hashable, Equatable {
     var pinPosition: PinPosition
     var firstPuttFeet: Double?
     var dictateTranscript: String
+    /// Leftover spoken detail that didn't fit a structured field — for later analysis.
+    var analysisNote: String?
     var isComplete: Bool
 
     struct PinPosition: Codable, Hashable, Equatable {
@@ -423,6 +426,7 @@ struct HoleScore: Identifiable, Codable, Hashable, Equatable {
         pinPosition = PinPosition(x: 0.5, y: 0.62)
         firstPuttFeet = nil
         dictateTranscript = ""
+        analysisNote = ""
         isComplete = false
     }
 

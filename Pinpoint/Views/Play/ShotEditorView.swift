@@ -21,6 +21,7 @@ struct ShotEditorView: View {
     @State private var contact: Contact?
     @State private var shape: ShotShape = .straight
     @State private var quality: ShotQuality?
+    @State private var note = ""
 
     private var isEditing: Bool { existing != nil }
 
@@ -41,6 +42,7 @@ struct ShotEditorView: View {
                                       options: ShotShape.allCases, label: \.label)
                         detailSection(contactTitle: "Quality", selection: $quality,
                                       options: ShotQuality.allCases, label: \.label)
+                        noteSection
                         saveRow
                     }
                     .padding(20)
@@ -78,6 +80,7 @@ struct ShotEditorView: View {
             includeTrue = existing.includeInTrueDistance
             if let d = existing.distanceToPinBeforeYards { distanceToPin = "\(Int(d))" }
             if let c = existing.carryYards { carry = "\(Int(c))" }
+            note = existing.note
         } else if let round = rounds.activeRound {
             let ball = rounds.ballState(holeNumber)
             lie = ball.lie
@@ -297,6 +300,19 @@ struct ShotEditorView: View {
         }
     }
 
+    private var noteSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Note").font(.headline)
+            Text("Unstructured color from dictation lives here for later analysis.")
+                .font(.caption)
+                .foregroundStyle(PinpointTheme.secondaryText)
+            TextField("Missed high side, left or right, …", text: $note, axis: .vertical)
+                .lineLimit(2...4)
+                .padding(12)
+                .background(PinpointTheme.surfaceElevated, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+    }
+
     private var saveRow: some View {
         Button {
             let start = existing?.start ?? prefillStart
@@ -320,7 +336,8 @@ struct ShotEditorView: View {
                 quality: quality,
                 includeInTrueDistance: includeTrue,
                 source: existing?.source ?? .manual,
-                timestamp: existing?.timestamp ?? Date()
+                timestamp: existing?.timestamp ?? Date(),
+                note: note
             )
             if existing != nil {
                 rounds.updateShot(holeNumber, shot)

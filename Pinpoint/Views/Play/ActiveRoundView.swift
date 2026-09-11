@@ -1,7 +1,7 @@
 import MapKit
 import SwiftUI
 
-/// Live GPS hole view: satellite map, tap-to-measure distances, shot trail,
+/// Live GPS hole view: satellite map, drag-to-measure distances, shot trail,
 /// pin edit, and 18Birdies-style score / next-hole chrome.
 struct ActiveRoundView: View {
     @Environment(RoundStore.self) private var rounds
@@ -20,6 +20,7 @@ struct ActiveRoundView: View {
     @State private var showWatch = false
     @State private var showHolePicker = false
     @State private var measurePoint: GeoPoint?
+    @State private var hoverPoint: GeoPoint?
     @State private var cameraPosition: MapCameraPosition =
         GeorgetownGPS.layout(for: 1)?.cameraPosition() ?? .automatic
     @State private var location = PlayerLocation()
@@ -57,6 +58,7 @@ struct ActiveRoundView: View {
         let layout = round.layout(for: holeNum)
         let pin = round.pinCoordinate(for: holeNum) ?? layout?.pin
         let ball = liveBall(round: round, holeNumber: holeNum)
+        let onThisHole = location.coordinate.map { GeorgetownGPS.isStanding(on: holeNum, at: $0) } ?? false
 
         return ZStack {
             if let layout, let pin, let holeDef, let hole {
@@ -67,11 +69,13 @@ struct ActiveRoundView: View {
                     ball: ball,
                     shots: hole.shots,
                     measurePoint: measurePoint,
-                    showsUserLocation: location.coordinate != nil,
-                    showsGreenDistances: measurePoint == nil && hole.shots.isEmpty,
+                    hoverPoint: hoverPoint,
+                    showsUserLocation: onThisHole,
+                    showsGreenDistances: hole.shots.isEmpty,
                     putts: hole.putts,
                     firstPuttFeet: hole.firstPuttFeet,
                     onTapCoordinate: { measurePoint = $0 },
+                    onHoverCoordinate: { hoverPoint = $0 },
                     onSelectShot: { shot in
                         editingShot = shot
                         pendingMeasure = nil
@@ -81,7 +85,7 @@ struct ActiveRoundView: View {
                 .ignoresSafeArea()
 
                 gpsChrome(round: round, holeNumber: holeNum, def: holeDef, hole: hole,
-                          layout: layout, pin: pin, ball: ball)
+                          layout: layout, pin: pin, ball: ball, onThisHole: onThisHole)
             } else {
                 Color.black.ignoresSafeArea()
                 Text("No GPS layout for this hole.")
@@ -116,7 +120,7 @@ struct ActiveRoundView: View {
         .sheet(isPresented: $showDictation) {
             HoleDictationView(holeNumber: holeNum)
                 .preferredColorScheme(.dark)
-                .presentationDetents([.medium, .large])
+                .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showScorecard) {
@@ -176,15 +180,15 @@ struct ActiveRoundView: View {
     // MARK: - Chrome
 
     private func gpsChrome(round: GolfRound, holeNumber: Int, def: GolfHole, hole: HoleScore,
-                           layout: HoleLayout, pin: GeoPoint, ball: GeoPoint) -> some View {
-        let remaining = (measurePoint ?? ball).yards(to: pin)
+                           layout: HoleLayout, pin: GeoPoint, ball: GeoPoint, onThisHole: Bool) -> some View {
+        let target = measurePoint ?? hoverPoint ?? ball
+        let remaining = target.yards(to: pin)
         let helping = cos((layout.headingDegrees - round.windFromDegrees) * .pi / 180)
         let playsLike = CaddieEngine.playsLike(yards: remaining, windMph: round.windMph, windHelping: helping)
         let rec = CaddieEngine.recommendClub(for: playsLike, averages: rounds.clubAverages())
 
         return VStack(spacing: 0) {
-            topBar(round: round, holeNumber: holeNumber, def: def, hole: hole,
-                   remaining: remaining, measuring: measurePoint != nil)
+            topBar(hole: hole, remaining: remaining, onThisHole: onThisHole)
             if showHolePicker {
                 HoleGridPicker(
                     holes: round.holeScores.map(\.holeNumber),
@@ -208,6 +212,9 @@ struct ActiveRoundView: View {
                             measurePoint = nil
                         }
                     }
+                    MapCircleButton(systemImage: "mic.fill", label: "Dictate") {
+                        showDictation = true
+                    }
                     windDial(round)
                     MapCircleButton(systemImage: "flag.fill", label: nil) {
                         greenMode = .pin
@@ -224,25 +231,9 @@ struct ActiveRoundView: View {
         .animation(.easeInOut(duration: 0.18), value: measurePoint != nil)
     }
 
-    private func topBar(round: GolfRound, holeNumber: Int, def: GolfHole, hole: HoleScore,
-                        remaining: Double, measuring: Bool) -> some View {
-        HStack(alignment: .center, spacing: 10) {
-            if measuring {
-                HStack {
-                    Text("Distance to Pin")
-                        .font(.subheadline.weight(.semibold))
-                    Spacer()
-                    HStack(spacing: 6) {
-                        Circle().fill(.red).frame(width: 8, height: 8)
-                        Text("\(Int(remaining.rounded())) Yds")
-                            .font(.title3.weight(.bold).monospacedDigit())
-                    }
-                }
-                .foregroundStyle(.white)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(.black.opacity(0.78), in: Capsule())
-            } else {
+    private func topBar(hole: HoleScore, remaining: Double, onThisHole: Bool) -> some View {
+        VStack(spacing: 8) {
+            HStack(alignment: .center, spacing: 10) {
                 HStack(spacing: 16) {
                     MapHUDChip(title: "Score", value: hole.hasScore ? "\(hole.grossScore)" : "–")
                     MapHUDChip(title: "Shot", value: "\(hole.isComplete ? max(1, hole.shots.count) : hole.shots.count + 1)")
@@ -268,6 +259,40 @@ struct ActiveRoundView: View {
                 }
                 .buttonStyle(.plain)
             }
+
+            HStack {
+                Text(measurePoint == nil ? "Drag map to measure" : "Pinned target")
+                    .font(.caption.weight(.semibold))
+                Spacer()
+                HStack(spacing: 8) {
+                    Circle().fill(.red).frame(width: 10, height: 10)
+                    Text("\(Int(remaining.rounded()))")
+                        .font(.system(size: 40, weight: .bold, design: .rounded).monospacedDigit())
+                    Text("Yds")
+                        .font(.headline.weight(.semibold))
+                }
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 10)
+            .background(.black.opacity(0.78), in: Capsule())
+
+            if location.coordinate != nil, !onThisHole {
+                Text("GPS is off this hole — yardages use the tee / last shot")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.85))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(.black.opacity(0.55), in: Capsule())
+            }
+            if let note = hole.analysisNote, !note.isEmpty {
+                Text(note)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(.black.opacity(0.62), in: Capsule())
+            }
         }
         .padding(.horizontal, 12)
         .padding(.top, 8)
@@ -278,7 +303,7 @@ struct ActiveRoundView: View {
         let club = recommendation?.club.shortName ?? "—"
         return HStack(spacing: 10) {
             Text("\(Int(yards.rounded()))")
-                .font(.title2.weight(.bold).monospacedDigit())
+                .font(.largeTitle.weight(.bold).monospacedDigit())
             + Text("y")
                 .font(.caption.weight(.semibold))
             VStack(alignment: .leading, spacing: 0) {
@@ -396,8 +421,7 @@ struct ActiveRoundView: View {
     // MARK: - Actions
 
     private func liveBall(round: GolfRound, holeNumber: Int) -> GeoPoint {
-        if let loc = location.coordinate, let layout = round.layout(for: holeNumber),
-           layout.contains(loc, slackYards: 160) {
+        if let loc = location.coordinate, GeorgetownGPS.isStanding(on: holeNumber, at: loc) {
             return loc
         }
         return round.ballCoordinate(for: holeNumber)
@@ -409,6 +433,7 @@ struct ActiveRoundView: View {
         selectedHole = number
         rounds.setCurrentHole(number)
         measurePoint = nil
+        hoverPoint = nil
         showHolePicker = false
         if let layout = round.layout(for: number) {
             cameraPosition = layout.cameraPosition(pin: round.pinCoordinate(for: number))

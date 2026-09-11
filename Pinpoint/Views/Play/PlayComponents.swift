@@ -150,10 +150,10 @@ struct MapHUDChip: View {
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(.white.opacity(0.7))
             Text(value)
-                .font(.headline.weight(.bold).monospacedDigit())
+                .font(.title2.weight(.bold).monospacedDigit())
                 .foregroundStyle(.white)
         }
-        .frame(minWidth: 52)
+        .frame(minWidth: 58)
     }
 }
 

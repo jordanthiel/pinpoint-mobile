@@ -15,9 +15,10 @@ final class PlayerLocation: NSObject, CLLocationManagerDelegate {
     override init() {
         super.init()
         manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyBest
+        manager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
+        manager.distanceFilter = 2
         manager.activityType = .fitness
-        manager.pausesLocationUpdatesAutomatically = true
+        manager.pausesLocationUpdatesAutomatically = false
     }
 
     func start() {
@@ -49,6 +50,8 @@ final class PlayerLocation: NSObject, CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let loc = locations.last else { return }
+        // A 100m+ fix looks like the next hole. Ignore it.
+        guard loc.horizontalAccuracy > 0, loc.horizontalAccuracy <= 40 else { return }
         coordinate = GeoPoint(latitude: loc.coordinate.latitude, longitude: loc.coordinate.longitude)
     }
 

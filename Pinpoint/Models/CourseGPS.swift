@@ -1,13 +1,17 @@
 import Foundation
+#if canImport(MapKit)
 import MapKit
+#endif
 
 // Real Georgetown Country Club GPS from OpenStreetMap (tees, greens, pins, hole corridors).
 // Scorecard yardages / rating match the published Blue tees (18Birdies / club card).
 
 extension GeoPoint {
+#if canImport(MapKit)
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
+#endif
 
     /// Offset this point by yards east / north.
     func offset(eastYards: Double, northYards: Double) -> GeoPoint {
@@ -35,6 +39,27 @@ extension GeoPoint {
     func midpoint(to other: GeoPoint) -> GeoPoint {
         GeoPoint(latitude: (latitude + other.latitude) / 2,
                  longitude: (longitude + other.longitude) / 2)
+    }
+
+    func interpolated(to other: GeoPoint, t: Double) -> GeoPoint {
+        GeoPoint(
+            latitude: latitude + (other.latitude - latitude) * t,
+            longitude: longitude + (other.longitude - longitude) * t
+        )
+    }
+
+    /// Planar T along this → `onto` for `from` (0 on this point, 1 on `onto`).
+    func projectionT(onto: GeoPoint, from: GeoPoint) -> Double {
+        let metersPerDegLat = 111_320.0
+        let metersPerDegLon = 111_320.0 * cos(latitude * .pi / 180)
+        let toYds = 1.09361
+        let dx = (onto.longitude - longitude) * metersPerDegLon * toYds
+        let dy = (onto.latitude - latitude) * metersPerDegLat * toYds
+        let px = (from.longitude - longitude) * metersPerDegLon * toYds
+        let py = (from.latitude - latitude) * metersPerDegLat * toYds
+        let denom = dx * dx + dy * dy
+        guard denom > 0 else { return 0 }
+        return (px * dx + py * dy) / denom
     }
 }
 
@@ -81,6 +106,88 @@ struct HoleLayout: Codable, Hashable, Equatable {
 
     var cameraCenter: GeoPoint {
         tee.midpoint(to: pin)
+    }
+
+#if canImport(MapKit)
+    func cameraPosition(pin: GeoPoint? = nil) -> MapCameraPosition {
+        let target = pin ?? self.pin
+        return .camera(
+            MapCamera(
+                centerCoordinate: cameraCenter.coordinate,
+                distance: cameraDistance(),
+                heading: tee.bearing(to: target),
+                pitch: 0
+            )
+        )
+    }
+
+    func greenCameraPosition(pin: GeoPoint? = nil) -> MapCameraPosition {
+        let target = pin ?? greenCenter
+        return .camera(
+            MapCamera(
+                centerCoordinate: target.coordinate,
+                distance: 92,
+                heading: headingDegrees,
+                pitch: 0
+            )
+        )
+    }
+#endif
+
+    /// Tee → pin, plus at most one real dogleg apex. OSM jogs become a straight hole.
+    var playPath: [GeoPoint] {
+        let raw = path.isEmpty ? [tee, pin] : path
+        var best: (point: GeoPoint, offset: Double)?
+        for point in raw.dropFirst().dropLast() {
+            let t = tee.projectionT(onto: pin, from: point)
+            guard t > 0.12, t < 0.88 else { continue }
+            let proj = tee.interpolated(to: pin, t: min(1, max(0, t)))
+            let offset = point.yards(to: proj)
+            if offset > 28, best == nil || offset > best!.offset {
+                best = (point, offset)
+            }
+        }
+        if let best { return [tee, best.point, pin] }
+        return [tee, pin]
+    }
+
+    func project(_ point: GeoPoint) -> (along: Double, cross: Double, length: Double) {
+        let corridor = playPath
+        guard corridor.count >= 2 else {
+            return (0, point.yards(to: tee), 0)
+        }
+        var bestCross = Double.greatestFiniteMagnitude
+        var bestAlong = 0.0
+        var walked = 0.0
+        var length = 0.0
+        for i in 0..<(corridor.count - 1) {
+            length += corridor[i].yards(to: corridor[i + 1])
+        }
+        for i in 0..<(corridor.count - 1) {
+            let a = corridor[i]
+            let b = corridor[i + 1]
+            let leg = max(0.001, a.yards(to: b))
+            let t = min(1, max(0, a.projectionT(onto: b, from: point)))
+            let proj = a.interpolated(to: b, t: t)
+            let cross = point.yards(to: proj)
+            if cross < bestCross {
+                bestCross = cross
+                bestAlong = walked + t * leg
+            }
+            walked += leg
+        }
+        return (bestAlong, bestCross, length)
+    }
+
+    func distanceToCorridor(_ point: GeoPoint) -> Double {
+        project(point).cross
+    }
+
+    /// True only when the golfer is actually beside this hole — not a neighbor
+    /// fairway or someone hundreds of yards away.
+    func isStandingOnHole(_ point: GeoPoint) -> Bool {
+        let p = project(point)
+        return p.cross <= 28 && p.along >= -12 && p.along <= p.length + 18
     }
 }
 
@@ -634,5 +741,30 @@ enum GeorgetownGPS {
 
     static func layout(for holeNumber: Int) -> HoleLayout? {
         layouts[holeNumber]
+    }
+
+    /// The hole whose fairway the point is actually on, if any.
+    static func standingHole(at point: GeoPoint) -> Int? {
+        var best: (number: Int, cross: Double)?
+        for (number, layout) in layouts where layout.isStandingOnHole(point) {
+            let cross = layout.distanceToCorridor(point)
+            if best == nil || cross < best!.cross {
+                best = (number, cross)
+            }
+        }
+        return best?.number
+    }
+
+    static func isStanding(on holeNumber: Int, at point: GeoPoint) -> Bool {
+        guard let layout = layouts[holeNumber], layout.isStandingOnHole(point) else { return false }
+        let thisCross = layout.distanceToCorridor(point)
+        // Shared tees are a few yards apart — keep GPS on the hole being played.
+        // Only ignore this hole when another corridor is clearly closer.
+        for (number, other) in layouts where number != holeNumber && other.isStandingOnHole(point) {
+            if other.distanceToCorridor(point) + 14 < thisCross {
+                return false
+            }
+        }
+        return true
     }
 }

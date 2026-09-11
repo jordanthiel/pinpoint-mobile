@@ -12,7 +12,8 @@ struct HoleDictationView: View {
 
     @State private var transcript = ""
     @State private var isRecording = false
-    @State private var result = HoleDictationResult(shots: [], puttsMentioned: nil, confidence: 0, warnings: [])
+    @State private var result = HoleDictationResult(shots: [], puttsMentioned: nil, scoreCall: nil,
+                                                   leftoverNote: "", confidence: 0, warnings: [])
     @State private var appliedCount: Int?
     @State private var speechDenied = false
 
@@ -27,11 +28,20 @@ struct HoleDictationView: View {
                 PinpointTheme.background.ignoresSafeArea()
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Hole \(holeNumber) — tell me the story")
-                            .font(.headline)
-                        Text("Try: “\(HoleDictationParser.examplePrompt)”")
+                        Text("Hole \(holeNumber) — AI recap")
+                            .font(.title3.weight(.bold))
+                        Text("Dictate the hole the way you’d tell a playing partner. Pinpoint turns clubs, contact, shape, and lie into structured shots, and parks leftover color in a note for later analysis.")
                             .font(.subheadline)
                             .foregroundStyle(PinpointTheme.secondaryText)
+                        Button {
+                            transcript = HoleDictationParser.examplePrompt
+                            result = HoleDictationParser.parse(transcript)
+                        } label: {
+                            Label("Try an example hole", systemImage: "text.badge.plus")
+                                .font(.subheadline.weight(.semibold))
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(PinpointTheme.accent)
 
                         recordRow
 
@@ -49,7 +59,9 @@ struct HoleDictationView: View {
 
                         Button {
                             let n = rounds.applyDictation(result, to: holeNumber)
-                            rounds.updateHole(holeNumber) { $0.dictateTranscript = transcript }
+                            rounds.updateHole(holeNumber) {
+                                $0.dictateTranscript = transcript
+                            }
                             appliedCount = n
                         } label: {
                             Label(applyLabel, systemImage: "sparkles")
@@ -68,7 +80,7 @@ struct HoleDictationView: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("Dictate Hole")
+            .navigationTitle("AI Hole Recap")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -132,7 +144,7 @@ struct HoleDictationView: View {
                 }
             }
             if result.isEmpty {
-                Text("Speak or type, and shots will structure themselves here — club, contact, shape, distance left, putts.")
+                Text("Speak or type. Structured fields fill in; anything extra becomes a note for later analysis.")
                     .font(.subheadline)
                     .foregroundStyle(PinpointTheme.secondaryText)
             }
@@ -160,6 +172,23 @@ struct HoleDictationView: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.green)
             }
+            if let call = result.scoreCall {
+                Label("Called \(call)", systemImage: "checkmark.seal")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(PinpointTheme.accent)
+            }
+            if !result.leftoverNote.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Saved to notes")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(PinpointTheme.accent)
+                    Text(result.leftoverNote)
+                        .font(.subheadline)
+                }
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(PinpointTheme.surfaceElevated, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
             ForEach(result.warnings, id: \.self) { w in
                 Label(w, systemImage: "exclamationmark.triangle")
                     .font(.caption)
@@ -170,10 +199,12 @@ struct HoleDictationView: View {
 
     private func previewMeta(_ shot: HoleDictationResult.ParsedShot) -> String {
         var bits: [String] = []
+        if let l = shot.lie { bits.append(l.label) }
         if let c = shot.contact { bits.append(c.label) }
         if let s = shot.shape { bits.append(s.label) }
         if let q = shot.quality { bits.append(q.label) }
         if let f = shot.leftFeet { bits.append("to \(Int(f)) ft") }
+        if !shot.note.isEmpty { bits.append(shot.note) }
         return bits.isEmpty ? "No extra detail" : bits.joined(separator: " · ")
     }
 

@@ -18,6 +18,7 @@ struct RoundSummaryView: View {
                         hero(round: round)
                         holeStrip(round: round)
                         statsCard(round: round)
+                        analysisCard(round: round)
                         recapCard(round: round)
                         Button {
                             showClubs = true
@@ -131,6 +132,31 @@ struct RoundSummaryView: View {
                 Text("Avg 1st putt \(Int(avg)) ft")
                     .font(.subheadline)
                     .foregroundStyle(PinpointTheme.secondaryText)
+            }
+        }
+    }
+
+    private func analysisCard(round: GolfRound) -> some View {
+        let notes = round.holeScores.compactMap { hole -> (Int, String)? in
+            let note = hole.analysisNote?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard !note.isEmpty else { return nil }
+            return (hole.holeNumber, note)
+        }
+        return Group {
+            if !notes.isEmpty {
+                PlayUI.card {
+                    Text("AI hole notes")
+                        .font(.headline)
+                    ForEach(notes, id: \.0) { item in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Hole \(item.0)")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(PinpointTheme.accent)
+                            Text(item.1)
+                                .font(.subheadline)
+                        }
+                    }
+                }
             }
         }
     }
