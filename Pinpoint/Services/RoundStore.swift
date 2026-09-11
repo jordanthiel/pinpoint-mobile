@@ -161,12 +161,13 @@ final class RoundStore {
         if shot.club?.isPutter == true { return .green }
         if remaining <= 25 { return .green }
         if remaining <= 45 { return .fringe }
-        // Misses scatter: poor quality or lateral shapes find the rough/sand.
+        // Misses scatter: poor quality or lateral shapes find the rough.
+        // Deterministic on purpose — the suggestion must not flip between recomputes.
         if shot.quality == .poor || shot.shape == .slice || shot.shape == .hook {
-            return Bool.random() ? .rough : .fairway
+            return .rough
         }
         if shot.lie == .sand { return .fairway }
-        return shot.lie == .tee ? .fairway : .fairway
+        return .fairway
     }
 
     // MARK: - Dictation

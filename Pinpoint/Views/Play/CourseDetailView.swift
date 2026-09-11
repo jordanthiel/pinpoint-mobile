@@ -26,7 +26,7 @@ struct CourseDetailView: View {
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(PrimaryButtonStyle())
-                        infoCard(title: "Course Tips", subtitle: "Based on insights from 981 golfers.", icon: "lightbulb")
+                        infoCard(title: "Course Tips", subtitle: "Local tips for this course.", icon: "lightbulb")
                         myCourseStats
                         watchCard
                     }
@@ -96,9 +96,15 @@ struct CourseDetailView: View {
                         VStack(alignment: .leading) {
                             Text("Round in progress — Hole \(round.currentHoleNumber)")
                                 .font(.headline)
-                            Text("\(round.totalGross) strokes · \(round.toParLabel)")
-                                .font(.subheadline)
-                                .foregroundStyle(PinpointTheme.secondaryText)
+                            if round.completedHoles.isEmpty {
+                                Text("\(round.totalGross) strokes")
+                                    .font(.subheadline)
+                                    .foregroundStyle(PinpointTheme.secondaryText)
+                            } else {
+                                Text("\(round.totalGross) strokes · \(round.completedToParLabel)")
+                                    .font(.subheadline)
+                                    .foregroundStyle(PinpointTheme.secondaryText)
+                            }
                         }
                         Spacer()
                         Image(systemName: "chevron.right")
