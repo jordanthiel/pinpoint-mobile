@@ -6,9 +6,9 @@ struct WatchInboxView: View {
     @Environment(RoundStore.self) private var rounds
     @Environment(\.dismiss) private var dismiss
 
-    private var watchClubs: [GolfClub] {
-        let bag = rounds.clubBag.displayClubs.map(\.club)
-        return bag.isEmpty ? Array(GolfClub.allCases) : bag
+    private var watchEntries: [ClubBagEntry] {
+        let bag = rounds.clubBag.displayClubs
+        return bag.isEmpty ? GolfClub.allCases.map { ClubBagEntry(club: $0) } : bag
     }
 
     /// Hole to attach claimed shots to. Defaults to the active hole.
@@ -168,17 +168,17 @@ struct WatchInboxView: View {
                     Text("Club").font(.subheadline.weight(.semibold))
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
-                            ForEach(watchClubs) { c in
+                            ForEach(watchEntries) { entry in
                                 Button {
-                                    claimClub = c
+                                    claimClub = entry.club
                                 } label: {
-                                    Text(c.shortName)
+                                    Text(entry.shortLabel)
                                         .font(.subheadline.weight(.bold))
                                         .frame(minWidth: 48)
                                         .padding(.vertical, 8)
-                                        .background(claimClub == c ? PinpointTheme.accent : PinpointTheme.surfaceElevated,
+                                        .background(claimClub == entry.club ? PinpointTheme.accent : PinpointTheme.surfaceElevated,
                                                     in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                                        .foregroundStyle(claimClub == c ? .white : PinpointTheme.secondaryText)
+                                        .foregroundStyle(claimClub == entry.club ? .white : PinpointTheme.secondaryText)
                                 }
                                 .buttonStyle(.plain)
                             }

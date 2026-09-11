@@ -53,8 +53,12 @@ struct ClubBag: Codable, Equatable {
         clubs.sorted { $0.carryYards > $1.carryYards }
     }
 
+    func entry(for club: GolfClub) -> ClubBagEntry? {
+        displayClubs.first { $0.club == club } ?? clubs.first { $0.club == club }
+    }
+
     func carry(for club: GolfClub) -> Double? {
-        clubs.first { $0.club == club }?.carryYards
+        entry(for: club)?.carryYards
     }
 
     func contains(_ club: GolfClub) -> Bool {

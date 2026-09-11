@@ -60,7 +60,7 @@ enum CaddieEngine {
     static func adviceLine(
         yards: Double,
         playsLike: Double,
-        recommendation: (club: GolfClub, swingEffort: Double)?
+        recommendation: (entry: ClubBagEntry, swingEffort: Double)?
     ) -> String {
         guard let rec = recommendation else { return "Putter time — read it well." }
         let effort: String
@@ -71,9 +71,9 @@ enum CaddieEngine {
         default: effort = "full"
         }
         if abs(playsLike - yards) < 3 {
-            return "\(Int(yards)) — \(effort) \(rec.club.shortName)"
+            return "\(Int(yards)) — \(effort) \(rec.entry.shortLabel)"
         }
-        return "\(Int(yards)) plays like \(Int(playsLike)) — \(effort) \(rec.club.shortName)"
+        return "\(Int(yards)) plays like \(Int(playsLike)) — \(effort) \(rec.entry.shortLabel)"
     }
 
     // MARK: - Green reading

@@ -73,7 +73,7 @@ struct PlayStatsView: View {
             } else {
                 HStack(spacing: 10) {
                     ForEach(Array(bag.prefix(3))) { entry in
-                        StatTile(title: entry.club.shortName,
+                        StatTile(title: entry.shortLabel,
                                  value: "\(Int(entry.carryYards.rounded()))",
                                  subtitle: "Yds")
                     }

@@ -48,6 +48,15 @@ extension GeoPoint {
         )
     }
 
+    /// Default rangefinder target: ~`carryYards` toward the pin, or 65% of the
+    /// way there on shorter holes.
+    func defaultShotTarget(toward other: GeoPoint, carryYards: Double = 150, maxFraction: Double = 0.65) -> GeoPoint {
+        let total = yards(to: other)
+        guard total > 1 else { return other }
+        let t = min(maxFraction, carryYards / total)
+        return interpolated(to: other, t: t)
+    }
+
     /// Catmull–Rom blend used to round green outlines.
     static func catmullRom(_ p0: GeoPoint, _ p1: GeoPoint, _ p2: GeoPoint, _ p3: GeoPoint, t: Double) -> GeoPoint {
         let t2 = t * t

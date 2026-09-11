@@ -67,6 +67,29 @@ struct DictationSmokeMain {
         check("custom SW carry is used", CaddieEngine.recommendClub(for: 90, bag: shortBag)?.club == .sandWedge)
         check("gap in the bag jumps to driver", CaddieEngine.recommendClub(for: 140, bag: shortBag)?.club == .driver)
 
+        let named = ClubBagEntry(club: .hybrid, carryYards: 200, nickname: "4 Hybrid")
+        check("nickname is the short label", named.shortLabel == "4 Hybrid")
+        check("nickname is the full label", named.fullLabel == "4 Hybrid")
+        let namedBag = ClubBag(clubs: [named, ClubBagEntry(club: .putter)])
+        check("yards label uses nickname", CaddieEngine.yardsClubLabel(yards: 200, bag: namedBag).contains("4 Hybrid"))
+
+        let legacyJSON = """
+        {"id":"00000000-0000-0000-0000-000000000001","club":"iron7","carryYards":155}
+        """
+        if let legacy = try? JSONDecoder().decode(ClubBagEntry.self, from: Data(legacyJSON.utf8)) {
+            check("old bag JSON still decodes", legacy.nickname == nil && legacy.shortLabel == "7i")
+        } else {
+            check("old bag JSON still decodes", false)
+        }
+
+        let origin = GeoPoint(latitude: 30.633, longitude: -97.678)
+        let longPin = origin.offset(eastYards: 300, northYards: 0)
+        let longTarget = origin.defaultShotTarget(toward: longPin)
+        check("default target is ~150y on a long hole", abs(origin.yards(to: longTarget) - 150) < 4)
+        let shortPin = origin.offset(eastYards: 100, northYards: 0)
+        let shortTarget = origin.defaultShotTarget(toward: shortPin)
+        check("default target uses 0.65 on a short hole", abs(origin.yards(to: shortTarget) - 65) < 3)
+
         if failed > 0 {
             print("\n\(failed) check(s) failed")
             exit(1)

@@ -203,7 +203,7 @@ struct ShotEditorView: View {
                 }
             }
             if let club {
-                Text(club.displayName)
+                Text(rounds.clubBag.entry(for: club)?.fullLabel ?? club.displayName)
                     .font(.largeTitle.weight(.bold))
                     .foregroundStyle(PinpointTheme.accent)
                     .frame(maxWidth: .infinity)
@@ -215,7 +215,7 @@ struct ShotEditorView: View {
                             club = c
                             if c.isPutter { lie = .green }
                         } label: {
-                            Text(c.shortName)
+                            Text(rounds.clubBag.entry(for: c)?.shortLabel ?? c.shortName)
                                 .font(.subheadline.weight(.bold).monospacedDigit())
                                 .frame(minWidth: 52)
                                 .padding(.vertical, 10)
