@@ -39,34 +39,12 @@ struct GreenView: View {
                             .stroke(.white, lineWidth: 2)
                     }
 
-                    SwiftUI.Annotation("Pin", coordinate: activePin.coordinate, anchor: .bottom) {
-                        VStack(spacing: 0) {
-                            Image(systemName: "flag.fill")
-                                .font(.title2)
-                                .foregroundStyle(.yellow)
-                            Circle().fill(.black).frame(width: 12, height: 6)
-                        }
-                    }
+                    Marker("Pin", systemImage: "flag.fill", coordinate: activePin.coordinate)
+                        .tint(.yellow)
 
                     if mode == .putt, let ball {
-                        SwiftUI.Annotation("Ball", coordinate: ball.coordinate, anchor: .center) {
-                            VStack(spacing: 4) {
-                                Text("\(Int(puttFeet.rounded())) Ft")
-                                    .font(.caption.weight(.bold).monospacedDigit())
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(.black.opacity(0.6), in: Capsule())
-                                ZStack {
-                                    Circle()
-                                        .fill(.red)
-                                        .frame(width: 22, height: 22)
-                                    Circle()
-                                        .stroke(.white, lineWidth: 2)
-                                        .frame(width: 22, height: 22)
-                                }
-                            }
-                        }
+                        Marker("\(Int(puttFeet.rounded())) Ft", systemImage: "circle.fill", coordinate: ball.coordinate)
+                            .tint(.red)
                     }
                 }
                 .mapStyle(.imagery(elevation: .realistic))

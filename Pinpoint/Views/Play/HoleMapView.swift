@@ -17,11 +17,11 @@ struct HoleMapView: View {
     var onTapCoordinate: ((GeoPoint) -> Void)?
     var onSelectShot: ((TrackedShot) -> Void)?
 
-    @State private var selectedFeature: MapFeature?
+    @State private var selectedShotID: UUID?
 
     var body: some View {
         MapReader { proxy in
-            Map(position: $position, selection: $selectedFeature) {
+            Map(position: $position, selection: $selectedShotID) {
                 if !layout.greenOutline.isEmpty {
                     MapPolygon(coordinates: layout.greenOutline.map(\.coordinate))
                         .foregroundStyle(Color.green.opacity(0.28))
@@ -40,82 +40,29 @@ struct HoleMapView: View {
                     }
                 }
 
-                SwiftUI.Annotation("Tee", coordinate: layout.tee.coordinate, anchor: .center) {
-                    shotBadge(text: "T", fill: .white, foreground: .black)
-                }
-                SwiftUI.Annotation("Pin", coordinate: pin.coordinate, anchor: .bottom) {
-                    VStack(spacing: 4) {
-                        if putts > 0 || firstPuttFeet != nil {
-                            VStack(spacing: 2) {
-                                if putts > 0 {
-                                    Text("Putts  \(putts)")
-                                }
-                                if let firstPuttFeet {
-                                    Text("1st Putt  \(Int(firstPuttFeet.rounded())) Ft")
-                                }
-                            }
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(.black.opacity(0.55), in: Capsule())
-                        }
-                        Image(systemName: "flag.fill")
-                            .font(.title3)
-                            .foregroundStyle(.yellow)
-                            .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
-                        Circle()
-                            .fill(.black)
-                            .frame(width: 10, height: 5)
-                    }
-                }
+                Marker("Tee", monogram: Text("T"), coordinate: layout.tee.coordinate)
+                    .tint(.white)
+                Marker(pinMarkerTitle, systemImage: "flag.fill", coordinate: pin.coordinate)
+                    .tint(.yellow)
 
-                ForEach(Array(placedShots.enumerated()), id: \.element.id) { _, item in
-                    SwiftUI.Annotation("Shot \(item.number)", coordinate: item.point.coordinate, anchor: .center) {
-                        Button {
-                            if let shot = shots.first(where: { $0.id == item.id }) {
-                                onSelectShot?(shot)
-                            }
-                        } label: {
-                            shotBadge(
-                                text: item.isPutt ? "P" : "\(item.number)",
-                                fill: item.isPutt ? Color(red: 0.18, green: 0.72, blue: 0.38) : Color(red: 0.13, green: 0.45, blue: 0.98),
-                                foreground: .white,
-                                caption: item.caption
-                            )
-                        }
-                        .buttonStyle(.plain)
-                    }
+                ForEach(placedShots) { item in
+                    Marker(item.markerTitle, monogram: Text(item.monogram), coordinate: item.point.coordinate)
+                        .tint(item.isPutt ? Color(red: 0.18, green: 0.72, blue: 0.38) : Color(red: 0.13, green: 0.45, blue: 0.98))
+                        .tag(item.id)
                 }
 
                 ForEach(distanceLabels) { label in
-                    SwiftUI.Annotation(label.id, coordinate: label.point.coordinate, anchor: .center) {
-                        Text(label.text)
-                            .font(.caption.weight(.bold).monospacedDigit())
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(.black.opacity(0.58), in: Capsule())
-                    }
+                    Marker(label.text, coordinate: label.point.coordinate)
+                        .tint(.black)
                 }
 
                 if let measurePoint {
-                    SwiftUI.Annotation("Target", coordinate: measurePoint.coordinate, anchor: .center) {
-                        ZStack {
-                            Circle()
-                                .stroke(.white, lineWidth: 2)
-                                .background(Circle().fill(Color.red))
-                                .frame(width: 18, height: 18)
-                            Circle()
-                                .fill(.white)
-                                .frame(width: 5, height: 5)
-                        }
-                        .shadow(color: .black.opacity(0.35), radius: 3, y: 1)
-                    }
+                    Marker("Target", systemImage: "plus.circle.fill", coordinate: measurePoint.coordinate)
+                        .tint(.red)
                 }
 
                 if showsUserLocation {
-                    UserSwiftUI.Annotation()
+                    UserAnnotation()
                 }
             }
             .mapStyle(.imagery(elevation: .realistic))
@@ -130,7 +77,19 @@ struct HoleMapView: View {
                     }
                 }
             )
+            .onChange(of: selectedShotID) { _, id in
+                if let id, let shot = shots.first(where: { $0.id == id }) {
+                    onSelectShot?(shot)
+                }
+            }
         }
+    }
+
+    private var pinMarkerTitle: String {
+        var parts = ["Pin"]
+        if putts > 0 { parts.append("Putts \(putts)") }
+        if let firstPuttFeet { parts.append("1st \(Int(firstPuttFeet.rounded())) ft") }
+        return parts.joined(separator: " · ")
     }
 
     // MARK: - Geometry
@@ -153,6 +112,12 @@ struct HoleMapView: View {
         var point: GeoPoint
         var isPutt: Bool
         var caption: String?
+
+        var monogram: String { isPutt ? "P" : "\(number)" }
+        var markerTitle: String {
+            if let caption { return "Shot \(number) · \(caption)" }
+            return "Shot \(number)"
+        }
     }
 
     private var placedShots: [PlacedShot] {
@@ -247,28 +212,6 @@ struct HoleMapView: View {
                                         text: "\(Int(leftover.rounded())) Yds"))
         }
         return labels
-    }
-
-    private func shotBadge(text: String, fill: Color, foreground: Color, caption: String? = nil) -> some View {
-        VStack(spacing: 2) {
-            ZStack {
-                Circle()
-                    .fill(fill)
-                    .frame(width: 28, height: 28)
-                    .shadow(color: .black.opacity(0.35), radius: 2, y: 1)
-                Text(text)
-                    .font(.caption.weight(.bold).monospacedDigit())
-                    .foregroundStyle(foreground)
-            }
-            if let caption {
-                Text(caption)
-                    .font(.caption2.weight(.semibold).monospacedDigit())
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(.black.opacity(0.55), in: Capsule())
-            }
-        }
     }
 }
 
