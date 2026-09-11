@@ -40,10 +40,10 @@ struct HoleMapView: View {
                     }
                 }
 
-                Annotation("Tee", coordinate: layout.tee.coordinate, anchor: .center) {
+                SwiftUI.Annotation("Tee", coordinate: layout.tee.coordinate, anchor: .center) {
                     shotBadge(text: "T", fill: .white, foreground: .black)
                 }
-                Annotation("Pin", coordinate: pin.coordinate, anchor: .bottom) {
+                SwiftUI.Annotation("Pin", coordinate: pin.coordinate, anchor: .bottom) {
                     VStack(spacing: 4) {
                         if putts > 0 || firstPuttFeet != nil {
                             VStack(spacing: 2) {
@@ -71,7 +71,7 @@ struct HoleMapView: View {
                 }
 
                 ForEach(Array(placedShots.enumerated()), id: \.element.id) { _, item in
-                    Annotation("Shot \(item.number)", coordinate: item.point.coordinate, anchor: .center) {
+                    SwiftUI.Annotation("Shot \(item.number)", coordinate: item.point.coordinate, anchor: .center) {
                         Button {
                             if let shot = shots.first(where: { $0.id == item.id }) {
                                 onSelectShot?(shot)
@@ -89,7 +89,7 @@ struct HoleMapView: View {
                 }
 
                 ForEach(distanceLabels) { label in
-                    Annotation(label.id, coordinate: label.point.coordinate, anchor: .center) {
+                    SwiftUI.Annotation(label.id, coordinate: label.point.coordinate, anchor: .center) {
                         Text(label.text)
                             .font(.caption.weight(.bold).monospacedDigit())
                             .foregroundStyle(.white)
@@ -100,7 +100,7 @@ struct HoleMapView: View {
                 }
 
                 if let measurePoint {
-                    Annotation("Target", coordinate: measurePoint.coordinate, anchor: .center) {
+                    SwiftUI.Annotation("Target", coordinate: measurePoint.coordinate, anchor: .center) {
                         ZStack {
                             Circle()
                                 .stroke(.white, lineWidth: 2)
@@ -115,7 +115,7 @@ struct HoleMapView: View {
                 }
 
                 if showsUserLocation {
-                    UserAnnotation()
+                    UserSwiftUI.Annotation()
                 }
             }
             .mapStyle(.imagery(elevation: .realistic))

@@ -39,7 +39,7 @@ struct GreenView: View {
                             .stroke(.white, lineWidth: 2)
                     }
 
-                    Annotation("Pin", coordinate: activePin.coordinate, anchor: .bottom) {
+                    SwiftUI.Annotation("Pin", coordinate: activePin.coordinate, anchor: .bottom) {
                         VStack(spacing: 0) {
                             Image(systemName: "flag.fill")
                                 .font(.title2)
@@ -49,7 +49,7 @@ struct GreenView: View {
                     }
 
                     if mode == .putt, let ball {
-                        Annotation("Ball", coordinate: ball.coordinate, anchor: .center) {
+                        SwiftUI.Annotation("Ball", coordinate: ball.coordinate, anchor: .center) {
                             VStack(spacing: 4) {
                                 Text("\(Int(puttFeet.rounded())) Ft")
                                     .font(.caption.weight(.bold).monospacedDigit())
