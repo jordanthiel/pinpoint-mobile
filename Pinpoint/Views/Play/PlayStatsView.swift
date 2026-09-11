@@ -20,9 +20,9 @@ struct PlayStatsView: View {
             }
             .navigationTitle("My Golf")
             .sheet(isPresented: $showClubs) {
-                ClubAveragesView()
+                ClubBagView()
                     .preferredColorScheme(.dark)
-                    .presentationDetents([.medium, .large])
+                    .presentationDetents([.large])
                     .presentationDragIndicator(.visible)
             }
         }
@@ -53,28 +53,31 @@ struct PlayStatsView: View {
     }
 
     private var clubsCard: some View {
-        let avgs = rounds.clubAverages()
+        let bag = rounds.clubBag.displayClubs.filter { !$0.club.isPutter }
         return PlayUI.card {
             HStack {
-                Text("Swing & Club Stats")
+                Text("My Bag")
                     .font(.headline)
                 Spacer()
-                Button("All clubs") { showClubs = true }
+                Button("Edit distances") { showClubs = true }
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(PinpointTheme.accent)
             }
-            if avgs.isEmpty {
-                Text("Driver ~260 · 7i ~155 stock distances until you track real shots.")
+            Text("The GPS map picks a club from these carries as you drag.")
+                .font(.caption)
+                .foregroundStyle(PinpointTheme.secondaryText)
+            if bag.isEmpty {
+                Text("Add clubs to your bag to see recommendations on the map.")
                     .font(.subheadline)
                     .foregroundStyle(PinpointTheme.secondaryText)
-            }
-            HStack(spacing: 10) {
-                StatTile(title: "Driver", value: avgs[.driver].map { "\(Int($0))" } ?? "260",
-                         subtitle: "Yds")
-                StatTile(title: "7i", value: avgs[.iron7].map { "\(Int($0))" } ?? "155",
-                         subtitle: "Yds")
-                StatTile(title: "SW", value: avgs[.sandWedge].map { "\(Int($0))" } ?? "92",
-                         subtitle: "Yds")
+            } else {
+                HStack(spacing: 10) {
+                    ForEach(Array(bag.prefix(3))) { entry in
+                        StatTile(title: entry.club.shortName,
+                                 value: "\(Int(entry.carryYards.rounded()))",
+                                 subtitle: "Yds")
+                    }
+                }
             }
         }
     }

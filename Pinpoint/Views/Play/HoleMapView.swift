@@ -17,6 +17,7 @@ struct HoleMapView: View {
     var showsGreenDistances: Bool
     var putts: Int = 0
     var firstPuttFeet: Double? = nil
+    var bag: ClubBag = .standard
     var onTapCoordinate: ((GeoPoint) -> Void)?
     var onHoverCoordinate: ((GeoPoint) -> Void)?
     var onSelectShot: ((TrackedShot) -> Void)?
@@ -93,15 +94,29 @@ struct HoleMapView: View {
         }
     }
 
+    private var liveClub: GolfClub? {
+        CaddieEngine.recommendClub(for: Double(liveYardsToPin), bag: bag)?.club
+    }
+
+    private func labeledYards(_ yards: Double, prefix: String = "") -> String {
+        CaddieEngine.yardsClubLabel(yards: yards, bag: bag, prefix: prefix)
+    }
+
     private var centerCrosshair: some View {
         ZStack {
-            Text("\(liveYardsToPin) Yds")
-                .font(.system(size: 32, weight: .heavy, design: .rounded).monospacedDigit())
-                .foregroundStyle(.white)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(.black.opacity(0.8), in: Capsule())
-                .offset(y: -56)
+            VStack(spacing: 2) {
+                Text("\(liveYardsToPin) Yds")
+                    .font(.system(size: 32, weight: .heavy, design: .rounded).monospacedDigit())
+                if let liveClub {
+                    Text(liveClub.displayName)
+                        .font(.title3.weight(.bold))
+                }
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 10)
+            .background(.black.opacity(0.8), in: Capsule())
+            .offset(y: liveClub == nil ? -56 : -72)
 
             Circle()
                 .stroke(.white.opacity(0.95), lineWidth: 2.5)
@@ -204,12 +219,12 @@ struct HoleMapView: View {
             let mid = ball.yards(to: layout.greenCenter)
             let back = ball.yards(to: layout.greenBack)
             labels.append(DistanceLabel(id: "front", point: layout.greenFront,
-                                        text: "F  \(Int(front.rounded()))"))
+                                        text: labeledYards(front, prefix: "F ")))
             labels.append(DistanceLabel(id: "mid", point: layout.greenCenter,
-                                        text: "\(Int(mid.rounded())) Yds"))
+                                        text: labeledYards(mid)))
             if abs(back - mid) > 6 {
                 labels.append(DistanceLabel(id: "back", point: layout.greenBack,
-                                            text: "B  \(Int(back.rounded()))"))
+                                            text: labeledYards(back, prefix: "B ")))
             }
         }
 
@@ -218,11 +233,11 @@ struct HoleMapView: View {
             let fromBall = ball.yards(to: lineTarget)
             labels.append(DistanceLabel(id: "measure-pin",
                                         point: lineTarget.midpoint(to: pin),
-                                        text: "\(Int(toPin.rounded())) Yds"))
+                                        text: labeledYards(toPin)))
             if fromBall > 8 {
                 labels.append(DistanceLabel(id: "measure-carry",
                                             point: ball.midpoint(to: lineTarget),
-                                            text: "\(Int(fromBall.rounded())) Yds"))
+                                            text: labeledYards(fromBall)))
             }
             return labels
         }
@@ -240,9 +255,11 @@ struct HoleMapView: View {
             }
             let yards = shot.carryYards ?? prev.yards(to: next)
             if yards > 8 {
+                let text = shot.club.map { "\(Int(yards.rounded())) Yds  ·  \($0.shortName)" }
+                    ?? labeledYards(yards)
                 labels.append(DistanceLabel(id: "leg-\(idx)",
                                             point: prev.midpoint(to: next),
-                                            text: "\(Int(yards.rounded())) Yds"))
+                                            text: text))
             }
             prev = next
         }
@@ -250,7 +267,7 @@ struct HoleMapView: View {
         if leftover > 12, !shots.isEmpty {
             labels.append(DistanceLabel(id: "remain",
                                         point: prev.midpoint(to: pin),
-                                        text: "\(Int(leftover.rounded())) Yds"))
+                                        text: labeledYards(leftover)))
         }
         return labels
     }

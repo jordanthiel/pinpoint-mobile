@@ -17,26 +17,31 @@ enum CaddieEngine {
         return max(0, yards + windEffect + elevationEffect)
     }
 
-    /// Picks the shortest club that covers `playsLikeYards`.
-    /// - Parameters:
-    ///   - averages: personal per-club averages (yards). Missing clubs fall back to stock.
-    ///   - maxSwing: 1.0 = full stock swing; scales all distances (e.g. 0.9 for smooth).
+    /// Picks the shortest club in the bag that covers `playsLikeYards`.
     static func recommendClub(
         for playsLikeYards: Double,
-        averages: [GolfClub: Double],
+        bag: ClubBag,
         maxSwing: Double = 1.0
     ) -> (club: GolfClub, swingEffort: Double)? {
-        guard playsLikeYards > 12 else { return nil } // putting territory
-        let bag: [GolfClub] = [.lobWedge, .sandWedge, .gapWedge, .pitchingWedge,
-                               .iron9, .iron8, .iron7, .iron6, .iron5,
-                               .iron4, .hybrid, .wood5, .wood3, .driver]
-        for club in bag {
-            let dist = (averages[club] ?? club.stockYards) * maxSwing
+        if playsLikeYards <= 12 {
+            return bag.contains(.putter) ? (.putter, 1) : nil
+        }
+        let options = bag.shotClubs
+        guard !options.isEmpty else { return nil }
+        for entry in options {
+            let dist = entry.carryYards * maxSwing
             if dist >= playsLikeYards {
-                return (club, min(1.0, playsLikeYards / max(dist, 1)))
+                return (entry.club, min(1.0, playsLikeYards / max(dist, 1)))
             }
         }
-        return (.driver, 1.0)
+        return (options.last!.club, 1.0)
+    }
+
+    /// Label for a live rangefinder number, e.g. "142 Yds · 8i".
+    static func yardsClubLabel(yards: Double, bag: ClubBag, prefix: String = "") -> String {
+        let yds = "\(prefix)\(Int(yards.rounded())) Yds"
+        guard let rec = recommendClub(for: yards, bag: bag) else { return yds }
+        return "\(yds)  ·  \(rec.club.shortName)"
     }
 
     /// Human-readable caddie line, e.g. "226 plays like 217 — smooth 5i".

@@ -25,6 +25,13 @@ struct ShotEditorView: View {
 
     private var isEditing: Bool { existing != nil }
 
+    private var editorClubs: [GolfClub] {
+        let bag = rounds.clubBag.displayClubs.map(\.club)
+        if bag.isEmpty { return Array(GolfClub.allCases) }
+        if let club, !bag.contains(club) { return bag + [club] }
+        return bag
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -100,7 +107,7 @@ struct ShotEditorView: View {
                 let helping = cos(Double(holeNumber) * 0.7)
                 let playsLike = CaddieEngine.playsLike(yards: ball.distanceYards,
                                                        windMph: round.windMph, windHelping: helping)
-                club = CaddieEngine.recommendClub(for: playsLike, averages: rounds.clubAverages())?.club
+                club = CaddieEngine.recommendClub(for: playsLike, bag: rounds.clubBag)?.club
             }
         }
     }
@@ -203,7 +210,7 @@ struct ShotEditorView: View {
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    ForEach(GolfClub.allCases) { c in
+                    ForEach(editorClubs) { c in
                         Button {
                             club = c
                             if c.isPutter { lie = .green }
@@ -221,7 +228,7 @@ struct ShotEditorView: View {
                 }
             }
             if let club {
-                Text("Stock ~\(Int(club.stockYards)) yds · personal \(rounds.clubAverages()[club].map { "\(Int($0)) yds" } ?? "–")")
+                Text("Bag \(Int(rounds.bagCarry(for: club))) yds")
                     .font(.caption)
                     .foregroundStyle(PinpointTheme.secondaryText)
             }

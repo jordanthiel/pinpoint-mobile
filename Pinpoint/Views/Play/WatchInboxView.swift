@@ -6,6 +6,11 @@ struct WatchInboxView: View {
     @Environment(RoundStore.self) private var rounds
     @Environment(\.dismiss) private var dismiss
 
+    private var watchClubs: [GolfClub] {
+        let bag = rounds.clubBag.displayClubs.map(\.club)
+        return bag.isEmpty ? Array(GolfClub.allCases) : bag
+    }
+
     /// Hole to attach claimed shots to. Defaults to the active hole.
     var holeNumber: Int?
 
@@ -163,7 +168,7 @@ struct WatchInboxView: View {
                     Text("Club").font(.subheadline.weight(.semibold))
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
-                            ForEach(GolfClub.allCases) { c in
+                            ForEach(watchClubs) { c in
                                 Button {
                                     claimClub = c
                                 } label: {
@@ -204,7 +209,7 @@ struct WatchInboxView: View {
                             number: rounds.nextShotNumber(targetHole),
                             club: claimClub, lie: claimLie,
                             distanceToPinBeforeYards: ball.distanceYards,
-                            carryYards: claimClub.isPutter ? nil : claimClub.stockYards,
+                            carryYards: claimClub.isPutter ? nil : rounds.bagCarry(for: claimClub),
                             source: .watch, timestamp: event.timestamp
                         )
                         if rounds.activeRound != nil {

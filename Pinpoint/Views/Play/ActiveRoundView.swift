@@ -19,6 +19,7 @@ struct ActiveRoundView: View {
     @State private var showTools = false
     @State private var showWatch = false
     @State private var showHolePicker = false
+    @State private var showBag = false
     @State private var measurePoint: GeoPoint?
     @State private var hoverPoint: GeoPoint?
     @State private var cameraPosition: MapCameraPosition =
@@ -74,6 +75,7 @@ struct ActiveRoundView: View {
                     showsGreenDistances: hole.shots.isEmpty,
                     putts: hole.putts,
                     firstPuttFeet: hole.firstPuttFeet,
+                    bag: rounds.clubBag,
                     onTapCoordinate: { measurePoint = $0 },
                     onHoverCoordinate: { hoverPoint = $0 },
                     onSelectShot: { shot in
@@ -117,6 +119,12 @@ struct ActiveRoundView: View {
             }
             .preferredColorScheme(.dark)
         }
+        .sheet(isPresented: $showBag) {
+            ClubBagView()
+                .preferredColorScheme(.dark)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
         .sheet(isPresented: $showDictation) {
             HoleDictationView(holeNumber: holeNum)
                 .preferredColorScheme(.dark)
@@ -159,6 +167,7 @@ struct ActiveRoundView: View {
             if rounds.watchDetector.unclaimedCount > 0 {
                 Button("Watch shots (\(rounds.watchDetector.unclaimedCount))") { showWatch = true }
             }
+            Button("My bag") { showBag = true }
             Button("Dictate this hole") { showDictation = true }
             Button("Confirm 1st putt") {
                 greenMode = .putt
@@ -185,7 +194,7 @@ struct ActiveRoundView: View {
         let remaining = target.yards(to: pin)
         let helping = cos((layout.headingDegrees - round.windFromDegrees) * .pi / 180)
         let playsLike = CaddieEngine.playsLike(yards: remaining, windMph: round.windMph, windHelping: helping)
-        let rec = CaddieEngine.recommendClub(for: playsLike, averages: rounds.clubAverages())
+        let rec = CaddieEngine.recommendClub(for: playsLike, bag: rounds.clubBag)
 
         return VStack(spacing: 0) {
             topBar(hole: hole, remaining: remaining, onThisHole: onThisHole)
@@ -211,6 +220,9 @@ struct ActiveRoundView: View {
                         MapCircleButton(systemImage: "arrow.uturn.backward", label: "Revert") {
                             measurePoint = nil
                         }
+                    }
+                    MapCircleButton(systemImage: "bag.fill", label: "Bag") {
+                        showBag = true
                     }
                     MapCircleButton(systemImage: "mic.fill", label: "Dictate") {
                         showDictation = true
@@ -270,6 +282,12 @@ struct ActiveRoundView: View {
                         .font(.system(size: 40, weight: .bold, design: .rounded).monospacedDigit())
                     Text("Yds")
                         .font(.headline.weight(.semibold))
+                    if let club = CaddieEngine.recommendClub(for: remaining, bag: rounds.clubBag)?.club {
+                        Text("·")
+                            .foregroundStyle(.white.opacity(0.5))
+                        Text(club.shortName)
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                    }
                 }
             }
             .foregroundStyle(.white)
@@ -300,26 +318,33 @@ struct ActiveRoundView: View {
 
     private func playsLikePill(yards: Double, playsLike: Double,
                                recommendation: (club: GolfClub, swingEffort: Double)?) -> some View {
-        let club = recommendation?.club.shortName ?? "—"
-        return HStack(spacing: 10) {
-            Text("\(Int(yards.rounded()))")
-                .font(.largeTitle.weight(.bold).monospacedDigit())
-            + Text("y")
-                .font(.caption.weight(.semibold))
-            VStack(alignment: .leading, spacing: 0) {
-                Text("Plays Like")
-                    .font(.caption2.weight(.semibold))
+        let club = recommendation?.club
+        let carry = club.map { Int(rounds.bagCarry(for: $0).rounded()) }
+        return Button {
+            showBag = true
+        } label: {
+            HStack(spacing: 10) {
+                Text("\(Int(yards.rounded()))")
+                    .font(.largeTitle.weight(.bold).monospacedDigit())
+                + Text("y")
+                    .font(.caption.weight(.semibold))
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(club?.displayName ?? "Set your bag")
+                        .font(.headline.weight(.bold))
+                    Text(carry.map { "Plays like \(Int(playsLike.rounded()))y · \($0)y club" }
+                         ?? "Plays like \(Int(playsLike.rounded()))y")
+                        .font(.caption.weight(.semibold).monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
-                Text("\(Int(playsLike.rounded()))y  \(club)")
-                    .font(.subheadline.weight(.bold).monospacedDigit())
             }
-            Image(systemName: "chevron.right")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(.ultraThinMaterial, in: Capsule())
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .background(.ultraThinMaterial, in: Capsule())
+        .buttonStyle(.plain)
     }
 
     private func windDial(_ round: GolfRound) -> some View {

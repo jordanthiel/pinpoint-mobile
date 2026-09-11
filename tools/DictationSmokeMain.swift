@@ -55,6 +55,18 @@ struct DictationSmokeMain {
             check("dogleg hole keeps a clean path", hole4.playPath.count <= 3)
         }
 
+        let bag = ClubBag.standard
+        check("150 yards is 7i in a stock bag", CaddieEngine.recommendClub(for: 150, bag: bag)?.club == .iron7)
+        check("90 yards is sand wedge", CaddieEngine.recommendClub(for: 90, bag: bag)?.club == .sandWedge)
+        check("label includes the club", CaddieEngine.yardsClubLabel(yards: 150, bag: bag).contains("7i"))
+        var shortBag = ClubBag(clubs: [
+            ClubBagEntry(club: .driver, carryYards: 250),
+            ClubBagEntry(club: .sandWedge, carryYards: 80),
+        ])
+        shortBag.upsert(.sandWedge, carryYards: 95)
+        check("custom SW carry is used", CaddieEngine.recommendClub(for: 90, bag: shortBag)?.club == .sandWedge)
+        check("gap in the bag jumps to driver", CaddieEngine.recommendClub(for: 140, bag: shortBag)?.club == .driver)
+
         if failed > 0 {
             print("\n\(failed) check(s) failed")
             exit(1)

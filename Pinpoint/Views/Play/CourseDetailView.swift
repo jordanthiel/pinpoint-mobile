@@ -6,6 +6,7 @@ struct CourseDetailView: View {
     @Environment(RoundStore.self) private var rounds
     @State private var showStart = false
     @State private var showActive = false
+    @State private var showBag = false
     @State private var headerSelection: MapFeature?
 
     private var course: GolfCourse { SampleCourses.georgetown }
@@ -28,6 +29,29 @@ struct CourseDetailView: View {
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(PrimaryButtonStyle())
+                        Button {
+                            showBag = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "bag.fill")
+                                    .font(.title3)
+                                    .foregroundStyle(PinpointTheme.accent)
+                                    .frame(width: 36)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("My bag")
+                                        .font(.headline)
+                                    Text(bagSubtitle)
+                                        .font(.subheadline)
+                                        .foregroundStyle(PinpointTheme.secondaryText)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .foregroundStyle(PinpointTheme.secondaryText)
+                            }
+                            .padding(16)
+                            .background(PinpointTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
                         infoCard(title: "Course Tips", subtitle: "Local tips for this course.", icon: "lightbulb")
                         myCourseStats
                         watchCard
@@ -37,6 +61,12 @@ struct CourseDetailView: View {
             }
             .navigationTitle("Courses")
             .navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $showBag) {
+                ClubBagView()
+                    .preferredColorScheme(.dark)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+            }
             .sheet(isPresented: $showStart) {
                 StartRoundView(course: course, onStarted: { showActive = true })
                     .preferredColorScheme(.dark)
@@ -206,6 +236,12 @@ struct CourseDetailView: View {
             .background(PinpointTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.plain)
+    }
+
+    private var bagSubtitle: String {
+        let shots = rounds.clubBag.shotClubs.count
+        if shots == 0 { return "Add clubs and carries for live map clubs" }
+        return "\(shots) clubs · map updates as you drag"
     }
 
     private var watchSubtitle: String {

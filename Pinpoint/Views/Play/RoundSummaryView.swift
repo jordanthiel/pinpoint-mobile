@@ -23,7 +23,7 @@ struct RoundSummaryView: View {
                         Button {
                             showClubs = true
                         } label: {
-                            Text("Review and Edit Club Selection")
+                            Text("Edit My Bag")
                                 .font(.headline)
                                 .frame(maxWidth: .infinity)
                         }
@@ -47,7 +47,7 @@ struct RoundSummaryView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .onAppear { recap = round.recap }
                 .sheet(isPresented: $showClubs) {
-                    ClubAveragesView()
+                    ClubBagView()
                         .preferredColorScheme(.dark)
                         .presentationDetents([.medium, .large])
                         .presentationDragIndicator(.visible)
@@ -174,49 +174,3 @@ struct RoundSummaryView: View {
     }
 }
 
-/// Per-club true-distance table, fed by tracked shots (review later).
-struct ClubAveragesView: View {
-    @Environment(RoundStore.self) private var rounds
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                PinpointTheme.background.ignoresSafeArea()
-                List {
-                    ForEach(GolfClub.allCases) { club in
-                        HStack {
-                            Text(club.shortName)
-                                .font(.headline.monospacedDigit())
-                                .frame(width: 44)
-                                .foregroundStyle(PinpointTheme.accent)
-                            Text(club.displayName)
-                                .font(.subheadline)
-                            Spacer()
-                            if let avg = rounds.clubAverages()[club] {
-                                Text("\(Int(avg)) Yds")
-                                    .font(.headline.monospacedDigit())
-                            } else {
-                                Text("\(Int(club.stockYards))")
-                                    .font(.subheadline.monospacedDigit())
-                                    .foregroundStyle(PinpointTheme.secondaryText)
-                                + Text(" stock")
-                                    .font(.caption)
-                                    .foregroundStyle(PinpointTheme.secondaryText)
-                            }
-                        }
-                        .listRowBackground(PinpointTheme.surface)
-                    }
-                }
-                .scrollContentBackground(.hidden)
-            }
-            .navigationTitle("Club Distances")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") { dismiss() }
-                }
-            }
-        }
-    }
-}

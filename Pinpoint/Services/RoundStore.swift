@@ -7,6 +7,7 @@ import Foundation
 final class RoundStore {
     var activeRound: GolfRound?
     var pastRounds: [GolfRound] = []
+    var clubBag: ClubBag = .standard
     var lastError: String?
 
     let watchDetector = WatchShotDetector()
@@ -22,6 +23,7 @@ final class RoundStore {
 
     private var roundsURL: URL { rootURL.appendingPathComponent("rounds.json") }
     private var activeURL: URL { rootURL.appendingPathComponent("active-round.json") }
+    private var bagURL: URL { rootURL.appendingPathComponent("club-bag.json") }
 
     init() {
         load()
@@ -39,6 +41,52 @@ final class RoundStore {
            decoded.status == .active {
             activeRound = decoded
         }
+        if let data = try? Data(contentsOf: bagURL),
+           let decoded = try? JSONDecoder().decode(ClubBag.self, from: data),
+           !decoded.clubs.isEmpty {
+            clubBag = decoded
+        } else {
+            clubBag = .standard
+            saveBag()
+        }
+    }
+
+    private func saveBag() {
+        do {
+            try JSONEncoder().encode(clubBag).write(to: bagURL, options: [.atomic])
+        } catch {
+            lastError = "Couldn't save your bag."
+        }
+    }
+
+    func setBagCarry(_ club: GolfClub, yards: Double) {
+        var bag = clubBag
+        bag.upsert(club, carryYards: yards)
+        clubBag = bag
+        saveBag()
+    }
+
+    func addClubToBag(_ club: GolfClub) {
+        var bag = clubBag
+        bag.upsert(club, carryYards: club.stockYards)
+        clubBag = bag
+        saveBag()
+    }
+
+    func removeClubFromBag(_ club: GolfClub) {
+        var bag = clubBag
+        bag.remove(club)
+        clubBag = bag
+        saveBag()
+    }
+
+    func resetClubBag() {
+        clubBag = .standard
+        saveBag()
+    }
+
+    func bagCarry(for club: GolfClub) -> Double {
+        clubBag.carry(for: club) ?? club.stockYards
     }
 
     private func save() {
@@ -198,12 +246,13 @@ final class RoundStore {
             let isApproach = remaining < 220 && nextNumber > 1
             let club = parsed.club ?? (isApproach ? .sandWedge : .iron7)
             let shotLie: Lie = parsed.lie ?? (club.isPutter ? .green : lie)
+            let stock = bagCarry(for: club)
             let shot = TrackedShot(
                 number: nextNumber,
                 club: club,
                 lie: shotLie,
                 distanceToPinBeforeYards: remaining,
-                carryYards: club.isPutter ? nil : min(remaining, club.stockYards),
+                carryYards: club.isPutter ? nil : min(remaining, stock),
                 contact: parsed.contact,
                 shape: parsed.shape,
                 quality: parsed.quality,
@@ -217,7 +266,7 @@ final class RoundStore {
                 remaining = leftFeet / 3.0
                 lie = remaining <= 8 ? .green : .fringe
             } else {
-                remaining = max(0, remaining - club.stockYards)
+                remaining = max(0, remaining - stock)
                 lie = remaining <= 25 ? .green : .fairway
             }
         }
