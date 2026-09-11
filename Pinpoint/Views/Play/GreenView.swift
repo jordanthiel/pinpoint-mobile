@@ -26,7 +26,7 @@ struct GreenView: View {
     var body: some View {
         VStack(spacing: 0) {
             MapReader { proxy in
-                Map(position: $camera, interactionModes: [.pan, .zoom]) {
+                Map(position: $camera, interactionModes: [.pan, .zoom], scope: nil) {
                     if !layout.greenOutline.isEmpty {
                         MapPolygon(coordinates: layout.greenOutline.map(\.coordinate))
                             .foregroundStyle(Color.green.opacity(0.22))

@@ -19,7 +19,7 @@ struct HoleMapView: View {
 
     var body: some View {
         MapReader { proxy in
-            Map(position: $position, interactionModes: [.pan, .zoom, .rotate]) {
+            Map(position: $position, interactionModes: [.pan, .zoom, .rotate], scope: nil) {
                 if !layout.greenOutline.isEmpty {
                     MapPolygon(coordinates: layout.greenOutline.map(\.coordinate))
                         .foregroundStyle(Color.green.opacity(0.28))
