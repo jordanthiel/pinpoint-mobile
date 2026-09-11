@@ -13,6 +13,9 @@ struct ActiveRoundView: View {
     @State private var pendingMeasure: GeoPoint?
     @State private var showDictation = false
     @State private var showScorecard = false
+    @State private var showHoleScore = false
+    @State private var advanceAfterScore = false
+    @State private var scoreSheetCommitted = false
     @State private var showGreen = false
     @State private var greenMode: GreenView.Mode = .pin
     @State private var showFinishConfirm = false
@@ -154,6 +157,25 @@ struct ActiveRoundView: View {
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
+        .sheet(isPresented: $showHoleScore, onDismiss: {
+            if !scoreSheetCommitted {
+                advanceAfterScore = false
+            }
+            scoreSheetCommitted = false
+        }) {
+            HoleScoreEntryView(holeNumber: holeNum) { mapShots in
+                scoreSheetCommitted = true
+                let shouldAdvance = advanceAfterScore
+                advanceAfterScore = false
+                showHoleScore = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                    handleScoreSaved(mapShots: mapShots, holeNumber: holeNum, shouldAdvance: shouldAdvance)
+                }
+            }
+            .preferredColorScheme(.dark)
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
+        }
         .sheet(isPresented: $showGreen) {
             if let layout {
                 GreenView(
@@ -192,6 +214,10 @@ struct ActiveRoundView: View {
             }
             Button("My bag") { showBag = true }
             Button("Dictate this hole") { showDictation = true }
+            Button(hole?.hasScore == true ? "Edit this hole's score" : "Enter this hole's score") {
+                advanceAfterScore = false
+                showHoleScore = true
+            }
             Button("Confirm 1st putt") {
                 greenMode = .putt
                 showGreen = true
@@ -270,8 +296,8 @@ struct ActiveRoundView: View {
             HStack(alignment: .center, spacing: 10) {
                 HStack(spacing: 16) {
                     MapHUDChip(title: "Score", value: hole.hasScore ? "\(hole.grossScore)" : "–")
-                    MapHUDChip(title: "Shot", value: "\(hole.isComplete ? max(1, hole.shots.count) : hole.shots.count + 1)")
-                    MapHUDChip(title: "Putt", value: "\(hole.putts)")
+                    MapHUDChip(title: "Shot", value: hole.shots.isEmpty ? (hole.hasScore ? "–" : "1") : "\(hole.isComplete ? hole.shots.count : hole.shots.count + 1)")
+                    MapHUDChip(title: "Putt", value: hole.hasScore ? "\(hole.putts)" : "–")
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
@@ -324,6 +350,19 @@ struct ActiveRoundView: View {
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
                     .background(.black.opacity(0.55), in: Capsule())
+            }
+            if hole.hasScore, hole.shots.isEmpty {
+                Button {
+                    openNewShot(at: measurePoint)
+                } label: {
+                    Label("Score saved — map your shots", systemImage: "mappin.and.ellipse")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(PinpointTheme.accent.opacity(0.85), in: Capsule())
+                }
+                .buttonStyle(.plain)
             }
             if let note = hole.analysisNote, !note.isEmpty {
                 Text(note)
@@ -426,24 +465,16 @@ struct ActiveRoundView: View {
 
             HStack(spacing: 10) {
                 Button {
-                    showScorecard = true
+                    advanceAfterScore = false
+                    showHoleScore = true
                 } label: {
-                    Text("Edit Score")
+                    Text(hole.hasScore ? "Edit Score" : "Enter Score")
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(SecondaryButtonStyle())
                 Button {
-                    rounds.updateHole(holeNumber) { $0.isComplete = true }
-                    if hole.firstPuttFeet == nil, toPin < 40 {
-                        greenMode = .putt
-                        showGreen = true
-                    }
-                    if !isLast {
-                        jump(to: order[idx + 1], in: round)
-                    } else {
-                        showScorecard = true
-                    }
+                    requestNextHole(round: round, holeNumber: holeNumber, hole: hole, toPin: toPin)
                 } label: {
                     Text(isLast ? "Review Scorecard" : "Go to Next Hole")
                         .font(.headline)
@@ -505,5 +536,43 @@ struct ActiveRoundView: View {
         editingShot = nil
         pendingMeasure = point
         showShotEditor = true
+    }
+
+    private func requestNextHole(round: GolfRound, holeNumber: Int, hole: HoleScore, toPin: Double) {
+        if !hole.hasScore {
+            advanceAfterScore = true
+            showHoleScore = true
+            return
+        }
+        advanceHole(round: round, holeNumber: holeNumber, hole: hole, toPin: toPin)
+    }
+
+    private func handleScoreSaved(mapShots: Bool, holeNumber: Int, shouldAdvance: Bool) {
+        if mapShots {
+            openNewShot(at: measurePoint)
+            return
+        }
+        guard shouldAdvance, let round = rounds.activeRound,
+              let hole = round.score(for: holeNumber)
+        else { return }
+        let pin = round.pinCoordinate(for: holeNumber)
+        let ball = liveBall(round: round, holeNumber: holeNumber)
+        let toPin = pin.map { ball.yards(to: $0) } ?? 999
+        advanceHole(round: round, holeNumber: holeNumber, hole: hole, toPin: toPin)
+    }
+
+    private func advanceHole(round: GolfRound, holeNumber: Int, hole: HoleScore, toPin: Double) {
+        rounds.updateHole(holeNumber) { $0.isComplete = true }
+        if hole.firstPuttFeet == nil, toPin < 40 {
+            greenMode = .putt
+            showGreen = true
+        }
+        let order = round.holeScores.map(\.holeNumber)
+        let idx = order.firstIndex(of: holeNumber) ?? 0
+        if idx < order.count - 1 {
+            jump(to: order[idx + 1], in: round)
+        } else {
+            showScorecard = true
+        }
     }
 }

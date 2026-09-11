@@ -163,6 +163,14 @@ final class RoundStore {
         save()
     }
 
+    /// Writes the hole sheet (score / putts / penalties / fairway) without requiring shots.
+    /// Later shot mapping does not overwrite `recordedScore` / `recordedPutts`.
+    func recordHoleScore(_ holeNumber: Int, score: Int, putts: Int, penalties: Int, fairwayHit: Bool?) {
+        updateHole(holeNumber) { hole in
+            hole.applyRecordedScore(score: score, putts: putts, penalties: penalties, fairwayHit: fairwayHit)
+        }
+    }
+
     func addShot(_ holeNumber: Int, _ shot: TrackedShot) {
         updateHole(holeNumber) { hole in
             var s = shot
@@ -309,6 +317,17 @@ final class RoundStore {
         updateHole(holeNumber) {
             $0.shots = hole.shots
             $0.firstPuttFeet = hole.firstPuttFeet
+            // Fill recorded putts / score from the spoken recap only when the
+            // golfer hasn't already locked them in on the score sheet.
+            if $0.recordedPutts == nil, let mentioned = result.puttsMentioned {
+                $0.recordedPutts = mentioned
+            }
+            if $0.recordedScore == nil,
+               let call = result.scoreCall,
+               let fromCall = HoleScore.score(fromCall: call, par: holeDef.par) {
+                $0.recordedScore = fromCall
+                $0.isComplete = true
+            }
             if !analysis.isEmpty {
                 if let existing = $0.analysisNote, !existing.isEmpty, existing != analysis {
                     $0.analysisNote = existing + " · " + analysis

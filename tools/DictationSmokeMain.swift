@@ -90,6 +90,55 @@ struct DictationSmokeMain {
         let shortTarget = origin.defaultShotTarget(toward: shortPin)
         check("default target uses 0.65 on a short hole", abs(origin.yards(to: shortTarget) - 65) < 3)
 
+        var scored = HoleScore(holeNumber: 1)
+        scored.applyRecordedScore(score: 4, putts: 2, penalties: 0, fairwayHit: true)
+        check("score-first hasScore without shots", scored.hasScore && scored.shots.isEmpty)
+        check("gross uses recordedScore", scored.grossScore == 4)
+        check("putts use recordedPutts", scored.putts == 2)
+        check("marks the hole complete", scored.isComplete)
+        check("GIR from recorded par", scored.greenInRegulation(par: 4) == true)
+        check("fairway from the sheet", scored.fairwayHit(par: 4) == true)
+        scored.shots.append(TrackedShot(number: 1, club: .driver, lie: .tee))
+        scored.shots.append(TrackedShot(number: 2, club: .iron7, lie: .rough))
+        scored.shots.append(TrackedShot(number: 3, club: .sandWedge, lie: .rough))
+        scored.shots.append(TrackedShot(number: 4, club: .putter, lie: .green))
+        check("mapping shots does not overwrite recordedScore", scored.grossScore == 4)
+        check("mapping shots does not overwrite recordedPutts", scored.putts == 2)
+        check("shot trail GIR wins once enough shots exist", scored.greenInRegulation(par: 4) == false)
+
+        var bogey = HoleScore(holeNumber: 2)
+        bogey.applyRecordedScore(score: 5, putts: 2, penalties: 1, fairwayHit: false)
+        check("bogey is not GIR", bogey.greenInRegulation(par: 4) == false)
+        check("missed fairway", bogey.fairwayHit(par: 4) == false)
+        check("par 3 skips fairway", bogey.fairwayHit(par: 3) == nil)
+
+        var shotOnly = HoleScore(holeNumber: 3)
+        shotOnly.shots = [TrackedShot(number: 1, club: .iron8, lie: .tee)]
+        shotOnly.penaltyStrokes = 1
+        check("legacy gross is shots + penalties", shotOnly.grossScore == 2)
+        check("legacy putts count putter shots", shotOnly.putts == 0)
+
+        check("par 4 chips are 1...8", HoleScore.scoreChipValues(par: 4) == Array(1...8))
+        check("par 3 chips start at 1", HoleScore.scoreChipValues(par: 3).first == 1)
+        check("current 9 is included", HoleScore.scoreChipValues(par: 4, current: 9).contains(9))
+
+        check("dictated par is the par score", HoleScore.score(fromCall: "par", par: 4) == 4)
+        check("dictated birdie", HoleScore.score(fromCall: "birdie", par: 5) == 4)
+
+        do {
+            let encoded = try JSONEncoder().encode(HoleScore(holeNumber: 8))
+            var obj = try JSONSerialization.jsonObject(with: encoded) as? [String: Any] ?? [:]
+            obj.removeValue(forKey: "recordedScore")
+            obj.removeValue(forKey: "recordedPutts")
+            obj.removeValue(forKey: "recordedFairwayHit")
+            let stripped = try JSONSerialization.data(withJSONObject: obj)
+            let decoded = try JSONDecoder().decode(HoleScore.self, from: stripped)
+            check("old hole JSON still decodes", decoded.recordedScore == nil && decoded.holeNumber == 8)
+            check("old hole has no score", !decoded.hasScore)
+        } catch {
+            check("old hole JSON still decodes", false)
+        }
+
         if failed > 0 {
             print("\n\(failed) check(s) failed")
             exit(1)

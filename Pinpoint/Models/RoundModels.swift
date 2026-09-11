@@ -405,6 +405,13 @@ struct HoleScore: Identifiable, Codable, Hashable, Equatable {
     /// Leftover spoken detail that didn't fit a structured field — for later analysis.
     var analysisNote: String?
     var isComplete: Bool
+    /// Card score entered on the hole sheet. Optional so older JSON still decodes.
+    /// When set, this is the official gross — later shot mapping does not overwrite it.
+    var recordedScore: Int?
+    /// Putts entered on the hole sheet. Optional so older JSON still decodes.
+    var recordedPutts: Int?
+    /// Fairway result from the hole sheet (`true` hit, `false` miss). `nil` is N/A / unrecorded.
+    var recordedFairwayHit: Bool?
 
     struct PinPosition: Codable, Hashable, Equatable {
         /// Normalized 0...1 position on the green (x right, y up). Used when
@@ -436,11 +443,49 @@ struct HoleScore: Identifiable, Codable, Hashable, Equatable {
         dictateTranscript = ""
         analysisNote = ""
         isComplete = false
+        recordedScore = nil
+        recordedPutts = nil
+        recordedFairwayHit = nil
     }
 
-    var grossScore: Int { shots.count + penaltyStrokes }
-    var putts: Int { shots.filter(\.isPutt).count }
-    var hasScore: Bool { !shots.isEmpty || penaltyStrokes > 0 }
+    /// Official card score. Shot mapping never overwrites `recordedScore`.
+    var grossScore: Int { recordedScore ?? (shots.count + penaltyStrokes) }
+    /// Official putt count. Shot mapping never overwrites `recordedPutts`.
+    var putts: Int { recordedPutts ?? shots.filter(\.isPutt).count }
+    var hasScore: Bool { recordedScore != nil || !shots.isEmpty || penaltyStrokes > 0 }
+
+    /// Chip values for the hole score sheet: par−3 through par+4, plus any current outlier.
+    static func scoreChipValues(par: Int, current: Int? = nil) -> [Int] {
+        let lo = max(1, par - 3)
+        let hi = max(lo, par + 4)
+        var values = Array(lo...hi)
+        if let current, current >= 1, !values.contains(current) {
+            values.append(current)
+            values.sort()
+        }
+        return values
+    }
+
+    mutating func applyRecordedScore(score: Int, putts: Int, penalties: Int, fairwayHit: Bool?) {
+        recordedScore = max(1, score)
+        recordedPutts = max(0, putts)
+        penaltyStrokes = max(0, penalties)
+        recordedFairwayHit = fairwayHit
+        isComplete = true
+    }
+
+    /// Maps a spoken "for a par / birdie / …" call onto a card score.
+    static func score(fromCall call: String, par: Int) -> Int? {
+        switch call.lowercased() {
+        case "albatross": return max(1, par - 3)
+        case "eagle": return max(1, par - 2)
+        case "birdie": return max(1, par - 1)
+        case "par": return par
+        case "bogey": return par + 1
+        case "double": return par + 2
+        default: return nil
+        }
+    }
 
     func scoreName(par: Int) -> String {
         guard hasScore else { return "–" }
@@ -456,7 +501,9 @@ struct HoleScore: Identifiable, Codable, Hashable, Equatable {
     }
 
     func fairwayHit(par: Int) -> Bool? {
-        guard par > 3, shots.count >= 2 else { return nil }
+        guard par > 3 else { return nil }
+        if let recordedFairwayHit { return recordedFairwayHit }
+        guard shots.count >= 2 else { return nil }
         let second = shots[1]
         return second.lie == .fairway || second.lie == .green
     }
@@ -464,8 +511,10 @@ struct HoleScore: Identifiable, Codable, Hashable, Equatable {
     /// True when the ball reached the green (or fringe) within par-2 strokes,
     /// or was holed out in par-2 or fewer (ace, chip-in). Nil while the hole
     /// is still in progress and the outcome can't be judged yet.
+    ///
+    /// Score-first holes (no shots yet) use recorded putts:
+    /// `(recordedScore - recordedPutts) <= par - 2`.
     func greenInRegulation(par: Int) -> Bool? {
-        guard !shots.isEmpty else { return nil }
         let target = max(1, par - 2)
         if shots.count > target {
             // The (target+1)-th shot exists: GIR iff it was played from the
@@ -473,6 +522,10 @@ struct HoleScore: Identifiable, Codable, Hashable, Equatable {
             let next = shots[target]
             return next.lie == .green || next.lie == .fringe
         }
+        if let recorded = recordedScore, let recordedPuttCount = recordedPutts {
+            return (recorded - recordedPuttCount) <= target
+        }
+        guard !shots.isEmpty else { return nil }
         // Holed out in <= target strokes implies the green was reached in
         // regulation; an unfinished hole can't be judged yet.
         return isComplete ? true : nil
