@@ -6,6 +6,7 @@ struct CourseDetailView: View {
     @Environment(RoundStore.self) private var rounds
     @State private var showStart = false
     @State private var showActive = false
+    @State private var headerSelection: MapFeature?
 
     private var course: GolfCourse { SampleCourses.georgetown }
 
@@ -57,7 +58,7 @@ struct CourseDetailView: View {
                 distance: 1400,
                 heading: 28,
                 pitch: 0
-            )), scope: nil) {
+            )), selection: $headerSelection) {
                 if let tee = course.layout(for: 1)?.tee, let pin = course.layout(for: 1)?.pin {
                     MapPolyline(coordinates: [tee.coordinate, pin.coordinate])
                         .stroke(.white.opacity(0.7), lineWidth: 2)

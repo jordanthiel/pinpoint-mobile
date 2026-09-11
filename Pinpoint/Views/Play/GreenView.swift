@@ -20,13 +20,14 @@ struct GreenView: View {
     @State private var camera: MapCameraPosition = .automatic
     @State private var droppedPin: GeoPoint?
     @State private var ball: GeoPoint?
+    @State private var selectedFeature: MapFeature?
 
     private var activePin: GeoPoint { droppedPin ?? pin }
 
     var body: some View {
         VStack(spacing: 0) {
             MapReader { proxy in
-                Map(position: $camera, interactionModes: [.pan, .zoom], scope: nil) {
+                Map(position: $camera, selection: $selectedFeature) {
                     if !layout.greenOutline.isEmpty {
                         MapPolygon(coordinates: layout.greenOutline.map(\.coordinate))
                             .foregroundStyle(Color.green.opacity(0.22))

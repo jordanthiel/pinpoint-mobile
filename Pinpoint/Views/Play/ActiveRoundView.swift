@@ -208,7 +208,7 @@ struct ActiveRoundView: View {
                             measurePoint = nil
                         }
                     }
-                    windDial(round: round)
+                    windDial(round)
                     MapCircleButton(systemImage: "flag.fill", label: nil) {
                         greenMode = .pin
                         showGreen = true

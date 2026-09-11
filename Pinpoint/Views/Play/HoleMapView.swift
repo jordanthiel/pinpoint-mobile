@@ -17,9 +17,11 @@ struct HoleMapView: View {
     var onTapCoordinate: ((GeoPoint) -> Void)?
     var onSelectShot: ((TrackedShot) -> Void)?
 
+    @State private var selectedFeature: MapFeature?
+
     var body: some View {
         MapReader { proxy in
-            Map(position: $position, interactionModes: [.pan, .zoom, .rotate], scope: nil) {
+            Map(position: $position, selection: $selectedFeature) {
                 if !layout.greenOutline.isEmpty {
                     MapPolygon(coordinates: layout.greenOutline.map(\.coordinate))
                         .foregroundStyle(Color.green.opacity(0.28))
