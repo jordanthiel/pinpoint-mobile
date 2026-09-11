@@ -397,6 +397,9 @@ struct HoleScore: Identifiable, Codable, Hashable, Equatable {
     var shots: [TrackedShot]
     var penaltyStrokes: Int
     var pinPosition: PinPosition
+    /// Optional override when the golfer dragged the tee marker.
+    var teeLatitude: Double?
+    var teeLongitude: Double?
     var firstPuttFeet: Double?
     var dictateTranscript: String
     /// Leftover spoken detail that didn't fit a structured field — for later analysis.
@@ -416,6 +419,11 @@ struct HoleScore: Identifiable, Codable, Hashable, Equatable {
             guard let latitude, let longitude else { return nil }
             return GeoPoint(latitude: latitude, longitude: longitude)
         }
+    }
+
+    var teeCoordinate: GeoPoint? {
+        guard let teeLatitude, let teeLongitude else { return nil }
+        return GeoPoint(latitude: teeLatitude, longitude: teeLongitude)
     }
 
     init(holeNumber: Int) {
@@ -583,14 +591,26 @@ struct GolfRound: Identifiable, Codable, Hashable, Equatable {
         return layout.resolvedPin(normalizedX: pin?.x ?? 0.5, normalizedY: pin?.y ?? 0.62)
     }
 
+    func teeCoordinate(for holeNumber: Int) -> GeoPoint? {
+        score(for: holeNumber)?.teeCoordinate ?? layout(for: holeNumber)?.tee
+    }
+
+    /// Layout with the golfer's dragged tee / pin applied.
+    func playLayout(for holeNumber: Int) -> HoleLayout? {
+        guard var layout = layout(for: holeNumber) else { return nil }
+        if let tee = teeCoordinate(for: holeNumber) { layout.tee = tee }
+        if let pin = pinCoordinate(for: holeNumber) { layout.pin = pin }
+        return layout
+    }
+
     func ballCoordinate(for holeNumber: Int) -> GeoPoint? {
-        guard let layout = layout(for: holeNumber) else { return nil }
+        guard let layout = playLayout(for: holeNumber) ?? layout(for: holeNumber) else { return nil }
         let hole = score(for: holeNumber)
         if let end = hole?.shots.last(where: { $0.end != nil })?.end {
             return end
         }
         if hole?.shots.isEmpty ?? true {
-            return layout.tee
+            return teeCoordinate(for: holeNumber) ?? layout.tee
         }
         return layout.point(afterTravelling: travelledYards(holeNumber), toward: pinCoordinate(for: holeNumber) ?? layout.pin)
     }

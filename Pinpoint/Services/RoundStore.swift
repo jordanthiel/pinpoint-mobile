@@ -66,9 +66,16 @@ final class RoundStore {
         saveBag()
     }
 
-    func addClubToBag(_ club: GolfClub) {
+    func updateBagEntry(_ entry: ClubBagEntry) {
         var bag = clubBag
-        bag.upsert(club, carryYards: club.stockYards)
+        bag.update(entry)
+        clubBag = bag
+        saveBag()
+    }
+
+    func addClubToBag(_ club: GolfClub, nickname: String? = nil, yards: Double? = nil) {
+        var bag = clubBag
+        bag.add(club, nickname: nickname, carryYards: yards)
         clubBag = bag
         saveBag()
     }
@@ -76,6 +83,13 @@ final class RoundStore {
     func removeClubFromBag(_ club: GolfClub) {
         var bag = clubBag
         bag.remove(club)
+        clubBag = bag
+        saveBag()
+    }
+
+    func removeBagEntry(id: UUID) {
+        var bag = clubBag
+        bag.remove(id: id)
         clubBag = bag
         saveBag()
     }

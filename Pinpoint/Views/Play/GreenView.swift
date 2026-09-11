@@ -1,7 +1,7 @@
 import MapKit
 import SwiftUI
 
-/// Satellite green: drop the pin or mark the first-putt ball, with live feet.
+/// Satellite green: drag the pin (or first-putt ball) — the map stays put.
 struct GreenView: View {
     enum Mode {
         case pin
@@ -21,46 +21,82 @@ struct GreenView: View {
     @State private var droppedPin: GeoPoint?
     @State private var ball: GeoPoint?
     @State private var selectedFeature: MapFeature?
+    @State private var isDragging = false
 
     private var activePin: GeoPoint { droppedPin ?? pin }
+    private var mapModes: MapInteractionModes { isDragging ? [] : [.pan, .zoom] }
 
     var body: some View {
         VStack(spacing: 0) {
-            MapReader { proxy in
-                Map(position: $camera, selection: $selectedFeature) {
-                    if !layout.greenOutline.isEmpty {
-                        MapPolygon(coordinates: layout.greenOutline.map(\.coordinate))
-                            .foregroundStyle(Color.green.opacity(0.22))
-                            .stroke(.white.opacity(0.5), lineWidth: 1)
-                    }
+            ZStack(alignment: .top) {
+                MapReader { proxy in
+                    ZStack {
+                        Map(position: $camera, interactionModes: mapModes, selection: $selectedFeature) {
+                            if !layout.greenOutline.isEmpty {
+                                MapPolygon(coordinates: layout.smoothedGreenOutline.map(\.coordinate))
+                                    .foregroundStyle(Color.green.opacity(0.22))
+                                    .stroke(Color.white.opacity(0.7), lineWidth: 2.5)
+                            }
 
-                    if mode == .putt, let ball {
-                        MapPolyline(coordinates: [ball.coordinate, activePin.coordinate])
-                            .stroke(.white, lineWidth: 2)
-                    }
+                            if mode == .putt, let ball {
+                                MapPolyline(coordinates: [ball.coordinate, activePin.coordinate])
+                                    .stroke(.white, lineWidth: 2)
+                            }
+                        }
+                        .mapStyle(.imagery(elevation: .realistic))
 
-                    Marker("Pin", systemImage: "flag.fill", coordinate: activePin.coordinate)
-                        .tint(.yellow)
-
-                    if mode == .putt, let ball {
-                        Marker("\(Int(puttFeet.rounded())) Ft", systemImage: "circle.fill", coordinate: ball.coordinate)
-                            .tint(.red)
-                    }
-                }
-                .mapStyle(.imagery(elevation: .realistic))
-                .gesture(
-                    SpatialTapGesture().onEnded { event in
-                        guard let coord = proxy.convert(event.location, from: .local) else { return }
-                        let point = GeoPoint(latitude: coord.latitude, longitude: coord.longitude)
-                        switch mode {
-                        case .pin:
+                        MapDragHandle(proxy: proxy, point: activePin, isDragging: $isDragging, onMove: { point in
                             droppedPin = point
-                            onMovePin(point)
-                        case .putt:
-                            ball = point
+                            if mode == .pin { onMovePin(point) }
+                        }) {
+                            VStack(spacing: 4) {
+                                Text(mode == .pin ? "Drag the flag" : "Pin")
+                                    .font(.caption.weight(.bold))
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 5)
+                                    .background(.black.opacity(0.75), in: Capsule())
+                                    .foregroundStyle(.white)
+                                Image(systemName: "flag.fill")
+                                    .font(.title.weight(.bold))
+                                    .foregroundStyle(.yellow)
+                                    .padding(14)
+                                    .background(.black.opacity(0.55), in: Circle())
+                            }
+                            .offset(y: -22)
+                        }
+
+                        if mode == .putt, let ball {
+                            MapDragHandle(proxy: proxy, point: ball, isDragging: $isDragging, onMove: { point in
+                                self.ball = point
+                            }) {
+                                VStack(spacing: 4) {
+                                    Text("\(Int(puttFeet.rounded())) ft")
+                                        .font(.title3.weight(.bold).monospacedDigit())
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 5)
+                                        .background(.black.opacity(0.75), in: Capsule())
+                                        .foregroundStyle(.white)
+                                    Circle()
+                                        .fill(.red)
+                                        .frame(width: 28, height: 28)
+                                        .overlay(Circle().stroke(.white, lineWidth: 3))
+                                }
+                                .offset(y: -18)
+                            }
                         }
                     }
-                )
+                    .coordinateSpace(name: MapDragSpace.name)
+                }
+
+                Text(mode == .pin
+                     ? "Pinch to zoom, then drag the flag onto the hole"
+                     : "Drag the ball to your first-putt spot")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(.black.opacity(0.72), in: Capsule())
+                    .padding(.top, 16)
             }
             .ignoresSafeArea(edges: .top)
 
@@ -95,6 +131,7 @@ struct GreenView: View {
         .background(PinpointTheme.background.ignoresSafeArea())
         .onAppear {
             camera = layout.greenCameraPosition(pin: pin)
+            droppedPin = pin
             if mode == .putt {
                 ball = pin.offset(eastYards: 0, northYards: -9)
             }

@@ -18,30 +18,42 @@ enum CaddieEngine {
     }
 
     /// Picks the shortest club in the bag that covers `playsLikeYards`.
-    static func recommendClub(
+    static func recommendEntry(
         for playsLikeYards: Double,
         bag: ClubBag,
         maxSwing: Double = 1.0
-    ) -> (club: GolfClub, swingEffort: Double)? {
+    ) -> (entry: ClubBagEntry, swingEffort: Double)? {
         if playsLikeYards <= 12 {
-            return bag.contains(.putter) ? (.putter, 1) : nil
+            if let putter = bag.clubs.first(where: { $0.club.isPutter }) {
+                return (putter, 1)
+            }
+            return nil
         }
         let options = bag.shotClubs
         guard !options.isEmpty else { return nil }
         for entry in options {
             let dist = entry.carryYards * maxSwing
             if dist >= playsLikeYards {
-                return (entry.club, min(1.0, playsLikeYards / max(dist, 1)))
+                return (entry, min(1.0, playsLikeYards / max(dist, 1)))
             }
         }
-        return (options.last!.club, 1.0)
+        return (options.last!, 1.0)
+    }
+
+    static func recommendClub(
+        for playsLikeYards: Double,
+        bag: ClubBag,
+        maxSwing: Double = 1.0
+    ) -> (club: GolfClub, swingEffort: Double)? {
+        guard let rec = recommendEntry(for: playsLikeYards, bag: bag, maxSwing: maxSwing) else { return nil }
+        return (rec.entry.club, rec.swingEffort)
     }
 
     /// Label for a live rangefinder number, e.g. "142 Yds · 8i".
     static func yardsClubLabel(yards: Double, bag: ClubBag, prefix: String = "") -> String {
         let yds = "\(prefix)\(Int(yards.rounded())) Yds"
-        guard let rec = recommendClub(for: yards, bag: bag) else { return yds }
-        return "\(yds)  ·  \(rec.club.shortName)"
+        guard let rec = recommendEntry(for: yards, bag: bag) else { return yds }
+        return "\(yds)  ·  \(rec.entry.shortLabel)"
     }
 
     /// Human-readable caddie line, e.g. "226 plays like 217 — smooth 5i".

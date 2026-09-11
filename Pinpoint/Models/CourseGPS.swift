@@ -48,6 +48,19 @@ extension GeoPoint {
         )
     }
 
+    /// Catmull–Rom blend used to round green outlines.
+    static func catmullRom(_ p0: GeoPoint, _ p1: GeoPoint, _ p2: GeoPoint, _ p3: GeoPoint, t: Double) -> GeoPoint {
+        let t2 = t * t
+        let t3 = t2 * t
+        func axis(_ a: Double, _ b: Double, _ c: Double, _ d: Double) -> Double {
+            0.5 * ((2 * b) + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (-a + 3 * b - 3 * c + d) * t3)
+        }
+        return GeoPoint(
+            latitude: axis(p0.latitude, p1.latitude, p2.latitude, p3.latitude),
+            longitude: axis(p0.longitude, p1.longitude, p2.longitude, p3.longitude)
+        )
+    }
+
     /// Planar T along this → `onto` for `from` (0 on this point, 1 on `onto`).
     func projectionT(onto: GeoPoint, from: GeoPoint) -> Double {
         let metersPerDegLat = 111_320.0
@@ -71,6 +84,36 @@ struct HoleLayout: Codable, Hashable, Equatable {
     var greenBack: GeoPoint
     var path: [GeoPoint]
     var greenOutline: [GeoPoint]
+
+    /// OSM greens are ~16-sided. Interpolate a closed spline so the overlay looks like a green.
+    var smoothedGreenOutline: [GeoPoint] {
+        Self.smoothClosedRing(greenOutline)
+    }
+
+    static func smoothClosedRing(_ raw: [GeoPoint], samplesPerEdge: Int = 8) -> [GeoPoint] {
+        guard raw.count >= 3 else { return raw }
+        var ring = raw
+        if let first = ring.first, let last = ring.last, first.yards(to: last) < 2 {
+            ring.removeLast()
+        }
+        let n = ring.count
+        guard n >= 3 else { return raw }
+        let steps = max(3, samplesPerEdge)
+        var out: [GeoPoint] = []
+        out.reserveCapacity(n * steps + 1)
+        for i in 0..<n {
+            let p0 = ring[(i - 1 + n) % n]
+            let p1 = ring[i]
+            let p2 = ring[(i + 1) % n]
+            let p3 = ring[(i + 2) % n]
+            for s in 0..<steps {
+                let t = Double(s) / Double(steps)
+                out.append(GeoPoint.catmullRom(p0, p1, p2, p3, t: t))
+            }
+        }
+        if let first = out.first { out.append(first) }
+        return out
+    }
 
     func resolvedPin(normalizedX x: Double, normalizedY y: Double) -> GeoPoint {
         greenCenter.offset(eastYards: (x - 0.5) * 24, northYards: (y - 0.5) * 20)

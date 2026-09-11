@@ -5,11 +5,24 @@ struct ClubBagEntry: Identifiable, Codable, Hashable, Equatable {
     var id: UUID
     var club: GolfClub
     var carryYards: Double
+    /// “4 Hybrid”, “60°”, etc. Empty uses the stock name.
+    var nickname: String?
 
-    init(id: UUID = UUID(), club: GolfClub, carryYards: Double? = nil) {
+    init(id: UUID = UUID(), club: GolfClub, carryYards: Double? = nil, nickname: String? = nil) {
         self.id = id
         self.club = club
         self.carryYards = carryYards ?? club.stockYards
+        self.nickname = nickname
+    }
+
+    var shortLabel: String {
+        let n = nickname?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return n.isEmpty ? club.shortName : n
+    }
+
+    var fullLabel: String {
+        let n = nickname?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return n.isEmpty ? club.displayName : n
     }
 }
 
@@ -53,7 +66,7 @@ struct ClubBag: Codable, Equatable {
     }
 
     mutating func upsert(_ club: GolfClub, carryYards: Double) {
-        let yards = min(400, max(20, carryYards))
+        let yards = min(400, max(15, carryYards))
         if let idx = clubs.firstIndex(where: { $0.club == club }) {
             clubs[idx].carryYards = yards
         } else {
@@ -61,7 +74,25 @@ struct ClubBag: Codable, Equatable {
         }
     }
 
+    mutating func update(_ entry: ClubBagEntry) {
+        var next = entry
+        next.carryYards = min(400, max(15, entry.carryYards))
+        if let idx = clubs.firstIndex(where: { $0.id == entry.id }) {
+            clubs[idx] = next
+        } else {
+            clubs.append(next)
+        }
+    }
+
+    mutating func add(_ club: GolfClub, nickname: String? = nil, carryYards: Double? = nil) {
+        clubs.append(ClubBagEntry(club: club, carryYards: carryYards, nickname: nickname))
+    }
+
     mutating func remove(_ club: GolfClub) {
         clubs.removeAll { $0.club == club }
+    }
+
+    mutating func remove(id: UUID) {
+        clubs.removeAll { $0.id == id }
     }
 }
