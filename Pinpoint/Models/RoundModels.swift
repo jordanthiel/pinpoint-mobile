@@ -325,8 +325,10 @@ struct GolfHole: Codable, Hashable, Equatable {
     var par: Int
     var handicap: Int
     var yardage: Int
-    /// -1 (dogleg left) ... +1 (dogleg right); drives the schematic map shape.
+    /// -1 (dogleg left) ... +1 (dogleg right); used if a hole has no GPS layout.
     var dogleg: Double
+    /// Real tee / green / corridor GPS when we have course survey data.
+    var layout: HoleLayout?
 }
 
 struct CourseTee: Codable, Hashable, Equatable {
@@ -342,11 +344,16 @@ struct GolfCourse: Identifiable, Codable, Hashable, Equatable {
     var location: String
     var tees: [CourseTee]
     var holes: [GolfHole]
+    var coordinate: GeoPoint?
 
     var totalPar: Int { holes.reduce(0) { $0 + $1.par } }
 
     func tee(named name: String) -> CourseTee? {
         tees.first { $0.name == name }
+    }
+
+    func layout(for holeNumber: Int) -> HoleLayout? {
+        holes.first { $0.number == holeNumber }?.layout ?? GeorgetownGPS.layout(for: holeNumber)
     }
 }
 
@@ -394,9 +401,18 @@ struct HoleScore: Identifiable, Codable, Hashable, Equatable {
     var isComplete: Bool
 
     struct PinPosition: Codable, Hashable, Equatable {
-        /// Normalized 0...1 position on the green schematic (x right, y up).
+        /// Normalized 0...1 position on the green (x right, y up). Used when
+        /// a hole has no surveyed pin coordinate yet.
         var x: Double
         var y: Double
+        /// Absolute pin when the golfer dropped it on the satellite green.
+        var latitude: Double?
+        var longitude: Double?
+
+        var coordinate: GeoPoint? {
+            guard let latitude, let longitude else { return nil }
+            return GeoPoint(latitude: latitude, longitude: longitude)
+        }
     }
 
     init(holeNumber: Int) {
@@ -549,33 +565,78 @@ struct GolfRound: Identifiable, Codable, Hashable, Equatable {
         if mins < 60 { return "\(mins)m" }
         return "\(mins / 60)h \(mins % 60)m"
     }
+
+    func layout(for holeNumber: Int) -> HoleLayout? {
+        hole(holeNumber)?.layout ?? GeorgetownGPS.layout(for: holeNumber)
+    }
+
+    func pinCoordinate(for holeNumber: Int) -> GeoPoint? {
+        guard let layout = layout(for: holeNumber) else { return nil }
+        if let geo = score(for: holeNumber)?.pinPosition.coordinate {
+            return geo
+        }
+        let pin = score(for: holeNumber)?.pinPosition
+        return layout.resolvedPin(normalizedX: pin?.x ?? 0.5, normalizedY: pin?.y ?? 0.62)
+    }
+
+    func ballCoordinate(for holeNumber: Int) -> GeoPoint? {
+        guard let layout = layout(for: holeNumber) else { return nil }
+        let hole = score(for: holeNumber)
+        if let end = hole?.shots.last(where: { $0.end != nil })?.end {
+            return end
+        }
+        if hole?.shots.isEmpty ?? true {
+            return layout.tee
+        }
+        return layout.point(afterTravelling: travelledYards(holeNumber), toward: pinCoordinate(for: holeNumber) ?? layout.pin)
+    }
+
+    func travelledYards(_ holeNumber: Int) -> Double {
+        guard let def = hole(holeNumber), let hole = score(for: holeNumber) else { return 0 }
+        var remaining = Double(def.yardage)
+        for shot in hole.shots {
+            if let end = shot.end, let pin = pinCoordinate(for: holeNumber) {
+                remaining = end.yards(to: pin)
+            } else if let carry = shot.carryYards {
+                remaining = max(0, remaining - carry)
+            } else if let d = shot.distanceToPinBeforeYards {
+                remaining = max(0, d - (shot.club?.stockYards ?? 150))
+            } else {
+                remaining = max(0, remaining - (shot.club?.stockYards ?? 150))
+            }
+        }
+        return max(0, Double(def.yardage) - remaining)
+    }
 }
 
 // MARK: - Sample course
 
 enum SampleCourses {
     static let georgetown: GolfCourse = {
-        // Pars/handicaps mirror the reference screenshots; yardages are Blue-tee scale.
-        let pars = [4, 4, 3, 5, 4, 5, 3, 4, 4, 4, 3, 5, 4, 4, 3, 5, 4, 4]
-        let hcps = [5, 3, 17, 1, 15, 7, 9, 11, 13, 6, 18, 2, 14, 8, 16, 4, 12, 10]
-        let yds = [385, 357, 168, 512, 378, 495, 155, 402, 368,
-                   391, 172, 521, 366, 408, 148, 505, 374, 395]
+        // Published Blue scorecard (par 70 / 5374 / 67.6 / 119) plus OSM hole GPS.
+        let pars = [4, 4, 3, 5, 4, 5, 3, 4, 4, 3, 4, 4, 4, 3, 5, 4, 3, 4]
+        let hcps = [5, 3, 17, 1, 15, 7, 9, 11, 13, 8, 2, 18, 4, 10, 12, 14, 16, 6]
+        let yds = [344, 357, 121, 523, 267, 510, 133, 277, 257,
+                   193, 384, 243, 343, 148, 439, 353, 138, 344]
         let dogs = [0.2, -0.35, 0.0, 0.45, -0.2, 0.3, 0.0, -0.4, 0.15,
                     0.1, 0.0, -0.45, 0.35, -0.15, 0.0, 0.4, -0.3, 0.2]
         let holes = (0..<18).map {
             GolfHole(number: $0 + 1, par: pars[$0], handicap: hcps[$0],
-                     yardage: yds[$0], dogleg: dogs[$0])
+                     yardage: yds[$0], dogleg: dogs[$0],
+                     layout: GeorgetownGPS.layout(for: $0 + 1))
         }
         return GolfCourse(
             id: UUID(uuidString: "6E3B1C44-1E2A-4A7B-9C0D-00CC6E07E001") ?? UUID(),
             name: "Georgetown Country Club",
-            location: "Georgetown, TX · <1 mile",
+            location: "Georgetown, TX · \(GeorgetownGPS.address)",
             tees: [
-                CourseTee(name: "Blue", totalYardage: 6427, rating: 71.2, slope: 128),
-                CourseTee(name: "White", totalYardage: 5980, rating: 69.1, slope: 121),
-                CourseTee(name: "Red", totalYardage: 5374, rating: 67.6, slope: 119),
+                CourseTee(name: "Blue", totalYardage: 5374, rating: 67.6, slope: 119),
+                CourseTee(name: "White", totalYardage: 5076, rating: 66.0, slope: 112),
+                CourseTee(name: "Yellow", totalYardage: 4540, rating: 63.5, slope: 107),
+                CourseTee(name: "Red", totalYardage: 4239, rating: 62.6, slope: 104),
             ],
-            holes: holes
+            holes: holes,
+            coordinate: GeorgetownGPS.courseCenter
         )
     }()
 

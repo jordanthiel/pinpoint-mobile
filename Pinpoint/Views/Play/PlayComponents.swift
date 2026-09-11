@@ -102,3 +102,82 @@ struct HolePickerBar: View {
         }
     }
 }
+
+/// 18-hole grid overlay used to jump holes from the GPS view.
+struct HoleGridPicker: View {
+    var holes: [Int]
+    var current: Int
+    var onSelect: (Int) -> Void
+    var onFinish: () -> Void
+
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 6)
+
+    var body: some View {
+        VStack(spacing: 14) {
+            LazyVGrid(columns: columns, spacing: 10) {
+                ForEach(holes, id: \.self) { n in
+                    Button {
+                        onSelect(n)
+                    } label: {
+                        Text("\(n)")
+                            .font(.headline.weight(.semibold).monospacedDigit())
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 40)
+                            .foregroundStyle(n == current ? PinpointTheme.accent : .primary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            Button(action: onFinish) {
+                Text("Finish Round")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(PrimaryButtonStyle())
+        }
+        .padding(16)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+    }
+}
+
+struct MapHUDChip: View {
+    var title: String
+    var value: String
+
+    var body: some View {
+        VStack(spacing: 1) {
+            Text(title)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.white.opacity(0.7))
+            Text(value)
+                .font(.headline.weight(.bold).monospacedDigit())
+                .foregroundStyle(.white)
+        }
+        .frame(minWidth: 52)
+    }
+}
+
+struct MapCircleButton: View {
+    var systemImage: String
+    var label: String? = nil
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Image(systemName: systemImage)
+                    .font(.body.weight(.semibold))
+                    .frame(width: 44, height: 44)
+                    .background(.black.opacity(0.72), in: Circle())
+                    .foregroundStyle(.white)
+                if let label {
+                    Text(label)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .shadow(color: .black.opacity(0.6), radius: 2)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+}

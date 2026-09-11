@@ -139,9 +139,18 @@ final class RoundStore {
               let hole = round.score(for: holeNumber)
         else { return (150, .tee) }
         if hole.shots.isEmpty {
+            if let ball = round.ballCoordinate(for: holeNumber),
+               let pin = round.pinCoordinate(for: holeNumber) {
+                return (ball.yards(to: pin), .tee)
+            }
             return (Double(holeDef.yardage), .tee)
         }
-        // Walk the shots: each shot's carry eats into the remaining distance.
+        // Prefer live GPS remaining when the last shot has an end point.
+        if let ball = round.ballCoordinate(for: holeNumber),
+           let pin = round.pinCoordinate(for: holeNumber) {
+            let remaining = ball.yards(to: pin)
+            return (remaining, nextLie(after: hole.shots[hole.shots.count - 1], remaining: remaining))
+        }
         var remaining = Double(holeDef.yardage)
         var lie: Lie = .tee
         for shot in hole.shots {

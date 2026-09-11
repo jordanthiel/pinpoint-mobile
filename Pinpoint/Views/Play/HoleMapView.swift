@@ -1,161 +1,303 @@
+import MapKit
 import SwiftUI
 
-/// Schematic hole map (no tile dependency): fairway with dogleg, bunkers,
-/// green, shot trail with per-leg distances, tee / ball / pin markers.
+/// Full-bleed satellite hole map: tee → green corridor, shot trail, front/mid/back
+/// distances, and a tap-to-measure target like a GPS rangefinder.
 struct HoleMapView: View {
-    var hole: GolfHole
+    @Binding var position: MapCameraPosition
+    var layout: HoleLayout
+    var pin: GeoPoint
+    var ball: GeoPoint
     var shots: [TrackedShot]
-    /// Remaining yards ball -> pin, drives the ball marker position.
-    var remainingYards: Double
-    var pinX: Double
-    var pinY: Double
+    var measurePoint: GeoPoint?
+    var showsUserLocation: Bool
+    var showsGreenDistances: Bool
+    var putts: Int = 0
+    var firstPuttFeet: Double? = nil
+    var onTapCoordinate: ((GeoPoint) -> Void)?
+    var onSelectShot: ((TrackedShot) -> Void)?
 
     var body: some View {
-        GeometryReader { geo in
-            let w = geo.size.width
-            let h = geo.size.height
-            ZStack {
-                // Grass backdrop.
-                LinearGradient(colors: [Color(red: 0.16, green: 0.32, blue: 0.20),
-                                        Color(red: 0.10, green: 0.22, blue: 0.14)],
-                               startPoint: .top, endPoint: .bottom)
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        MapReader { proxy in
+            Map(position: $position, interactionModes: [.pan, .zoom, .rotate]) {
+                if !layout.greenOutline.isEmpty {
+                    MapPolygon(coordinates: layout.greenOutline.map(\.coordinate))
+                        .foregroundStyle(Color.green.opacity(0.28))
+                        .stroke(.white.opacity(0.45), lineWidth: 1)
+                }
 
-                Canvas { ctx, size in
-                    let tee = CGPoint(x: size.width * 0.5, y: size.height * 0.92)
-                    let green = CGPoint(x: size.width * (0.5 + hole.dogleg * 0.18), y: size.height * 0.10)
-                    let mid = CGPoint(x: (tee.x + green.x) / 2 + CGFloat(hole.dogleg) * size.width * 0.22,
-                                      y: (tee.y + green.y) / 2)
+                MapPolyline(coordinates: corridorCoordinates)
+                    .stroke(.white.opacity(0.88), lineWidth: 2.2)
 
-                    // Fairway ribbon tee -> mid -> green.
-                    var fairway = Path()
-                    fairway.move(to: tee)
-                    fairway.addQuadCurve(to: mid, control: CGPoint(x: (tee.x + mid.x) / 2, y: (tee.y + mid.y) / 2))
-                    fairway.addQuadCurve(to: green, control: CGPoint(x: (mid.x + green.x) / 2, y: (mid.y + green.y) / 2))
-                    ctx.stroke(fairway, with: .color(Color(red: 0.30, green: 0.55, blue: 0.30)), lineWidth: size.width * 0.16)
-                    ctx.stroke(fairway, with: .color(Color(red: 0.36, green: 0.62, blue: 0.34)), lineWidth: size.width * 0.11)
-
-                    // Bunkers flanking the green.
-                    for (dx, dy, r) in [(-0.10, 0.02, 0.045), (0.11, -0.01, 0.055), (0.02, 0.07, 0.04)] as [(Double, Double, Double)] {
-                        let c = CGPoint(x: green.x + CGFloat(dx) * size.width, y: green.y + CGFloat(dy) * size.height)
-                        ctx.fill(Path(ellipseIn: CGRect(x: c.x - CGFloat(r) * size.width, y: c.y - CGFloat(r) * size.width,
-                                                        width: CGFloat(r) * 2 * size.width, height: CGFloat(r) * 1.5 * size.width)),
-                                 with: .color(Color(red: 0.85, green: 0.80, blue: 0.62)))
-                    }
-
-                    // Green.
-                    let gr = size.width * 0.13
-                    ctx.fill(Path(ellipseIn: CGRect(x: green.x - gr, y: green.y - gr * 0.8, width: gr * 2, height: gr * 1.6)),
-                             with: .color(Color(red: 0.42, green: 0.70, blue: 0.38)))
-
-                    // Shot trail.
-                    let points = trailPoints(size: size, tee: tee, green: green)
-                    if points.count >= 2 {
-                        var trail = Path()
-                        trail.move(to: points[0])
-                        for p in points.dropFirst() { trail.addLine(to: p) }
-                        ctx.stroke(trail, with: .color(.white.opacity(0.9)), lineWidth: 2)
-                        for (i, p) in points.enumerated() {
-                            let dot = Path(ellipseIn: CGRect(x: p.x - 5, y: p.y - 5, width: 10, height: 10))
-                            ctx.fill(dot, with: .color(i == points.count - 1 ? .blue : .white))
-                        }
+                if let measurePoint {
+                    MapPolyline(coordinates: [measurePoint.coordinate, pin.coordinate])
+                        .stroke(.white, lineWidth: 2)
+                    if ball.yards(to: measurePoint) > 4 {
+                        MapPolyline(coordinates: [ball.coordinate, measurePoint.coordinate])
+                            .stroke(PinpointTheme.accent.opacity(0.9), lineWidth: 2)
                     }
                 }
 
-                // Overlays: tee marker, ball, pin, leg distances.
-                mapOverlays(width: w, height: h)
+                Annotation("Tee", coordinate: layout.tee.coordinate, anchor: .center) {
+                    shotBadge(text: "T", fill: .white, foreground: .black)
+                }
+                Annotation("Pin", coordinate: pin.coordinate, anchor: .bottom) {
+                    VStack(spacing: 4) {
+                        if putts > 0 || firstPuttFeet != nil {
+                            VStack(spacing: 2) {
+                                if putts > 0 {
+                                    Text("Putts  \(putts)")
+                                }
+                                if let firstPuttFeet {
+                                    Text("1st Putt  \(Int(firstPuttFeet.rounded())) Ft")
+                                }
+                            }
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(.black.opacity(0.55), in: Capsule())
+                        }
+                        Image(systemName: "flag.fill")
+                            .font(.title3)
+                            .foregroundStyle(.yellow)
+                            .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
+                        Circle()
+                            .fill(.black)
+                            .frame(width: 10, height: 5)
+                    }
+                }
+
+                ForEach(Array(placedShots.enumerated()), id: \.element.id) { _, item in
+                    Annotation("Shot \(item.number)", coordinate: item.point.coordinate, anchor: .center) {
+                        Button {
+                            if let shot = shots.first(where: { $0.id == item.id }) {
+                                onSelectShot?(shot)
+                            }
+                        } label: {
+                            shotBadge(
+                                text: item.isPutt ? "P" : "\(item.number)",
+                                fill: item.isPutt ? Color(red: 0.18, green: 0.72, blue: 0.38) : Color(red: 0.13, green: 0.45, blue: 0.98),
+                                foreground: .white,
+                                caption: item.caption
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+
+                ForEach(distanceLabels) { label in
+                    Annotation(label.id, coordinate: label.point.coordinate, anchor: .center) {
+                        Text(label.text)
+                            .font(.caption.weight(.bold).monospacedDigit())
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(.black.opacity(0.58), in: Capsule())
+                    }
+                }
+
+                if let measurePoint {
+                    Annotation("Target", coordinate: measurePoint.coordinate, anchor: .center) {
+                        ZStack {
+                            Circle()
+                                .stroke(.white, lineWidth: 2)
+                                .background(Circle().fill(Color.red))
+                                .frame(width: 18, height: 18)
+                            Circle()
+                                .fill(.white)
+                                .frame(width: 5, height: 5)
+                        }
+                        .shadow(color: .black.opacity(0.35), radius: 3, y: 1)
+                    }
+                }
+
+                if showsUserLocation {
+                    UserAnnotation()
+                }
+            }
+            .mapStyle(.imagery(elevation: .realistic))
+            .mapControls {
+                MapCompass()
+                    .mapControlVisibility(.hidden)
+            }
+            .gesture(
+                SpatialTapGesture().onEnded { event in
+                    if let coord = proxy.convert(event.location, from: .local) {
+                        onTapCoordinate?(GeoPoint(latitude: coord.latitude, longitude: coord.longitude))
+                    }
+                }
+            )
+        }
+    }
+
+    // MARK: - Geometry
+
+    private var corridorCoordinates: [CLLocationCoordinate2D] {
+        var pts = layout.path
+        if pts.isEmpty { pts = [layout.tee, pin] }
+        if let measurePoint {
+            return [ball.coordinate, measurePoint.coordinate, pin.coordinate]
+        }
+        if ball.yards(to: layout.tee) > 8 {
+            return [ball.coordinate, pin.coordinate]
+        }
+        return pts.map(\.coordinate)
+    }
+
+    private struct PlacedShot: Identifiable {
+        var id: UUID
+        var number: Int
+        var point: GeoPoint
+        var isPutt: Bool
+        var caption: String?
+    }
+
+    private var placedShots: [PlacedShot] {
+        var items: [PlacedShot] = []
+        var cursor = layout.tee
+        var remaining = layout.tee.yards(to: pin)
+        for shot in shots {
+            if let end = shot.end {
+                cursor = end
+            } else {
+                let carry = shot.carryYards ?? shot.club?.stockYards ?? 120
+                remaining = max(0, remaining - carry)
+                cursor = layout.point(afterTravelling: layout.tee.yards(to: pin) - remaining, toward: pin)
+            }
+            if shot.end != nil || !shot.isPutt {
+                var caption: String?
+                if let lieCode = Optional(shot.lie.code) {
+                    if let carry = shot.carryYards {
+                        caption = "\(lieCode) · \(Int(carry))"
+                    } else {
+                        caption = lieCode
+                    }
+                }
+                items.append(PlacedShot(id: shot.id, number: shot.number, point: cursor,
+                                        isPutt: shot.isPutt, caption: caption))
+            }
+        }
+        return items
+    }
+
+    private struct DistanceLabel: Identifiable {
+        var id: String
+        var point: GeoPoint
+        var text: String
+    }
+
+    private var distanceLabels: [DistanceLabel] {
+        if let measurePoint {
+            let toPin = measurePoint.yards(to: pin)
+            let fromBall = ball.yards(to: measurePoint)
+            var labels = [
+                DistanceLabel(id: "measure-pin",
+                              point: measurePoint.midpoint(to: pin),
+                              text: "\(Int(toPin.rounded())) Yds")
+            ]
+            if fromBall > 8 {
+                labels.append(DistanceLabel(id: "measure-carry",
+                                            point: ball.midpoint(to: measurePoint),
+                                            text: "\(Int(fromBall.rounded())) Yds"))
+            }
+            return labels
+        }
+
+        var labels: [DistanceLabel] = []
+        if showsGreenDistances {
+            let front = ball.yards(to: layout.greenFront)
+            let mid = ball.yards(to: layout.greenCenter)
+            let back = ball.yards(to: layout.greenBack)
+            labels.append(DistanceLabel(id: "front", point: layout.greenFront.offset(eastYards: -14, northYards: 8),
+                                        text: "\(Int(front.rounded())) Yds"))
+            labels.append(DistanceLabel(id: "mid", point: layout.greenCenter.offset(eastYards: 16, northYards: 0),
+                                        text: "\(Int(mid.rounded())) Yds"))
+            if abs(back - mid) > 6 {
+                labels.append(DistanceLabel(id: "back", point: layout.greenBack.offset(eastYards: -10, northYards: -8),
+                                            text: "\(Int(back.rounded())) Yds"))
+            }
+        }
+
+        var prev = layout.tee
+        var remaining = layout.tee.yards(to: pin)
+        for (idx, shot) in shots.enumerated() where !shot.isPutt {
+            let next: GeoPoint
+            if let end = shot.end {
+                next = end
+            } else {
+                let carry = shot.carryYards ?? shot.club?.stockYards ?? 120
+                remaining = max(0, remaining - carry)
+                next = layout.point(afterTravelling: layout.tee.yards(to: pin) - remaining, toward: pin)
+            }
+            let yards = shot.carryYards ?? prev.yards(to: next)
+            if yards > 8 {
+                labels.append(DistanceLabel(id: "leg-\(idx)",
+                                            point: prev.midpoint(to: next).offset(eastYards: 12, northYards: 0),
+                                            text: "\(Int(yards.rounded())) Yds"))
+            }
+            prev = next
+        }
+        let leftover = prev.yards(to: pin)
+        if leftover > 12, !shots.isEmpty {
+            labels.append(DistanceLabel(id: "remain",
+                                        point: prev.midpoint(to: pin).offset(eastYards: -12, northYards: 0),
+                                        text: "\(Int(leftover.rounded())) Yds"))
+        }
+        return labels
+    }
+
+    private func shotBadge(text: String, fill: Color, foreground: Color, caption: String? = nil) -> some View {
+        VStack(spacing: 2) {
+            ZStack {
+                Circle()
+                    .fill(fill)
+                    .frame(width: 28, height: 28)
+                    .shadow(color: .black.opacity(0.35), radius: 2, y: 1)
+                Text(text)
+                    .font(.caption.weight(.bold).monospacedDigit())
+                    .foregroundStyle(foreground)
+            }
+            if let caption {
+                Text(caption)
+                    .font(.caption2.weight(.semibold).monospacedDigit())
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(.black.opacity(0.55), in: Capsule())
             }
         }
     }
+}
 
-    // MARK: - Trail math (mirrors the Canvas geometry)
-
-    private func fairwayPoint(_ t: Double, size: CGSize) -> CGPoint {
-        // Piecewise: tee(0) -> apex(0.5) -> green(1), lateral dogleg bow.
-        let tee = CGPoint(x: size.width * 0.5, y: size.height * 0.92)
-        let green = CGPoint(x: size.width * (0.5 + hole.dogleg * 0.18), y: size.height * 0.10)
-        let bow = CGFloat(hole.dogleg) * size.width * 0.22
-        let x = tee.x + (green.x - tee.x) * t + bow * sin(t * .pi)
-        let y = tee.y + (green.y - tee.y) * t
-        return CGPoint(x: x, y: y)
+extension HoleLayout {
+    func cameraPosition(pin: GeoPoint? = nil) -> MapCameraPosition {
+        let target = pin ?? self.pin
+        return .camera(
+            MapCamera(
+                centerCoordinate: cameraCenter.coordinate,
+                distance: cameraDistance(),
+                heading: tee.bearing(to: target),
+                pitch: 0
+            )
+        )
     }
 
-    private func trailPoints(size: CGSize, tee: CGPoint, green: CGPoint) -> [CGPoint] {
-        guard !shots.isEmpty else { return [tee] }
-        var points = [tee]
-        var travelled: Double = 0
-        let total = max(1, Double(hole.yardage))
-        for shot in shots {
-            travelled += min(total - travelled, shot.carryYards ?? shot.club?.stockYards ?? 120)
-            let t = min(1, travelled / total)
-            // Lateral scatter for offline shapes.
-            var p = fairwayPoint(t, size: size)
-            if shot.shape == .slice || shot.shape == .push { p.x += size.width * 0.06 }
-            if shot.shape == .hook || shot.shape == .pull { p.x -= size.width * 0.06 }
-            points.append(p)
-        }
-        // Live ball marker: interpolate toward remaining distance.
-        let done = min(1, (total - remainingYards) / total)
-        points.append(fairwayPoint(max(0, done), size: size))
-        return points
+    func greenCameraPosition(pin: GeoPoint? = nil) -> MapCameraPosition {
+        let target = pin ?? greenCenter
+        return .camera(
+            MapCamera(
+                centerCoordinate: target.coordinate,
+                distance: 92,
+                heading: headingDegrees,
+                pitch: 0
+            )
+        )
     }
 
-    @ViewBuilder
-    private func mapOverlays(width: CGFloat, height: CGFloat) -> some View {
-        let size = CGSize(width: width, height: height)
-        let pts = trailPoints(size: size,
-                              tee: CGPoint(x: width * 0.5, y: height * 0.92),
-                              green: CGPoint(x: width * (0.5 + hole.dogleg * 0.18), y: height * 0.10))
-        // Per-leg distance labels between consecutive shot points.
-        ForEach(1..<pts.count, id: \.self) { i in
-            let a = pts[i - 1]
-            let b = pts[i]
-            let frac = i <= shots.count ? legFraction(i) : remainingFraction
-            Text(frac)
-                .font(.caption2.weight(.bold).monospacedDigit())
-                .foregroundStyle(.white)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 3)
-                .background(.black.opacity(0.55), in: Capsule())
-                .position(x: (a.x + b.x) / 2 + 34, y: (a.y + b.y) / 2)
-        }
-        // Tee + ball markers.
-        if let first = pts.first {
-            mapPin(number: nil, color: .white, position: first, label: "T")
-        }
-        if let last = pts.last, pts.count > 1 {
-            mapPin(number: shots.count, color: .blue, position: last, label: nil)
-        }
-        // Pin flag on the green.
-        let green = CGPoint(x: width * (0.5 + hole.dogleg * 0.18), y: height * 0.10)
-        Image(systemName: "flag.fill")
-            .foregroundStyle(.yellow)
-            .position(x: green.x + CGFloat(pinX - 0.5) * 40, y: green.y + CGFloat(0.5 - pinY) * 30)
-    }
-
-    private func legFraction(_ i: Int) -> String {
-        let idx = i - 1
-        guard shots.indices.contains(idx) else { return "" }
-        let s = shots[idx]
-        if let c = s.carryYards { return "\(Int(c))" }
-        if let d = s.distanceToPinBeforeYards, shots.indices.contains(idx + 1),
-           let n = shots[idx + 1].distanceToPinBeforeYards {
-            return "\(Int(max(0, d - n)))"
-        }
-        return s.club.map { "\(Int($0.stockYards))" } ?? ""
-    }
-
-    private var remainingFraction: String { "\(Int(max(0, remainingYards)))" }
-
-    private func mapPin(number: Int?, color: Color, position: CGPoint, label: String?) -> some View {
-        ZStack {
-            Circle()
-                .fill(color)
-                .frame(width: 30, height: 30)
-            Text(number.map(String.init) ?? label ?? "")
-                .font(.caption.weight(.bold))
-                .foregroundStyle(color == .white ? .black : .white)
-        }
-        .position(position)
+    func contains(_ point: GeoPoint, slackYards: Double = 140) -> Bool {
+        if point.yards(to: pin) < slackYards { return true }
+        if point.yards(to: tee) < slackYards { return true }
+        return path.contains { point.yards(to: $0) < slackYards }
     }
 }

@@ -57,24 +57,35 @@ struct ScorecardView: View {
     }
 
     private func header(round: GolfRound) -> some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(round.courseName)
-                    .font(.title3.weight(.bold))
-                Text("\(round.teeName) · \(round.roundType.label)")
-                    .font(.subheadline)
-                    .foregroundStyle(PinpointTheme.secondaryText)
+        VStack(alignment: .leading, spacing: 10) {
+            Text("\(round.startedAt.formatted(date: .numeric, time: .omitted)) · Duration: \(round.durationLabel)")
+                .font(.caption)
+                .foregroundStyle(PinpointTheme.secondaryText)
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(round.courseName)
+                        .font(.title3.weight(.bold))
+                    if let tee = SampleCourses.georgetown.tee(named: round.teeName) {
+                        Text("\(round.teeName) · \(String(format: "%.1f", tee.rating))/\(tee.slope) (Rating/Slope)")
+                            .font(.subheadline)
+                            .foregroundStyle(PinpointTheme.accent)
+                    } else {
+                        Text("\(round.teeName) · \(round.roundType.label)")
+                            .font(.subheadline)
+                            .foregroundStyle(PinpointTheme.secondaryText)
+                    }
+                }
+                Spacer()
+                VStack {
+                    Text("Gross/Net")
+                        .font(.caption2)
+                        .foregroundStyle(PinpointTheme.secondaryText)
+                    Text("\(round.totalGross)/\(round.totalGross)")
+                        .font(.title2.weight(.bold).monospacedDigit())
+                }
+                .padding(10)
+                .background(PinpointTheme.surfaceElevated, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
-            Spacer()
-            VStack {
-                Text("Gross/Net")
-                    .font(.caption2)
-                    .foregroundStyle(PinpointTheme.secondaryText)
-                Text("\(round.totalGross)/\(round.totalGross)")
-                    .font(.title2.weight(.bold).monospacedDigit())
-            }
-            .padding(10)
-            .background(PinpointTheme.surfaceElevated, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .padding(16)
     }
@@ -214,13 +225,21 @@ struct ScorecardView: View {
         HStack(spacing: 10) {
             if round.status == .active {
                 Button {
+                    dismiss()
+                } label: {
+                    Text("Back to GPS")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                Button {
                     showSummary = true
                 } label: {
                     Text("Finish Round")
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(PrimaryButtonStyle())
+                .buttonStyle(SecondaryButtonStyle())
             } else {
                 Button("Done") { dismiss() }
                     .buttonStyle(PrimaryButtonStyle())

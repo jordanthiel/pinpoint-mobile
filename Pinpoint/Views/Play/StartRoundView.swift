@@ -49,7 +49,7 @@ struct StartRoundView: View {
                                 scoringMode = .smart
                             }
                         }
-                        Text("Smart Tracking auto-tracks shots from your watch and turns end-of-hole dictations into club, contact and shape data.")
+                        Text("Smart Tracking uses satellite GPS for distances, drop-a-pin shot entry, watch detections, and end-of-hole dictation.")
                             .font(.footnote)
                             .foregroundStyle(PinpointTheme.secondaryText)
 
@@ -160,6 +160,7 @@ struct StartRoundView: View {
         switch name.lowercased() {
         case "blue": return .blue
         case "white": return .white
+        case "yellow": return .yellow
         case "red": return .red
         default: return .gray
         }

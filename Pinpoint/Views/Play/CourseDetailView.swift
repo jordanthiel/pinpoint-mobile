@@ -1,3 +1,4 @@
+import MapKit
 import SwiftUI
 
 /// Course home: header art, Start Round, tips + personal stats at this course.
@@ -51,20 +52,27 @@ struct CourseDetailView: View {
 
     private var courseHeader: some View {
         ZStack(alignment: .bottomLeading) {
-            // Stylized aerial: layered greens evoke a flyover without map tiles.
-            LinearGradient(colors: [.green.opacity(0.55), .green.opacity(0.25), PinpointTheme.surface],
-                           startPoint: .top, endPoint: .bottom)
-                .frame(height: 190)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .overlay(alignment: .topTrailing) {
-                    Text("PREMIUM TOOLS")
-                        .font(.caption2.weight(.bold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(PinpointTheme.accent, in: Capsule())
-                        .padding(12)
+            Map(initialPosition: .camera(MapCamera(
+                centerCoordinate: (course.coordinate ?? GeorgetownGPS.courseCenter).coordinate,
+                distance: 1400,
+                heading: 28,
+                pitch: 0
+            ))) {
+                if let tee = course.layout(for: 1)?.tee, let pin = course.layout(for: 1)?.pin {
+                    MapPolyline(coordinates: [tee.coordinate, pin.coordinate])
+                        .stroke(.white.opacity(0.7), lineWidth: 2)
                 }
+            }
+            .mapStyle(.imagery)
+            .mapControls { }
+            .frame(height: 240)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .allowsHitTesting(false)
+
+            LinearGradient(colors: [.clear, .black.opacity(0.72)],
+                           startPoint: .top, endPoint: .bottom)
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
                     Image(systemName: "mappin.circle.fill")
@@ -72,11 +80,12 @@ struct CourseDetailView: View {
                     Text(course.location)
                         .font(.subheadline)
                         .foregroundStyle(.white.opacity(0.85))
+                        .lineLimit(1)
                 }
                 Text(course.name)
                     .font(.title.weight(.bold))
                     .foregroundStyle(.white)
-                Text("Par \(course.totalPar) · Blue 6427 yds")
+                Text("Par \(course.totalPar) · Blue 5374 yds")
                     .font(.subheadline)
                     .foregroundStyle(.white.opacity(0.8))
             }

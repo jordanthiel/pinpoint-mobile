@@ -8,6 +8,8 @@ struct ShotEditorView: View {
     var holeNumber: Int
     var holeYardage: Int
     var existing: TrackedShot?
+    var prefillStart: GeoPoint? = nil
+    var prefillEnd: GeoPoint? = nil
     var onDone: () -> Void = {}
 
     @State private var lie: Lie = .tee
@@ -79,8 +81,14 @@ struct ShotEditorView: View {
         } else if let round = rounds.activeRound {
             let ball = rounds.ballState(holeNumber)
             lie = ball.lie
-            distanceToPin = "\(Int(ball.distanceYards))"
-            // Sensible default club for the number: driver off the first tee.
+            if let start = prefillStart, let pin = round.pinCoordinate(for: holeNumber) {
+                distanceToPin = "\(Int(start.yards(to: pin).rounded()))"
+            } else {
+                distanceToPin = "\(Int(ball.distanceYards))"
+            }
+            if let start = prefillStart, let end = prefillEnd {
+                carry = "\(Int(start.yards(to: end).rounded()))"
+            }
             let count = round.score(for: holeNumber)?.shots.count ?? 0
             if count == 0 {
                 club = holeYardage > 220 ? .driver : .iron7
@@ -96,40 +104,52 @@ struct ShotEditorView: View {
 
     private var header: some View {
         HStack {
-            Text("Shot \(existing?.number ?? rounds.nextShotNumber(holeNumber)) · Hole \(holeNumber)")
+            Text("Shot \(existing?.number ?? rounds.nextShotNumber(holeNumber))")
                 .font(.headline)
+            + Text("  (Distance to Pin)")
+                .font(.subheadline)
+                .foregroundStyle(PinpointTheme.secondaryText)
             Spacer()
-            Text("\(distanceToPin.isEmpty ? "–" : distanceToPin) Yds to pin")
-                .font(.headline.monospacedDigit())
+            Text("\(distanceToPin.isEmpty ? "–" : distanceToPin) Yds")
+                .font(.title3.weight(.bold).monospacedDigit())
         }
     }
 
     private var lieSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Lie").font(.headline)
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 10) {
-                ForEach(Lie.allCases) { l in
-                    Button {
-                        lie = l
-                        if l == .green { club = .putter }
-                    } label: {
-                        VStack(spacing: 4) {
-                            Text(l.code)
-                                .font(.headline.weight(.bold))
-                                .frame(width: 52, height: 52)
-                                .background(lie == l ? PinpointTheme.accent.opacity(0.25) : PinpointTheme.surfaceElevated,
-                                            in: Circle())
-                                .overlay(Circle().stroke(lie == l ? PinpointTheme.accent : .clear, lineWidth: 2))
-                                .foregroundStyle(lie == l ? PinpointTheme.accent : .white)
-                            Text(l.label)
-                                .font(.caption2)
-                                .foregroundStyle(PinpointTheme.secondaryText)
-                        }
-                    }
-                    .buttonStyle(.plain)
+            HStack(spacing: 8) {
+                ForEach([Lie.tee, .fairway, .sand, .rough, .recovery], id: \.self) { l in
+                    lieButton(l)
                 }
             }
+            HStack(spacing: 8) {
+                ForEach([Lie.fringe, .green], id: \.self) { l in
+                    lieButton(l)
+                }
+                Spacer()
+            }
         }
+    }
+
+    private func lieButton(_ l: Lie) -> some View {
+        Button {
+            lie = l
+            if l == .green { club = .putter }
+        } label: {
+            VStack(spacing: 6) {
+                Text(l.code)
+                    .font(.headline.weight(.bold))
+                    .frame(width: 52, height: 52)
+                    .background(lie == l ? .white : PinpointTheme.surfaceElevated, in: Circle())
+                    .overlay(Circle().stroke(lie == l ? PinpointTheme.accent : Color.white.opacity(0.12), lineWidth: 1.5))
+                    .foregroundStyle(lie == l ? PinpointTheme.accent : .white)
+                Text(l.label)
+                    .font(.caption2)
+                    .foregroundStyle(PinpointTheme.secondaryText)
+            }
+        }
+        .buttonStyle(.plain)
     }
 
     private var penaltySection: some View {
@@ -172,6 +192,12 @@ struct ShotEditorView: View {
                         .foregroundStyle(PinpointTheme.accent)
                 }
             }
+            if let club {
+                Text(club.displayName)
+                    .font(.largeTitle.weight(.bold))
+                    .foregroundStyle(PinpointTheme.accent)
+                    .frame(maxWidth: .infinity)
+            }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(GolfClub.allCases) { c in
@@ -205,18 +231,19 @@ struct ShotEditorView: View {
                 Text("True Distance").font(.headline)
                 Spacer()
                 Text("\(carry.isEmpty ? "–" : carry) Yds")
-                    .font(.headline.monospacedDigit())
+                    .font(.title3.weight(.bold).monospacedDigit())
             }
             TextField("Carry yards", text: $carry)
                 .keyboardType(.numberPad)
                 .padding(12)
                 .background(PinpointTheme.surfaceElevated, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-            TextField("Distance to pin before shot", text: $distanceToPin)
-                .keyboardType(.numberPad)
-                .padding(12)
-                .background(PinpointTheme.surfaceElevated, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             Toggle("Include this shot in True Distance?", isOn: $includeTrue)
                 .font(.subheadline)
+            if let start = existing?.start ?? prefillStart, let end = existing?.end ?? prefillEnd {
+                Text("Mapped \(Int(start.yards(to: end).rounded())) yds from the satellite drop.")
+                    .font(.caption)
+                    .foregroundStyle(PinpointTheme.secondaryText)
+            }
         }
     }
 
@@ -272,13 +299,22 @@ struct ShotEditorView: View {
 
     private var saveRow: some View {
         Button {
+            let start = existing?.start ?? prefillStart
+            let end = existing?.end ?? prefillEnd
+            let computedCarry: Double? = {
+                if let value = Double(carry) { return value }
+                if let start, let end { return start.yards(to: end) }
+                return nil
+            }()
             let shot = TrackedShot(
                 id: existing?.id ?? UUID(),
                 number: existing?.number ?? rounds.nextShotNumber(holeNumber),
                 club: club,
                 lie: lie,
                 distanceToPinBeforeYards: Double(distanceToPin),
-                carryYards: Double(carry),
+                carryYards: computedCarry,
+                start: start,
+                end: end,
                 contact: contact,
                 shape: shape,
                 quality: quality,
