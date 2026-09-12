@@ -1,17 +1,14 @@
 import Foundation
-#if canImport(MapKit)
 import MapKit
-#endif
+import SwiftUI
 
 // Real Georgetown Country Club GPS from OpenStreetMap (tees, greens, pins, hole corridors).
 // Scorecard yardages / rating match the published Blue tees (18Birdies / club card).
 
 extension GeoPoint {
-#if canImport(MapKit)
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
-#endif
 
     /// Offset this point by yards east / north.
     func offset(eastYards: Double, northYards: Double) -> GeoPoint {
@@ -160,7 +157,6 @@ struct HoleLayout: Codable, Hashable, Equatable {
         tee.midpoint(to: pin)
     }
 
-#if canImport(MapKit)
     func cameraPosition(pin: GeoPoint? = nil) -> MapCameraPosition {
         let target = pin ?? self.pin
         return .camera(
@@ -184,7 +180,6 @@ struct HoleLayout: Codable, Hashable, Equatable {
             )
         )
     }
-#endif
 
     /// Tee → pin, plus at most one real dogleg apex. OSM jogs become a straight hole.
     var playPath: [GeoPoint] {
