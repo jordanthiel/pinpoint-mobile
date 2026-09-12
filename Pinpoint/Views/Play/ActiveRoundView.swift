@@ -1,8 +1,8 @@
 import MapKit
 import SwiftUI
 
-/// Live GPS hole view: satellite map, draggable target and tee, shot trail,
-/// pin edit, and 18Birdies-style score / next-hole chrome.
+/// Live GPS hole view: satellite map, fixed-center rangefinder, and
+/// 18Birdies-style hole / wind / score chrome. Dictation is the only extra.
 struct ActiveRoundView: View {
     @Environment(RoundStore.self) private var rounds
     @Environment(\.dismiss) private var dismiss
@@ -23,15 +23,13 @@ struct ActiveRoundView: View {
     @State private var showWatch = false
     @State private var showHolePicker = false
     @State private var showBag = false
-    @State private var measurePoint = Self.openingTarget
-    @State private var seededTargetHole: Int?
+    @State private var measurePoint = Self.openingCenter
     @State private var cameraPosition: MapCameraPosition =
         GeorgetownGPS.layout(for: 1)?.cameraPosition() ?? .automatic
     @State private var location = PlayerLocation()
 
-    private static var openingTarget: GeoPoint {
-        guard let layout = GeorgetownGPS.layout(for: 1) else { return GeorgetownGPS.courseCenter }
-        return layout.tee.defaultShotTarget(toward: layout.pin)
+    private static var openingCenter: GeoPoint {
+        GeorgetownGPS.layout(for: 1)?.cameraCenter ?? GeorgetownGPS.courseCenter
     }
 
     var body: some View {
@@ -54,7 +52,6 @@ struct ActiveRoundView: View {
             let hole = selectedHole ?? round.currentHoleNumber
             selectedHole = hole
             applyCamera(round: round, holeNumber: hole)
-            seedTargetIfNeeded(round: round, holeNumber: hole)
         }
         .onDisappear { location.stop() }
     }
@@ -71,6 +68,7 @@ struct ActiveRoundView: View {
 
         return ZStack {
             if let layout, let pin, let tee, let holeDef, let hole {
+                let helping = cos((layout.headingDegrees - round.windFromDegrees) * .pi / 180)
                 HoleMapView(
                     position: $cameraPosition,
                     layout: layout,
@@ -80,28 +78,25 @@ struct ActiveRoundView: View {
                     shots: hole.shots,
                     target: measurePoint,
                     showsUserLocation: onThisHole,
-                    showsGreenDistances: hole.shots.isEmpty,
-                    putts: hole.putts,
-                    firstPuttFeet: hole.firstPuttFeet,
                     bag: rounds.clubBag,
-                    onDragTarget: { measurePoint = $0 },
-                    onDragTee: { geo in
-                        rounds.updateHole(holeNum) {
-                            $0.teeLatitude = geo.latitude
-                            $0.teeLongitude = geo.longitude
+                    windMph: round.windMph,
+                    windHelping: helping,
+                    onMeasure: { geo in
+                        if measurePoint.yards(to: geo) > 0.4 {
+                            measurePoint = geo
                         }
                     },
                     onSelectShot: { shot in
                         editingShot = shot
                         pendingMeasure = nil
                         showShotEditor = true
-                    }
+                    },
+                    onOpenBag: { showBag = true }
                 )
                 .ignoresSafeArea()
-                .onAppear { seedTargetIfNeeded(round: round, holeNumber: holeNum) }
                 .onChange(of: holeNum) { _, newHole in
                     guard let round = rounds.activeRound else { return }
-                    seedTargetIfNeeded(round: round, holeNumber: newHole)
+                    applyCamera(round: round, holeNumber: newHole)
                 }
 
                 gpsChrome(round: round, holeNumber: holeNum, def: holeDef, hole: hole,
@@ -123,9 +118,6 @@ struct ActiveRoundView: View {
                     onDone: {
                         editingShot = nil
                         pendingMeasure = nil
-                        if let round = rounds.activeRound {
-                            seedTarget(round: round, holeNumber: holeNum)
-                        }
                     }
                 )
                 .preferredColorScheme(.dark)
@@ -203,6 +195,10 @@ struct ActiveRoundView: View {
         }
         .confirmationDialog("Tools", isPresented: $showTools, titleVisibility: .visible) {
             Button("Add shot") { openNewShot(at: measurePoint) }
+            Button("Edit pin") {
+                greenMode = .pin
+                showGreen = true
+            }
             Button("Reset tee") {
                 rounds.updateHole(holeNum) {
                     $0.teeLatitude = nil
@@ -239,14 +235,9 @@ struct ActiveRoundView: View {
 
     private func gpsChrome(round: GolfRound, holeNumber: Int, def: GolfHole, hole: HoleScore,
                            layout: HoleLayout, pin: GeoPoint, ball: GeoPoint, onThisHole: Bool) -> some View {
-        let targetYards = ball.yards(to: measurePoint)
-        let toPin = ball.yards(to: pin)
-        let helping = cos((layout.headingDegrees - round.windFromDegrees) * .pi / 180)
-        let playsLike = CaddieEngine.playsLike(yards: targetYards, windMph: round.windMph, windHelping: helping)
-        let rec = CaddieEngine.recommendEntry(for: playsLike, bag: rounds.clubBag)
+        VStack(spacing: 0) {
+            topBar(round: round, holeNumber: holeNumber, def: def, ball: ball, pin: pin, layout: layout)
 
-        return VStack(spacing: 0) {
-            topBar(hole: hole, targetYards: targetYards, recommendation: rec, onThisHole: onThisHole)
             if showHolePicker {
                 HoleGridPicker(
                     holes: round.holeScores.map(\.holeNumber),
@@ -259,97 +250,14 @@ struct ActiveRoundView: View {
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
 
-            Spacer()
-
-            HStack(alignment: .bottom) {
-                playsLikePill(yards: targetYards, playsLike: playsLike, recommendation: rec)
-                Spacer()
-                VStack(spacing: 12) {
-                    MapCircleButton(systemImage: "arrow.uturn.backward", label: "Revert") {
-                        seedTarget(round: round, holeNumber: holeNumber)
-                    }
-                    MapCircleButton(systemImage: "bag.fill", label: "Bag") {
-                        showBag = true
-                    }
-                    MapCircleButton(systemImage: "mic.fill", label: "Dictate") {
-                        showDictation = true
-                    }
-                    windDial(round)
-                    MapCircleButton(systemImage: "flag.fill", label: nil) {
-                        greenMode = .pin
-                        showGreen = true
-                    }
-                }
-            }
-            .padding(.horizontal, 14)
-            .padding(.bottom, 10)
-
-            bottomBar(round: round, holeNumber: holeNumber, hole: hole, toPin: toPin)
-        }
-        .animation(.easeInOut(duration: 0.22), value: showHolePicker)
-    }
-
-    private func topBar(hole: HoleScore, targetYards: Double,
-                        recommendation: (entry: ClubBagEntry, swingEffort: Double)?,
-                        onThisHole: Bool) -> some View {
-        VStack(spacing: 8) {
-            HStack(alignment: .center, spacing: 10) {
-                HStack(spacing: 16) {
-                    MapHUDChip(title: "Score", value: hole.hasScore ? "\(hole.grossScore)" : "–")
-                    MapHUDChip(title: "Shot", value: hole.shots.isEmpty ? (hole.hasScore ? "–" : "1") : "\(hole.isComplete ? hole.shots.count : hole.shots.count + 1)")
-                    MapHUDChip(title: "Putt", value: hole.hasScore ? "\(hole.putts)" : "–")
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .background(.black.opacity(0.78), in: Capsule())
-
-                Spacer(minLength: 8)
-
-                Button {
-                    greenMode = .pin
-                    showGreen = true
-                } label: {
-                    Text("Edit Pin\nLocation")
-                        .font(.caption.weight(.semibold))
-                        .multilineTextAlignment(.center)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
-                        .background(.black.opacity(0.78), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                }
-                .buttonStyle(.plain)
-            }
-
-            HStack {
-                Text("Drag the red target")
-                    .font(.caption.weight(.semibold))
-                Spacer()
-                HStack(spacing: 8) {
-                    Circle().fill(.red).frame(width: 10, height: 10)
-                    Text("\(Int(targetYards.rounded()))")
-                        .font(.system(size: 40, weight: .bold, design: .rounded).monospacedDigit())
-                    Text("Yds")
-                        .font(.headline.weight(.semibold))
-                    if let recommendation {
-                        Text("·")
-                            .foregroundStyle(.white.opacity(0.5))
-                        Text(recommendation.entry.shortLabel)
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                    }
-                }
-            }
-            .foregroundStyle(.white)
-            .padding(.horizontal, 18)
-            .padding(.vertical, 10)
-            .background(.black.opacity(0.78), in: Capsule())
-
             if location.coordinate != nil, !onThisHole {
                 Text("GPS is off this hole — yardages use the tee / last shot")
                     .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.85))
+                    .foregroundStyle(.white.opacity(0.9))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(.black.opacity(0.55), in: Capsule())
+                    .background(Color.black.opacity(0.72), in: Capsule())
+                    .padding(.top, 8)
             }
             if hole.hasScore, hole.shots.isEmpty {
                 Button {
@@ -363,6 +271,7 @@ struct ActiveRoundView: View {
                         .background(PinpointTheme.accent.opacity(0.85), in: Capsule())
                 }
                 .buttonStyle(.plain)
+                .padding(.top, 8)
             }
             if let note = hole.analysisNote, !note.isEmpty {
                 Text(note)
@@ -370,126 +279,152 @@ struct ActiveRoundView: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(.black.opacity(0.62), in: Capsule())
+                    .background(Color.black.opacity(0.62), in: Capsule())
+                    .padding(.top, 8)
             }
-        }
-        .padding(.horizontal, 12)
-        .padding(.top, 8)
-    }
 
-    private func playsLikePill(yards: Double, playsLike: Double,
-                               recommendation: (entry: ClubBagEntry, swingEffort: Double)?) -> some View {
-        let entry = recommendation?.entry
-        let carry = entry.map { Int($0.carryYards.rounded()) }
-        return Button {
-            showBag = true
-        } label: {
-            HStack(spacing: 10) {
-                Text("\(Int(yards.rounded()))")
-                    .font(.largeTitle.weight(.bold).monospacedDigit())
-                + Text("y")
-                    .font(.caption.weight(.semibold))
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(entry?.fullLabel ?? "Set your bag")
-                        .font(.headline.weight(.bold))
-                    Text(carry.map { "Plays like \(Int(playsLike.rounded()))y · \($0)y club" }
-                         ?? "Plays like \(Int(playsLike.rounded()))y")
-                        .font(.caption.weight(.semibold).monospacedDigit())
-                        .foregroundStyle(.secondary)
+            Spacer(minLength: 0)
+                .allowsHitTesting(false)
+
+            HStack(alignment: .bottom) {
+                Spacer(minLength: 0)
+                    .allowsHitTesting(false)
+                VStack(spacing: 10) {
+                    BirdiesWindCard(mph: round.windMph, fromDegrees: round.windFromDegrees)
+                    BirdiesRailButton(systemImage: "plus", accessibilityTitle: "Add shot") {
+                        openNewShot(at: measurePoint)
+                    }
+                    BirdiesRailButton(systemImage: "dot.scope", accessibilityTitle: "Recenter hole") {
+                        applyCamera(round: round, holeNumber: holeNumber)
+                    }
+                    BirdiesRailButton(systemImage: "doc", accessibilityTitle: "Hole score") {
+                        advanceAfterScore = false
+                        showHoleScore = true
+                    }
+                    BirdiesRailButton(systemImage: "mic.fill", accessibilityTitle: "Dictate hole") {
+                        showDictation = true
+                    }
                 }
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-            .background(.ultraThinMaterial, in: Capsule())
+            .padding(.horizontal, 12)
+            .padding(.bottom, 12)
+
+            bottomBar(round: round, holeNumber: holeNumber)
         }
-        .buttonStyle(.plain)
+        .animation(.easeInOut(duration: 0.22), value: showHolePicker)
     }
 
-    private func windDial(_ round: GolfRound) -> some View {
-        VStack(spacing: 4) {
-            Text("Wind")
-                .font(.caption2.weight(.semibold))
-            Image(systemName: "arrow.down")
-                .font(.body.weight(.bold))
-                .rotationEffect(.degrees(round.windFromDegrees))
-            Text("\(Int(round.windMph)) mph")
-                .font(.caption.weight(.bold).monospacedDigit())
-        }
-        .foregroundStyle(.white)
-        .frame(width: 58)
-        .padding(.vertical, 10)
-        .background(.black.opacity(0.72), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-    }
-
-    private func bottomBar(round: GolfRound, holeNumber: Int, hole: HoleScore, toPin: Double) -> some View {
+    private func topBar(round: GolfRound, holeNumber: Int, def: GolfHole,
+                        ball: GeoPoint, pin: GeoPoint, layout: HoleLayout) -> some View {
+        let mid = Int(ball.yards(to: layout.greenCenter).rounded())
+        let toGreen = Int(ball.yards(to: pin).rounded())
         let order = round.holeScores.map(\.holeNumber)
         let idx = order.firstIndex(of: holeNumber) ?? 0
         let isLast = idx == order.count - 1
-        return VStack(spacing: 10) {
-            HStack {
-                MapCircleButton(systemImage: "line.3.horizontal") { showTools = true }
-                Spacer()
-                HStack(spacing: 14) {
-                    Button {
-                        if idx > 0 { jump(to: order[idx - 1], in: round) }
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.body.weight(.bold))
-                    }
-                    .disabled(idx == 0)
-                    Button { showHolePicker.toggle() } label: {
-                        Text("Hole \(holeNumber)")
-                            .font(.headline.monospacedDigit())
-                    }
-                    Button {
-                        if !isLast { jump(to: order[idx + 1], in: round) }
-                    } label: {
-                        Image(systemName: "chevron.right")
-                            .font(.body.weight(.bold))
-                    }
-                    .disabled(isLast)
+
+        return HStack(spacing: 6) {
+            Button { dismiss() } label: {
+                Image(systemName: "chevron.left")
+                    .font(.body.weight(.bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 34, height: 44)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Back")
+
+            Button { showHolePicker.toggle() } label: {
+                VStack(spacing: 1) {
+                    Text("\(holeNumber)")
+                        .font(.system(size: 26, weight: .bold, design: .rounded).monospacedDigit())
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 8, weight: .bold))
                 }
                 .foregroundStyle(.white)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .background(.black.opacity(0.72), in: Capsule())
-                Spacer()
-                MapCircleButton(systemImage: "plus") {
-                    openNewShot(at: measurePoint)
-                }
+                .frame(width: 34)
             }
-            .padding(.horizontal, 12)
+            .buttonStyle(.plain)
+            .accessibilityLabel("Hole \(holeNumber)")
 
-            HStack(spacing: 10) {
-                Button {
-                    advanceAfterScore = false
-                    showHoleScore = true
-                } label: {
-                    Text(hole.hasScore ? "Edit Score" : "Enter Score")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(SecondaryButtonStyle())
-                Button {
-                    requestNextHole(round: round, holeNumber: holeNumber, hole: hole, toPin: toPin)
-                } label: {
-                    Text(isLast ? "Review Scorecard" : "Go to Next Hole")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(PrimaryButtonStyle())
+            HStack(spacing: 0) {
+                BirdiesTopStat(title: "Mid", value: "\(mid)y")
+                BirdiesTopStat(title: "Green", value: "\(toGreen)y")
+                BirdiesTopStat(title: "Par", value: "\(def.par)")
+                BirdiesTopStat(title: round.teeName, value: "\(def.yardage)")
+                BirdiesTopStat(title: "Handicap", value: "\(def.handicap)")
             }
-            .padding(.horizontal, 12)
-            .padding(.bottom, 8)
+            .frame(maxWidth: .infinity)
+
+            Button {
+                if !isLast {
+                    jump(to: order[idx + 1], in: round)
+                } else {
+                    showScorecard = true
+                }
+            } label: {
+                Image(systemName: "chevron.right")
+                    .font(.body.weight(.bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 28, height: 44)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(isLast ? "Review scorecard" : "Next hole")
         }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(Color.black, in: Capsule())
+        .padding(.horizontal, 10)
         .padding(.top, 6)
-        .background(
-            LinearGradient(colors: [.clear, .black.opacity(0.55)], startPoint: .top, endPoint: .bottom)
-                .ignoresSafeArea(edges: .bottom)
-        )
+    }
+
+    private func bottomBar(round: GolfRound, holeNumber: Int) -> some View {
+        let order = round.holeScores.map(\.holeNumber)
+        let idx = order.firstIndex(of: holeNumber) ?? 0
+        let isLast = idx == order.count - 1
+
+        return HStack(alignment: .bottom, spacing: 8) {
+            BirdiesDockButton(systemImage: "target", title: "Scorecard") {
+                showScorecard = true
+            }
+            .frame(maxWidth: .infinity)
+
+            HStack(spacing: 14) {
+                Button {
+                    if idx > 0 { jump(to: order[idx - 1], in: round) }
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.body.weight(.bold))
+                }
+                .disabled(idx == 0)
+                .opacity(idx == 0 ? 0.35 : 1)
+
+                Button { showHolePicker.toggle() } label: {
+                    Text("Hole \(holeNumber)")
+                        .font(.headline.monospacedDigit())
+                }
+
+                Button {
+                    if !isLast {
+                        jump(to: order[idx + 1], in: round)
+                    } else {
+                        showScorecard = true
+                    }
+                } label: {
+                    Image(systemName: "chevron.right")
+                        .font(.body.weight(.bold))
+                }
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 12)
+            .background(Color.black, in: Capsule())
+
+            BirdiesDockButton(systemImage: "doc.badge.gearshape", title: "Tools") {
+                showTools = true
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .padding(.horizontal, 12)
+        .padding(.bottom, 8)
     }
 
     // MARK: - Actions
@@ -507,21 +442,8 @@ struct ActiveRoundView: View {
     private func applyCamera(round: GolfRound, holeNumber: Int) {
         if let layout = round.playLayout(for: holeNumber) {
             cameraPosition = layout.cameraPosition(pin: round.pinCoordinate(for: holeNumber))
+            measurePoint = layout.cameraCenter
         }
-    }
-
-    private func seedTarget(round: GolfRound, holeNumber: Int) {
-        let ball = liveBall(round: round, holeNumber: holeNumber)
-        let pin = round.pinCoordinate(for: holeNumber)
-            ?? round.playLayout(for: holeNumber)?.pin
-            ?? GeorgetownGPS.courseCenter
-        measurePoint = ball.defaultShotTarget(toward: pin)
-        seededTargetHole = holeNumber
-    }
-
-    private func seedTargetIfNeeded(round: GolfRound, holeNumber: Int) {
-        guard seededTargetHole != holeNumber else { return }
-        seedTarget(round: round, holeNumber: holeNumber)
     }
 
     private func jump(to number: Int, in round: GolfRound) {
@@ -529,22 +451,12 @@ struct ActiveRoundView: View {
         rounds.setCurrentHole(number)
         showHolePicker = false
         applyCamera(round: round, holeNumber: number)
-        seedTarget(round: round, holeNumber: number)
     }
 
     private func openNewShot(at point: GeoPoint) {
         editingShot = nil
         pendingMeasure = point
         showShotEditor = true
-    }
-
-    private func requestNextHole(round: GolfRound, holeNumber: Int, hole: HoleScore, toPin: Double) {
-        if !hole.hasScore {
-            advanceAfterScore = true
-            showHoleScore = true
-            return
-        }
-        advanceHole(round: round, holeNumber: holeNumber, hole: hole, toPin: toPin)
     }
 
     private func handleScoreSaved(mapShots: Bool, holeNumber: Int, shouldAdvance: Bool) {
