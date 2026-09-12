@@ -157,6 +157,176 @@ struct MapHUDChip: View {
     }
 }
 
+/// Compact Mid / Green / Par / tee / handicap column used in the GPS top bar.
+struct BirdiesTopStat: View {
+    var title: String
+    var value: String
+
+    var body: some View {
+        VStack(spacing: 2) {
+            Text(title)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.62))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            Text(value)
+                .font(.system(size: 17, weight: .bold, design: .rounded).monospacedDigit())
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+/// 18Birdies-style right-rail circle (solid black on satellite).
+struct BirdiesRailButton: View {
+    var systemImage: String
+    var accessibilityTitle: String
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(.white)
+                .frame(width: 50, height: 50)
+                .background(Color.black, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text(accessibilityTitle))
+    }
+}
+
+/// Bottom-bar Scorecard / Tools control: circle + caption.
+struct BirdiesDockButton: View {
+    var systemImage: String
+    var title: String
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Image(systemName: systemImage)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 50, height: 50)
+                    .background(Color.black, in: Circle())
+                Text(title)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.55), radius: 2)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// Wind card on the right rail: label, heading arrow, mph.
+struct BirdiesWindCard: View {
+    var mph: Double
+    var fromDegrees: Double
+
+    var body: some View {
+        VStack(spacing: 5) {
+            HStack(spacing: 2) {
+                Text("Wind")
+                    .font(.caption2.weight(.semibold))
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 8, weight: .bold))
+            }
+            Image(systemName: "arrow.down")
+                .font(.body.weight(.bold))
+                .rotationEffect(.degrees(fromDegrees))
+            Text("\(Int(mph.rounded()))mph")
+                .font(.caption.weight(.bold).monospacedDigit())
+        }
+        .foregroundStyle(.white)
+        .frame(width: 50)
+        .padding(.vertical, 10)
+        .background(Color.black, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+}
+
+/// Fixed camera-center rangefinder, matching the 18Birdies satellite crosshair.
+struct CenterCrosshair: View {
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(Color.white.opacity(0.95), lineWidth: 1.6)
+                .frame(width: 46, height: 46)
+            Circle()
+                .fill(Color.white)
+                .frame(width: 5, height: 5)
+            ForEach(0..<4, id: \.self) { i in
+                Capsule()
+                    .fill(Color.white)
+                    .frame(width: i.isMultiple(of: 2) ? 1.6 : 11, height: i.isMultiple(of: 2) ? 11 : 1.6)
+                    .offset(
+                        x: i == 1 ? 23 : i == 3 ? -23 : 0,
+                        y: i == 0 ? -23 : i == 2 ? 23 : 0
+                    )
+            }
+        }
+        .shadow(color: .black.opacity(0.35), radius: 1.5)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Distance + Plays Like chip that sits on the play line (circle on the left).
+struct PlaysLikeLinePill: View {
+    var yards: Int
+    var playsLike: Int
+    var club: String?
+    var action: () -> Void = {}
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: -6) {
+                Text("\(yards)y")
+                    .font(.system(size: 20, weight: .bold, design: .rounded).monospacedDigit())
+                    .foregroundStyle(.white)
+                    .frame(width: 62, height: 62)
+                    .background(Color.black, in: Circle())
+                    .zIndex(1)
+
+                VStack(alignment: .leading, spacing: 1) {
+                    HStack(spacing: 3) {
+                        Text("Plays like")
+                            .font(.caption.weight(.semibold))
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 9, weight: .bold))
+                    }
+                    HStack(spacing: 4) {
+                        Text("\(playsLike)y")
+                            .font(.subheadline.weight(.bold).monospacedDigit())
+                        if let club, !club.isEmpty {
+                            Text(club)
+                                .font(.subheadline.weight(.bold))
+                        }
+                    }
+                }
+                .foregroundStyle(.black)
+                .padding(.leading, 14)
+                .padding(.trailing, 12)
+                .padding(.vertical, 8)
+                .background(Color.white, in: Capsule())
+            }
+            .shadow(color: .black.opacity(0.28), radius: 5, y: 1)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text(accessibilityText))
+    }
+
+    private var accessibilityText: String {
+        if let club, !club.isEmpty {
+            return "\(yards) yards, plays like \(playsLike) yards, \(club)"
+        }
+        return "\(yards) yards, plays like \(playsLike) yards"
+    }
+}
+
 struct MapCircleButton: View {
     var systemImage: String
     var label: String? = nil
@@ -167,8 +337,8 @@ struct MapCircleButton: View {
             VStack(spacing: 4) {
                 Image(systemName: systemImage)
                     .font(.body.weight(.semibold))
-                    .frame(width: 44, height: 44)
-                    .background(.black.opacity(0.72), in: Circle())
+                    .frame(width: 50, height: 50)
+                    .background(Color.black, in: Circle())
                     .foregroundStyle(.white)
                 if let label {
                     Text(label)

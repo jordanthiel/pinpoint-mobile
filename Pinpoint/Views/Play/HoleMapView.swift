@@ -1,7 +1,9 @@
 import MapKit
 import SwiftUI
 
-/// Full-bleed satellite hole map with a draggable target and tee.
+/// Full-bleed satellite hole map. The rangefinder is a fixed center crosshair:
+/// panning the map moves the landing spot under the reticle and live-updates
+/// the Plays Like pills on the play line.
 struct HoleMapView: View {
     @Binding var position: MapCameraPosition
     var layout: HoleLayout
@@ -11,42 +13,22 @@ struct HoleMapView: View {
     var shots: [TrackedShot]
     var target: GeoPoint
     var showsUserLocation: Bool
-    var showsGreenDistances: Bool
-    var putts: Int = 0
-    var firstPuttFeet: Double? = nil
     var bag: ClubBag = .standard
-    var onDragTarget: (GeoPoint) -> Void
-    var onDragTee: (GeoPoint) -> Void
+    var windMph: Double = 0
+    var windHelping: Double = 0
+    var onMeasure: (GeoPoint) -> Void
     var onSelectShot: ((TrackedShot) -> Void)?
+    var onOpenBag: () -> Void = {}
 
     @State private var selectedShotID: UUID?
-    @State private var isDragging = false
-
-    private var liveYards: Int { Int(ball.yards(to: target).rounded()) }
-    private var liveEntry: ClubBagEntry? {
-        CaddieEngine.recommendEntry(for: Double(liveYards), bag: bag)?.entry
-    }
-
-    private var mapModes: MapInteractionModes { isDragging ? [] : [.pan, .zoom] }
+    @State private var mapSize: CGSize = .zero
 
     var body: some View {
         MapReader { proxy in
             ZStack {
-                Map(position: $position, interactionModes: mapModes, selection: $selectedShotID) {
-                    if !layout.greenOutline.isEmpty {
-                        MapPolygon(coordinates: layout.smoothedGreenOutline.map(\.coordinate))
-                            .foregroundStyle(Color.green.opacity(0.24))
-                            .stroke(Color.white.opacity(0.62), lineWidth: 2)
-                    }
-
-                    MapPolyline(coordinates: layout.playPath.map(\.coordinate))
-                        .stroke(.white.opacity(0.38), lineWidth: 3)
-
+                Map(position: $position, interactionModes: [.pan, .zoom], selection: $selectedShotID) {
                     MapPolyline(coordinates: [ball.coordinate, target.coordinate, pin.coordinate])
-                        .stroke(.white.opacity(0.96), lineWidth: 4)
-
-                    Marker(pinMarkerTitle, systemImage: "flag.fill", coordinate: pin.coordinate)
-                        .tint(.yellow)
+                        .stroke(.white.opacity(0.96), lineWidth: 2)
 
                     ForEach(placedShots) { item in
                         Marker(item.markerTitle, monogram: Text(item.monogram), coordinate: item.point.coordinate)
@@ -59,97 +41,102 @@ struct HoleMapView: View {
                     }
                 }
                 .mapStyle(.imagery(elevation: .realistic))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .mapControls {
                     MapCompass()
                         .mapControlVisibility(.hidden)
+                }
+                .onMapCameraChange(frequency: .continuous) { context in
+                    let center = context.camera.centerCoordinate
+                    onMeasure(GeoPoint(latitude: center.latitude, longitude: center.longitude))
                 }
                 .onChange(of: selectedShotID) { _, id in
                     if let id, let shot = shots.first(where: { $0.id == id }) {
                         onSelectShot?(shot)
                     }
                 }
-
-                distanceOverlays(proxy: proxy)
-
-                MapDragHandle(proxy: proxy, point: tee, isDragging: $isDragging, onMove: onDragTee) {
-                    handleBadge(title: "TEE", color: .white, textColor: .black)
-                }
-
-                MapDragHandle(proxy: proxy, point: target, isDragging: $isDragging, onMove: onDragTarget) {
-                    VStack(spacing: 6) {
-                        VStack(spacing: 2) {
-                            Text("\(liveYards) Yds")
-                                .font(.system(size: 28, weight: .heavy, design: .rounded).monospacedDigit())
-                            if let liveEntry {
-                                Text(liveEntry.fullLabel)
-                                    .font(.headline.weight(.bold))
-                            }
-                        }
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(.black.opacity(0.8), in: Capsule())
-
-                        ZStack {
-                            Circle()
-                                .fill(.red)
-                                .frame(width: 34, height: 34)
-                            Circle()
-                                .stroke(.white, lineWidth: 3)
-                                .frame(width: 34, height: 34)
-                            Image(systemName: "plus")
-                                .font(.body.weight(.bold))
-                                .foregroundStyle(.white)
-                        }
-                        .frame(width: 56, height: 56)
-                        .contentShape(Circle())
+                .background {
+                    GeometryReader { geo in
+                        Color.clear
+                            .onAppear { mapSize = geo.size }
+                            .onChange(of: geo.size) { _, size in mapSize = size }
                     }
-                    .offset(y: -28)
                 }
-            }
-            .coordinateSpace(name: MapDragSpace.name)
-        }
-    }
 
-    private func handleBadge(title: String, color: Color, textColor: Color) -> some View {
-        Text(title)
-            .font(.caption.weight(.heavy))
-            .foregroundStyle(textColor)
-            .frame(width: 44, height: 44)
-            .background(color, in: Circle())
-            .overlay(Circle().stroke(.black.opacity(0.35), lineWidth: 1))
-            .shadow(color: .black.opacity(0.45), radius: 4, y: 1)
+                lineFurniture(proxy: proxy, size: mapSize)
+
+                CenterCrosshair()
+            }
+        }
     }
 
     @ViewBuilder
-    private func distanceOverlays(proxy: MapProxy) -> some View {
-        ForEach(distanceLabels) { label in
-            if let screen = proxy.convert(label.point.coordinate, to: .local) {
-                Text(label.text)
-                    .font(.system(size: 22, weight: .bold, design: .rounded).monospacedDigit())
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 7)
-                    .background(.black.opacity(0.78), in: Capsule())
-                    .shadow(color: .black.opacity(0.45), radius: 4, y: 1)
-                    .position(screen)
-                    .allowsHitTesting(false)
-            }
+    private func lineFurniture(proxy: MapProxy, size: CGSize) -> some View {
+        if let ballScreen = proxy.convert(ball.coordinate, to: .local) {
+            corridorDot(diameter: 10)
+                .position(ballScreen)
+                .allowsHitTesting(false)
+        }
+        if let pinScreen = proxy.convert(pin.coordinate, to: .local) {
+            corridorDot(diameter: 12)
+                .position(pinScreen)
+                .allowsHitTesting(false)
+        }
+
+        let carryYards = ball.yards(to: target)
+        let remainYards = target.yards(to: pin)
+
+        if carryYards > 8,
+           let a = proxy.convert(ball.coordinate, to: .local),
+           let b = proxy.convert(target.coordinate, to: .local) {
+            let spot = leftOfLine(from: a, to: b, t: 0.52, distance: 86, in: size)
+            let info = playsLike(for: carryYards)
+            PlaysLikeLinePill(yards: info.raw, playsLike: info.like, club: info.club, action: onOpenBag)
+                .position(spot)
+        }
+
+        if remainYards > 8,
+           let a = proxy.convert(target.coordinate, to: .local),
+           let b = proxy.convert(pin.coordinate, to: .local) {
+            let spot = leftOfLine(from: a, to: b, t: 0.48, distance: 86, in: size)
+            let info = playsLike(for: remainYards)
+            PlaysLikeLinePill(yards: info.raw, playsLike: info.like, club: info.club, action: onOpenBag)
+                .position(spot)
         }
     }
 
-    private var pinMarkerTitle: String {
-        var parts = ["Pin"]
-        if putts > 0 { parts.append("Putts \(putts)") }
-        if let firstPuttFeet { parts.append("1st \(Int(firstPuttFeet.rounded())) ft") }
-        return parts.joined(separator: " · ")
+    private func corridorDot(diameter: CGFloat) -> some View {
+        Circle()
+            .fill(Color.white)
+            .frame(width: diameter, height: diameter)
+            .overlay(Circle().stroke(Color.black.opacity(0.28), lineWidth: 0.8))
+            .shadow(color: .black.opacity(0.35), radius: 2, y: 1)
     }
 
-    private func labeledYards(_ yards: Double, prefix: String = "") -> String {
-        CaddieEngine.yardsClubLabel(yards: yards, bag: bag, prefix: prefix)
+    private func playsLike(for yards: Double) -> (raw: Int, like: Int, club: String?) {
+        let like = CaddieEngine.playsLike(yards: yards, windMph: windMph, windHelping: windHelping)
+        let club = CaddieEngine.recommendEntry(for: like, bag: bag)?.entry.shortLabel
+        return (Int(yards.rounded()), Int(like.rounded()), club)
     }
 
-    // MARK: - Geometry
+    /// Place a pill to the screen-left of the play line, clamped on-screen.
+    private func leftOfLine(from a: CGPoint, to b: CGPoint, t: CGFloat, distance: CGFloat, in size: CGSize) -> CGPoint {
+        let px = a.x + (b.x - a.x) * t
+        let py = a.y + (b.y - a.y) * t
+        let dx = b.x - a.x
+        let dy = b.y - a.y
+        let len = max(1, hypot(dx, dy))
+        let n1 = CGPoint(x: px - dy / len * distance, y: py + dx / len * distance)
+        let n2 = CGPoint(x: px + dy / len * distance, y: py - dx / len * distance)
+        let chosen = n1.x <= n2.x ? n1 : n2
+        guard size.width > 80, size.height > 80 else { return chosen }
+        return CGPoint(
+            x: min(max(chosen.x, 92), max(92, size.width - 92)),
+            y: min(max(chosen.y, 120), max(120, size.height - 140))
+        )
+    }
+
+    // MARK: - Shot trail
 
     private struct PlacedShot: Identifiable {
         var id: UUID
@@ -179,53 +166,15 @@ struct HoleMapView: View {
             }
             if shot.end != nil || !shot.isPutt {
                 var caption: String?
-                if let lieCode = Optional(shot.lie.code) {
-                    if let carry = shot.carryYards {
-                        caption = "\(lieCode) · \(Int(carry))"
-                    } else {
-                        caption = lieCode
-                    }
+                if let carry = shot.carryYards {
+                    caption = "\(shot.lie.code) · \(Int(carry))"
+                } else {
+                    caption = shot.lie.code
                 }
                 items.append(PlacedShot(id: shot.id, number: shot.number, point: cursor,
                                         isPutt: shot.isPutt, caption: caption))
             }
         }
         return items
-    }
-
-    private struct DistanceLabel: Identifiable {
-        var id: String
-        var point: GeoPoint
-        var text: String
-    }
-
-    private var distanceLabels: [DistanceLabel] {
-        var labels: [DistanceLabel] = []
-
-        if showsGreenDistances {
-            let front = ball.yards(to: layout.greenFront)
-            let mid = ball.yards(to: layout.greenCenter)
-            let back = ball.yards(to: layout.greenBack)
-            labels.append(DistanceLabel(id: "front", point: layout.greenFront,
-                                        text: labeledYards(front, prefix: "F ")))
-            labels.append(DistanceLabel(id: "mid", point: layout.greenCenter,
-                                        text: labeledYards(mid)))
-            if abs(back - mid) > 6 {
-                labels.append(DistanceLabel(id: "back", point: layout.greenBack,
-                                            text: labeledYards(back, prefix: "B ")))
-            }
-        }
-
-        let toPin = target.yards(to: pin)
-        let fromBall = ball.yards(to: target)
-        labels.append(DistanceLabel(id: "measure-pin",
-                                    point: target.midpoint(to: pin),
-                                    text: labeledYards(toPin)))
-        if fromBall > 8 {
-            labels.append(DistanceLabel(id: "measure-carry",
-                                        point: ball.midpoint(to: target),
-                                        text: labeledYards(fromBall)))
-        }
-        return labels
     }
 }

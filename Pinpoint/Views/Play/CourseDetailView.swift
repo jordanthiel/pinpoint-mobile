@@ -241,7 +241,7 @@ struct CourseDetailView: View {
     private var bagSubtitle: String {
         let shots = rounds.clubBag.shotClubs.count
         if shots == 0 { return "Add clubs and carries for live map clubs" }
-        return "\(shots) clubs · map updates as you drag"
+        return "\(shots) clubs · map updates as you pan"
     }
 
     private var watchSubtitle: String {

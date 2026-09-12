@@ -63,7 +63,7 @@ struct PlayStatsView: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(PinpointTheme.accent)
             }
-            Text("The GPS map picks a club from these carries as you drag.")
+            Text("The GPS map picks a club from these carries as you pan.")
                 .font(.caption)
                 .foregroundStyle(PinpointTheme.secondaryText)
             if bag.isEmpty {
