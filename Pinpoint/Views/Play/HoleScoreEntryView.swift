@@ -1,38 +1,18 @@
 import SwiftUI
 
-/// 18Birdies-style hole close-out: enter score / putts / penalties first,
-/// then optionally map shots. Saving does not require any TrackedShots.
+/// 18Birdies-style hole close-out sheet: light card with a score tile grid
+/// (golf circle/square glyphs), putts row, and a Finish Hole advance.
+/// Saving writes the card score/putts; penalties and fairway stay untouched.
 struct HoleScoreEntryView: View {
     @Environment(RoundStore.self) private var rounds
     @Environment(\.dismiss) private var dismiss
 
     var holeNumber: Int
-    var onFinished: (_ mapShots: Bool) -> Void = { _ in }
+    var onFinished: () -> Void = {}
 
     @State private var score: Int = 4
     @State private var putts: Int = 2
-    @State private var penalties: Int = 0
-    @State private var fairway: FairwayPick = .na
-
-    private enum FairwayPick: Hashable {
-        case hit, miss, na
-
-        var recorded: Bool? {
-            switch self {
-            case .hit: return true
-            case .miss: return false
-            case .na: return nil
-            }
-        }
-
-        init(recorded: Bool?) {
-            switch recorded {
-            case true: self = .hit
-            case false: self = .miss
-            case nil: self = .na
-            }
-        }
-    }
+    @State private var showExtendedScores = false
 
     private var holeDef: GolfHole? {
         rounds.activeRound?.hole(holeNumber)
@@ -43,43 +23,34 @@ struct HoleScoreEntryView: View {
     }
 
     private var par: Int { holeDef?.par ?? 4 }
-    private var yardage: Int { holeDef?.yardage ?? 0 }
 
-    private var scoreChips: [Int] {
-        HoleScore.scoreChipValues(par: par, current: score)
-    }
-
-    private var previewName: String {
-        var hs = HoleScore(holeNumber: holeNumber)
-        hs.applyRecordedScore(score: score, putts: putts, penalties: penalties, fairwayHit: fairway.recorded)
-        return hs.scoreName(par: par)
-    }
-
-    private var previewGIR: Bool {
-        (score - putts) <= max(1, par - 2)
+    private var scoreValues: [Int] {
+        showExtendedScores ? Array(1...12) : Array(1...9)
     }
 
     var body: some View {
         NavigationStack {
             ZStack {
-                PinpointTheme.background.ignoresSafeArea()
+                Color.white.ignoresSafeArea()
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 22) {
-                        header
+                    VStack(alignment: .leading, spacing: 18) {
+                        Text("Hole \(holeNumber)")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundStyle(.black)
+
                         scoreSection
+
+                        Divider()
+
                         puttsSection
-                        penaltiesSection
-                        if par > 3 {
-                            fairwaySection
-                        }
-                        derivedLine
-                        saveRow
+
+                        bottomRow
                     }
-                    .padding(20)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+                    .padding(.bottom, 20)
                 }
             }
-            .navigationTitle("Hole \(holeNumber)")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { dismiss() }
@@ -89,154 +60,154 @@ struct HoleScoreEntryView: View {
         }
     }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Hole \(holeNumber)  ·  Par \(par)  ·  \(yardage) yds")
-                .font(.title3.weight(.bold))
-            Text(previewName)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(PlayUI.scoreColor(score: score, par: par))
+    private var scoreSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Score")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(.black)
+                Spacer()
+                Button(showExtendedScores ? "Less" : "Others") {
+                    showExtendedScores.toggle()
+                }
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Color(red: 0.1, green: 0.4, blue: 1.0))
+                .buttonStyle(.plain)
+            }
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
+                ForEach(scoreValues, id: \.self) { value in
+                    scoreTile(value)
+                }
+            }
         }
     }
 
-    private var scoreSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("Score").font(.headline)
-                Spacer()
-                HStack(spacing: 12) {
-                    stepperButton(systemImage: "minus") {
-                        score = max(1, score - 1)
+    private func scoreTile(_ value: Int) -> some View {
+        Button {
+            score = value
+        } label: {
+            ZStack {
+                if value == par {
+                    VStack(spacing: 0) {
+                        Text("\(value)")
+                            .font(.system(size: 26, weight: .medium))
+                            .foregroundStyle(.black)
+                        Text("Par")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(Color.black.opacity(0.55))
                     }
-                    Text("\(score)")
-                        .font(.title2.weight(.bold).monospacedDigit())
-                        .frame(minWidth: 28)
-                    stepperButton(systemImage: "plus") {
-                        score += 1
-                    }
+                } else {
+                    scoreGlyph(value)
+                    Text("\(value)")
+                        .font(.system(size: 26, weight: .medium))
+                        .foregroundStyle(.black)
                 }
             }
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
-                ForEach(scoreChips, id: \.self) { value in
-                    chip(title: "\(value)", selected: score == value, accentPar: value == par) {
-                        score = value
-                    }
-                }
+            .frame(maxWidth: .infinity, minHeight: 76)
+            .background(
+                score == value ? Color(red: 0.85, green: 0.91, blue: 1.0) : Color(red: 0.94, green: 0.96, blue: 0.98),
+                in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// Golf scoring glyphs: circles under par, squares over par, doubled for
+    /// eagle-or-better / double-bogey-or-worse.
+    private func scoreGlyph(_ value: Int) -> some View {
+        Group {
+            if value < par - 1 {
+                doubleCircle
+            } else if value == par - 1 {
+                singleCircle
+            } else if value == par + 1 {
+                singleSquare
+            } else {
+                doubleSquare
             }
+        }
+    }
+
+    private var glyphStroke: some ShapeStyle {
+        Color.black.opacity(0.35)
+    }
+
+    private var singleCircle: some View {
+        Circle().stroke(glyphStroke, lineWidth: 1.5).frame(width: 46, height: 46)
+    }
+
+    private var doubleCircle: some View {
+        ZStack {
+            Circle().stroke(glyphStroke, lineWidth: 1.5).frame(width: 48, height: 48)
+            Circle().stroke(glyphStroke, lineWidth: 1).frame(width: 42, height: 42)
+        }
+    }
+
+    private var singleSquare: some View {
+        Rectangle().stroke(glyphStroke, lineWidth: 1.5).frame(width: 44, height: 44)
+    }
+
+    private var doubleSquare: some View {
+        ZStack {
+            Rectangle().stroke(glyphStroke, lineWidth: 1.5).frame(width: 46, height: 46)
+            Rectangle().stroke(glyphStroke, lineWidth: 1).frame(width: 40, height: 40)
         }
     }
 
     private var puttsSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Putts").font(.headline)
-            HStack(spacing: 8) {
-                ForEach(0..<4, id: \.self) { value in
-                    chip(title: "\(value)", selected: putts == value) {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Putts")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(.black)
+            HStack(spacing: 10) {
+                ForEach(0...4, id: \.self) { value in
+                    Button {
                         putts = value
+                    } label: {
+                        Text("\(value)")
+                            .font(.system(size: 22, weight: .medium))
+                            .foregroundStyle(.black)
+                            .frame(maxWidth: .infinity, minHeight: 62)
+                            .background(
+                                putts == value ? Color(red: 0.85, green: 0.91, blue: 1.0) : Color(red: 0.94, green: 0.96, blue: 0.98),
+                                in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            )
                     }
-                }
-                chip(title: putts >= 4 ? "\(putts)+" : "4+", selected: putts >= 4) {
-                    putts = putts >= 4 ? min(8, putts + 1) : 4
+                    .buttonStyle(.plain)
                 }
             }
         }
     }
 
-    private var penaltiesSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Penalties").font(.headline)
-            HStack(spacing: 8) {
-                ForEach(0..<3, id: \.self) { value in
-                    chip(title: "\(value)", selected: penalties == value) {
-                        penalties = value
-                    }
+    private var bottomRow: some View {
+        HStack {
+            Spacer()
+            VStack(spacing: 2) {
+                Text("Hole \(holeNumber)")
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundStyle(.black)
+                Button("Finish Hole") {
+                    commit()
+                    onFinished()
                 }
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Color(red: 0.1, green: 0.4, blue: 1.0))
+                .buttonStyle(.plain)
             }
-        }
-    }
-
-    private var fairwaySection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Fairway").font(.headline)
-            HStack(spacing: 8) {
-                chip(title: "Hit", selected: fairway == .hit) { fairway = .hit }
-                chip(title: "Miss", selected: fairway == .miss) { fairway = .miss }
-                chip(title: "N/A", selected: fairway == .na) { fairway = .na }
-            }
-        }
-    }
-
-    private var derivedLine: some View {
-        HStack(spacing: 8) {
-            Image(systemName: previewGIR ? "checkmark.circle.fill" : "xmark.circle")
-            Text(previewGIR ? "Green in regulation" : "Missed green in regulation")
-                .font(.subheadline.weight(.semibold))
-        }
-        .foregroundStyle(previewGIR ? Color(red: 0.18, green: 0.72, blue: 0.38) : PinpointTheme.secondaryText)
-    }
-
-    private var saveRow: some View {
-        VStack(spacing: 10) {
+            Spacer()
             Button {
                 commit()
-                onFinished(false)
+                onFinished()
             } label: {
-                Text("Save Score")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(.black)
+                    .frame(width: 64, height: 64)
+                    .background(Color(red: 0.9, green: 0.94, blue: 1.0), in: Circle())
             }
-            .buttonStyle(PrimaryButtonStyle())
-
-            Button {
-                commit()
-                onFinished(true)
-            } label: {
-                Text("Add Shot Details")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(SecondaryButtonStyle())
-
-            Text("Shots, clubs, and locations are optional. Save the number first.")
-                .font(.caption)
-                .foregroundStyle(PinpointTheme.secondaryText)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            .buttonStyle(.plain)
         }
-        .padding(.top, 4)
-    }
-
-    private func chip(title: String, selected: Bool, accentPar: Bool = false, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(.headline.monospacedDigit())
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(
-                    selected ? PinpointTheme.accent.opacity(0.22) : PinpointTheme.surfaceElevated,
-                    in: RoundedRectangle(cornerRadius: 12, style: .continuous)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(
-                            selected ? PinpointTheme.accent
-                                : (accentPar ? Color.white.opacity(0.28) : .clear),
-                            lineWidth: selected ? 1.5 : 1
-                        )
-                )
-                .foregroundStyle(selected ? PinpointTheme.accent : .white)
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func stepperButton(systemImage: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.body.weight(.bold))
-                .frame(width: 36, height: 36)
-                .background(PinpointTheme.surfaceElevated, in: Circle())
-                .foregroundStyle(.white)
-        }
-        .buttonStyle(.plain)
+        .padding(.top, 8)
     }
 
     private func prefill() {
@@ -259,23 +230,13 @@ struct HoleScoreEntryView: View {
         } else {
             putts = 2
         }
-        penalties = hole.penaltyStrokes
-        if let recorded = hole.recordedFairwayHit {
-            fairway = FairwayPick(recorded: recorded)
-        } else if let fromShots = hole.fairwayHit(par: def.par) {
-            fairway = FairwayPick(recorded: fromShots)
-        } else {
-            fairway = .na
-        }
     }
 
     private func commit() {
-        rounds.recordHoleScore(
-            holeNumber,
-            score: score,
-            putts: putts,
-            penalties: penalties,
-            fairwayHit: par > 3 ? fairway.recorded : nil
-        )
+        rounds.updateHole(holeNumber) {
+            $0.recordedScore = max(1, score)
+            $0.recordedPutts = max(0, putts)
+            $0.isComplete = true
+        }
     }
 }

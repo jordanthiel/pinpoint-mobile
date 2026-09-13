@@ -16,6 +16,8 @@ struct HoleDictationView: View {
                                                    leftoverNote: "", confidence: 0, warnings: [])
     @State private var appliedCount: Int?
     @State private var speechDenied = false
+    @State private var engine: HoleRecapEngine = .rules
+    @State private var aiBusy = false
 
     private var recognizer: SFSpeechRecognizer? { SFSpeechRecognizer() }
     @State private var recognitionTask: SFSpeechRecognitionTask?
@@ -45,6 +47,24 @@ struct HoleDictationView: View {
 
                         recordRow
 
+                        Button {
+                            aiBusy = true
+                            let text = transcript
+                            Task {
+                                let (structured, used) = await HoleRecapLLM.structure(text)
+                                result = structured
+                                engine = used
+                                aiBusy = false
+                            }
+                        } label: {
+                            Label(aiBusy ? "Structuring…" : "Structure with AI",
+                                  systemImage: "sparkles")
+                                .font(.subheadline.weight(.semibold))
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(PinpointTheme.accent)
+                        .disabled(transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || aiBusy)
+
                         TextEditor(text: $transcript)
                             .frame(minHeight: 110)
                             .padding(10)
@@ -53,6 +73,7 @@ struct HoleDictationView: View {
                                 .stroke(PinpointTheme.hairline, lineWidth: 1))
                             .onChange(of: transcript) { _, new in
                                 result = HoleDictationParser.parse(new)
+                                engine = .rules
                             }
 
                         parsePreview
@@ -136,6 +157,9 @@ struct HoleDictationView: View {
             HStack {
                 Text("AI structure")
                     .font(.headline)
+                Text(engine == .apple ? "Apple Intelligence" : "On-device rules")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(PinpointTheme.secondaryText)
                 Spacer()
                 if result.confidence > 0 {
                     Text("\(Int(result.confidence * 100))% confident")
@@ -202,6 +226,9 @@ struct HoleDictationView: View {
         if let l = shot.lie { bits.append(l.label) }
         if let c = shot.contact { bits.append(c.label) }
         if let s = shot.shape { bits.append(s.label) }
+        if !shot.outcome.isEmpty { bits.append(shot.outcome) }
+        if let d = shot.distanceYards { bits.append("\(Int(d)) yds") }
+        if !shot.breakDirection.isEmpty { bits.append("breaks \(shot.breakDirection)") }
         if let q = shot.quality { bits.append(q.label) }
         if let f = shot.leftFeet { bits.append("to \(Int(f)) ft") }
         if !shot.note.isEmpty { bits.append(shot.note) }

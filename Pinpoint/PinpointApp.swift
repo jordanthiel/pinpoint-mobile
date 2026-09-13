@@ -17,8 +17,36 @@ struct PinpointApp: App {
 }
 
 struct ContentView: View {
+    @Environment(RoundStore.self) private var rounds
+    @State private var ready = false
+
+    private static var isHoleProbe: Bool {
+        CommandLine.arguments.contains { $0.hasPrefix("--ui-hole-") }
+    }
+
     var body: some View {
-        MainTabView()
+        if Self.isHoleProbe {
+            Group {
+                if ready {
+                    NavigationStack { ActiveRoundView() }
+                } else {
+                    Color.black
+                }
+            }
+            .task {
+                rounds.discardActiveRound()
+                rounds.startRound(
+                    course: SampleCourses.georgetown,
+                    teeName: "Blue",
+                    roundType: .eighteen,
+                    scoringMode: .smart,
+                    startHole: 1
+                )
+                ready = true
+            }
+        } else {
+            MainTabView()
+        }
     }
 }
 

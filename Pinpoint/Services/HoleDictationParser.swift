@@ -14,7 +14,14 @@ struct HoleDictationResult: Equatable {
         /// "to five feet" / "to 150 yards" — distance the ball finished from the pin.
         var leftFeet: Double?
         var putts: Int?
-        /// Spoken detail that didn't map to a field (direction, miss location, feel).
+        /// Miss/result outcome: "missed left", "missed right", "short", "long",
+        /// "fairway", "green", "bunker", "water", "out of bounds", "holed".
+        var outcome: String = ""
+        /// "hit it 250" / "drove it about 280 yards" — how far the shot went.
+        var distanceYards: Double?
+        /// Break direction on/around the green: "left to right", "right to left".
+        var breakDirection: String = ""
+        /// Spoken detail that didn't map to a field (feel, wind, misc color).
         var note: String
     }
 
@@ -68,12 +75,15 @@ enum HoleDictationParser {
                     if last.note.isEmpty { last.note = note }
                     else if !note.isEmpty { last.note += "; " + note }
                     if last.quality == nil { last.quality = parseQuality(clause) }
+                    if last.outcome.isEmpty { last.outcome = parseOutcome(clause) }
+                    if last.breakDirection.isEmpty { last.breakDirection = parseBreak(clause) }
                     shots[shots.count - 1] = last
                 } else if GolfClub.match(in: clause) == .putter || n > 0 {
                     shots.append(.init(
                         club: .putter, lie: .green, contact: parseContact(clause),
                         shape: parseShape(clause), quality: parseQuality(clause) ?? (clause.contains("miss") ? .poor : nil),
-                        leftFeet: parseLeftDistance(clause), putts: n, note: note
+                        leftFeet: parseLeftDistance(clause), putts: n,
+                        outcome: parseOutcome(clause), breakDirection: parseBreak(clause), note: note
                     ))
                 }
                 continue
@@ -85,7 +95,11 @@ enum HoleDictationParser {
             let quality = parseQuality(clause)
             let lie = parseLie(clause)
             let leftFeet = parseLeftDistance(clause)
-            if club == nil && contact == nil && shape == nil && quality == nil && leftFeet == nil && lie == nil {
+            let outcome = parseOutcome(clause)
+            let distanceYards = parseShotDistance(clause)
+            let breakDirection = parseBreak(clause)
+            if club == nil && contact == nil && shape == nil && quality == nil && leftFeet == nil && lie == nil
+                && outcome.isEmpty && distanceYards == nil && breakDirection.isEmpty {
                 let extra = tidy(clause)
                 if !extra.isEmpty { leftoverBits.append(extra) }
                 continue
@@ -94,7 +108,9 @@ enum HoleDictationParser {
                                 quality: quality, lie: lie, leftFeet: leftFeet)
             let parsed = HoleDictationResult.ParsedShot(
                 club: club, lie: lie, contact: contact, shape: shape,
-                quality: quality, leftFeet: leftFeet, putts: nil, note: note
+                quality: quality, leftFeet: leftFeet, putts: nil,
+                outcome: outcome, distanceYards: distanceYards,
+                breakDirection: breakDirection, note: note
             )
             if parsed.club == nil, var last = shots.last {
                 if last.contact == nil { last.contact = parsed.contact }
@@ -102,6 +118,9 @@ enum HoleDictationParser {
                 if last.quality == nil { last.quality = parsed.quality }
                 if last.lie == nil { last.lie = parsed.lie }
                 if last.leftFeet == nil { last.leftFeet = parsed.leftFeet }
+                if last.outcome.isEmpty { last.outcome = parsed.outcome }
+                if last.distanceYards == nil { last.distanceYards = parsed.distanceYards }
+                if last.breakDirection.isEmpty { last.breakDirection = parsed.breakDirection }
                 if last.note.isEmpty { last.note = parsed.note }
                 else if !parsed.note.isEmpty { last.note += "; " + parsed.note }
                 shots[shots.count - 1] = last
@@ -321,6 +340,49 @@ enum HoleDictationParser {
         return nil
     }
 
+    /// Miss/result outcome: "missed left", "missed right", "short", "long",
+    /// "fairway", "green", "bunker", "water", "out of bounds", "holed".
+    static func parseOutcome(_ clause: String) -> String {
+        let t = " \(clause.lowercased()) "
+        if t.contains(" out of bounds ") || t.contains(" ob ") { return "out of bounds" }
+        if t.contains(" in the water ") || t.contains(" into the water ") || t.contains(" water hazard ") { return "water" }
+        if t.contains(" holed ") || t.contains(" holed it ") || t.contains(" sank it ")
+            || t.contains(" made the putt ") || t.contains(" drained it ") { return "holed" }
+        if t.contains(" missed left ") || t.contains(" miss left ") || t.contains(" left of ")
+            || t.contains(" pulled it ") { return "missed left" }
+        if t.contains(" missed right ") || t.contains(" miss right ") || t.contains(" right of ")
+            || t.contains(" pushed it ") { return "missed right" }
+        if t.contains(" came up short ") || t.contains(" left it short ") || t.contains(" short of ")
+            || t.contains(" short sided ") || t.contains(" short side ") { return "short" }
+        if t.contains(" went long ") || t.contains(" long of ") || t.contains(" through the green ")
+            || t.contains(" over the green ") || t.contains(" flew the green ") { return "long" }
+        if t.contains(" in the bunker ") || t.contains(" in a bunker ") || t.contains(" greenside bunker ")
+            || t.contains(" plugged ") { return "bunker" }
+        if t.contains(" on the green ") || t.contains(" onto the green ") || t.contains(" hit the green ") { return "green" }
+        if t.contains(" fairway ") || t.contains(" down the middle ") { return "fairway" }
+        return ""
+    }
+
+    /// Break direction: "left to right" / "right to left".
+    static func parseBreak(_ clause: String) -> String {
+        let t = " \(clause.lowercased()) "
+        if t.contains(" left to right ") { return "left to right" }
+        if t.contains(" right to left ") { return "right to left" }
+        return ""
+    }
+
+    /// "hit it 250" / "drove it about 280 yards" / "carried 240" — shot distance.
+    static func parseShotDistance(_ clause: String) -> Double? {
+        let t = clause.lowercased()
+        let pattern = #"(?:hit|drove|carried|went|flew|striped)\s+(?:it\s+)?(?:about\s+|roughly\s+|around\s+)?(\d+)\s*(yards?|yds?)\b"#
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              let m = regex.firstMatch(in: t, range: NSRange(t.startIndex..., in: t)),
+              let r = Range(m.range(at: 1), in: t),
+              let value = Double(t[r])
+        else { return nil }
+        return value
+    }
+
     static func parseQuality(_ clause: String) -> ShotQuality? {
         let t = " \(clause) "
         if t.contains(" great ") || t.contains(" excellent ") || t.contains(" perfect ")
@@ -419,6 +481,10 @@ enum HoleDictationParser {
             "feet", "foot", "ft", "yards", "yard", "yds",
             "for a par", "for par", "for a birdie", "for birdie", "for a bogey",
             "left to right", "right to left",
+            "out of bounds", "in the water", "into the water", "water hazard", "holed it", "sank it",
+            "came up short", "left it short", "short of", "short sided", "short side", "went long",
+            "in the bunker", "in a bunker", "down the middle", "onto the green",
+            "drove", "carried", "striped", "flew", "drained it", "made the putt",
         ]
         for phrase in drop {
             t = t.replacingOccurrences(of: " \(phrase) ", with: " ")

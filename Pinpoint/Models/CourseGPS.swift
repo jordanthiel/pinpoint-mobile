@@ -128,7 +128,7 @@ struct HoleLayout: Codable, Hashable, Equatable {
     var headingDegrees: Double { tee.bearing(to: pin) }
 
     func cameraDistance(extra: Double = 1.0) -> Double {
-        let yards = max(160, tee.yards(to: pin) * 1.45)
+        let yards = max(160, tee.yards(to: pin) * 1.75)
         return (yards / 1.09361) * 2.15 * extra
     }
 

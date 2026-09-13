@@ -269,17 +269,22 @@ final class RoundStore {
             let club = parsed.club ?? (isApproach ? .sandWedge : .iron7)
             let shotLie: Lie = parsed.lie ?? (club.isPutter ? .green : lie)
             let stock = bagCarry(for: club)
+            var noteBits: [String] = []
+            if !parsed.outcome.isEmpty { noteBits.append(parsed.outcome) }
+            if let d = parsed.distanceYards { noteBits.append("\(Int(d)) yds") }
+            if !parsed.breakDirection.isEmpty { noteBits.append("breaks \(parsed.breakDirection)") }
+            if !parsed.note.isEmpty { noteBits.append(parsed.note) }
             let shot = TrackedShot(
                 number: nextNumber,
                 club: club,
                 lie: shotLie,
                 distanceToPinBeforeYards: remaining,
-                carryYards: club.isPutter ? nil : min(remaining, stock),
+                carryYards: parsed.distanceYards ?? (club.isPutter ? nil : min(remaining, stock)),
                 contact: parsed.contact,
                 shape: parsed.shape,
                 quality: parsed.quality,
                 source: .dictation,
-                note: parsed.note
+                note: noteBits.joined(separator: " · ")
             )
             hole.shots.append(shot)
             nextNumber += 1

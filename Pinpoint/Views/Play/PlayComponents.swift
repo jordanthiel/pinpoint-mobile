@@ -161,25 +161,68 @@ struct MapHUDChip: View {
 struct BirdiesTopStat: View {
     var title: String
     var value: String
+    var unit: String? = nil
 
     var body: some View {
         VStack(spacing: 2) {
             Text(title)
-                .font(.system(size: 10, weight: .semibold))
+                .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.white.opacity(0.62))
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
-            Text(value)
-                .font(.system(size: 17, weight: .bold, design: .rounded).monospacedDigit())
-                .foregroundStyle(.white)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+            HStack(alignment: .lastTextBaseline, spacing: 2) {
+                Text(value)
+                    .font(.system(size: 20, weight: .bold, design: .rounded).monospacedDigit())
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.65)
+                if let unit, !unit.isEmpty {
+                    Text(unit)
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.9))
+                        .padding(.leading, 1)
+                }
+            }
         }
         .frame(maxWidth: .infinity)
     }
 }
 
-/// 18Birdies-style right-rail circle (solid black on satellite).
+/// Small blue circular badge with a white chevron used across the 18Birdies UI
+/// as an "expand/action" indicator (top-right of cards).
+struct BirdiesBlueBadge: View {
+    var systemImage: String = "chevron.right"
+    var size: CGFloat = 16
+
+    var body: some View {
+        Image(systemName: systemImage)
+            .font(.system(size: size * 0.55, weight: .heavy))
+            .foregroundStyle(.white)
+            .frame(width: size, height: size)
+            .background(Color(red: 20 / 255, green: 130 / 255, blue: 240 / 255), in: Circle())
+    }
+}
+
+/// Standalone circular back / next control beside the hole-stats pill.
+struct BirdiesCircleNavButton: View {
+    var systemImage: String
+    var accessibilityTitle: String
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 46, height: 46)
+                .background(Color.black.opacity(0.92), in: Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text(accessibilityTitle))
+    }
+}
+
+/// 18Birdies-style right-rail rounded-square card with a small blue chevron badge.
 struct BirdiesRailButton: View {
     var systemImage: String
     var accessibilityTitle: String
@@ -188,17 +231,146 @@ struct BirdiesRailButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.body.weight(.semibold))
+                .font(.system(size: 26, weight: .medium))
                 .foregroundStyle(.white)
-                .frame(width: 50, height: 50)
-                .background(Color.black, in: Circle())
+                .frame(width: 64, height: 64)
+                .background(Color.black.opacity(0.92), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text(accessibilityTitle))
     }
 }
 
-/// Bottom-bar Scorecard / Tools control: circle + caption.
+/// Magnifier with the "+" inside the lens, matching the reference zoom button.
+struct BirdiesZoomIcon: View {
+    var body: some View {
+        ZStack {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 23, weight: .medium))
+            Image(systemName: "plus")
+                .font(.system(size: 9, weight: .bold))
+                .offset(x: -2.5, y: -3.5)
+        }
+        .foregroundStyle(.white)
+    }
+}
+
+/// Filled scorecard doc with text lines and a plus badge, matching the
+/// reference "add score" button.
+struct BirdiesDocIcon: View {
+    var body: some View {
+        ZStack(alignment: .bottomTrailing) {
+            ZStack {
+                Image(systemName: "doc.fill")
+                    .font(.system(size: 25, weight: .medium))
+                    .foregroundStyle(.white)
+                VStack(spacing: 3) {
+                    RoundedRectangle(cornerRadius: 1.25, style: .continuous)
+                        .fill(Color.black.opacity(0.7))
+                        .frame(width: 12, height: 2.5)
+                    RoundedRectangle(cornerRadius: 1.25, style: .continuous)
+                        .fill(Color.black.opacity(0.7))
+                        .frame(width: 12, height: 2.5)
+                }
+                .offset(y: 1)
+            }
+            ZStack {
+                Circle()
+                    .fill(.black)
+                    .frame(width: 15, height: 15)
+                Image(systemName: "plus")
+                    .font(.system(size: 9, weight: .heavy))
+                    .foregroundStyle(.white)
+            }
+            .offset(x: 6, y: 6)
+        }
+    }
+}
+
+/// Three-button vertical rail (zoom + score/shot entry + tools) in one dark
+/// container, matching the reference right-edge control cluster.
+struct BirdiesZoomRail: View {
+    var zoomAction: () -> Void
+    var docAction: () -> Void
+    var toolsAction: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Button(action: zoomAction) {
+                BirdiesZoomIcon()
+                    .frame(width: 50, height: 50)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("Zoom"))
+            railDivider
+            Button(action: docAction) {
+                BirdiesDocIcon()
+                    .frame(width: 50, height: 50)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("Add"))
+            railDivider
+            Button(action: toolsAction) {
+                Image(systemName: "wrench.and.screwdriver")
+                    .font(.system(size: 21, weight: .medium))
+                    .foregroundStyle(.white)
+                    .frame(width: 50, height: 50)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("Tools"))
+        }
+        .frame(width: 58)
+        .background(Color.black.opacity(0.88), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private var railDivider: some View {
+        Rectangle()
+            .fill(Color.white.opacity(0.14))
+            .frame(height: 1)
+            .padding(.horizontal, 8)
+    }
+}
+
+/// Left-edge grouped card: recenter scope + scorecard in one dark container,
+/// mirroring the right rail.
+struct BirdiesLeftRail: View {
+    var recenterAction: () -> Void
+    var scorecardAction: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Button(action: recenterAction) {
+                Image(systemName: "scope")
+                    .font(.system(size: 26, weight: .light))
+                    .foregroundStyle(.white)
+                    .frame(width: 50, height: 50)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("Recenter"))
+            Rectangle()
+                .fill(Color.white.opacity(0.14))
+                .frame(height: 1)
+                .padding(.horizontal, 8)
+            Button(action: scorecardAction) {
+                VStack(spacing: 3) {
+                    Image(systemName: "list.bullet")
+                        .font(.system(size: 19, weight: .medium))
+                    Text("Scorecard")
+                        .font(.system(size: 9, weight: .bold))
+                }
+                .foregroundStyle(.white)
+                .frame(width: 50, height: 52)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("Scorecard"))
+        }
+        .frame(width: 58)
+        .background(Color.black.opacity(0.92), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+}
+
+/// Bottom-bar Scorecard / Tools control: rounded-square black card with a
+/// caption below and a small blue chevron indicator in the corner.
 struct BirdiesDockButton: View {
     var systemImage: String
     var title: String
@@ -206,70 +378,125 @@ struct BirdiesDockButton: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 4) {
+            VStack(spacing: 6) {
                 Image(systemName: systemImage)
-                    .font(.body.weight(.semibold))
+                    .font(.system(size: 24, weight: .semibold))
                     .foregroundStyle(.white)
-                    .frame(width: 50, height: 50)
-                    .background(Color.black, in: Circle())
+                    .frame(width: 62, height: 62)
+                    .background(Color.black, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .overlay(alignment: .bottomTrailing) {
+                        BirdiesBlueBadge()
+                            .offset(x: 4, y: 4)
+                    }
                 Text(title)
-                    .font(.caption2.weight(.semibold))
+                    .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(.white)
-                    .shadow(color: .black.opacity(0.55), radius: 2)
+                    .shadow(color: .black.opacity(0.6), radius: 2)
             }
         }
         .buttonStyle(.plain)
     }
 }
 
-/// Wind card on the right rail: label, heading arrow, mph.
+/// Two-tone bottom-center hole pill: black label section + raised chevron tab.
+struct BirdiesHolePill: View {
+    var holeNumber: Int
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 0) {
+                Text("Hole \(holeNumber)")
+                    .font(.system(size: 20, weight: .semibold, design: .rounded).monospacedDigit())
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, minHeight: 60)
+                    .background(Color.black.opacity(0.95))
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 56, height: 60)
+                    .background(Color(red: 0.22, green: 0.23, blue: 0.26).opacity(0.95))
+            }
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("Hole \(holeNumber)"))
+    }
+}
+
+/// Wind card on the right rail: "Wind >" label, diagonal wind arrow, mph.
 struct BirdiesWindCard: View {
     var mph: Double
     var fromDegrees: Double
 
     var body: some View {
-        VStack(spacing: 5) {
-            HStack(spacing: 2) {
+        VStack(spacing: 4) {
+            HStack(spacing: 4) {
                 Text("Wind")
-                    .font(.caption2.weight(.semibold))
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 8, weight: .bold))
+                    .font(.system(size: 13, weight: .semibold))
+                BirdiesBlueBadge(size: 14)
             }
-            Image(systemName: "arrow.down")
-                .font(.body.weight(.bold))
-                .rotationEffect(.degrees(fromDegrees))
-            Text("\(Int(mph.rounded()))mph")
-                .font(.caption.weight(.bold).monospacedDigit())
+            ZStack {
+                Image(systemName: "arrow.down")
+                    .font(.system(size: 11, weight: .regular))
+                    .foregroundStyle(.white.opacity(0.55))
+                    .rotationEffect(.degrees(windHeading + 180))
+                    .offset(x: -15, y: 10)
+                Image(systemName: "arrow.down")
+                    .font(.system(size: 11, weight: .regular))
+                    .foregroundStyle(.white.opacity(0.55))
+                    .rotationEffect(.degrees(windHeading + 180))
+                    .offset(x: 15, y: -12)
+                Image(systemName: "arrow.down")
+                    .font(.system(size: 27, weight: .bold))
+                    .foregroundStyle(.white)
+                    .rotationEffect(.degrees(windHeading + 180))
+            }
+            .frame(height: 52)
+            HStack(alignment: .lastTextBaseline, spacing: 3) {
+                Text("\(Int(mph.rounded()))")
+                    .font(.system(size: 20, weight: .bold, design: .rounded).monospacedDigit())
+                Text("mph")
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundStyle(.white.opacity(0.9))
+            }
         }
         .foregroundStyle(.white)
-        .frame(width: 50)
-        .padding(.vertical, 10)
-        .background(Color.black, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .frame(width: 68)
+        .padding(.vertical, 9)
+        .background(Color.black.opacity(0.92), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
+
+    /// Reference art blows toward bottom-right; rotate the whole glyph group
+    /// by the measured wind direction so the big arrow matches compass truth.
+    private var windHeading: Double { fromDegrees }
 }
 
-/// Fixed camera-center rangefinder, matching the 18Birdies satellite crosshair.
+/// Landing-spot reticle on the play line, matching the 18Birdies satellite crosshair.
 struct CenterCrosshair: View {
+    private let diameter: CGFloat = 46
+    private let tickLength: CGFloat = 7
+
     var body: some View {
         ZStack {
             Circle()
-                .stroke(Color.white.opacity(0.95), lineWidth: 1.6)
-                .frame(width: 46, height: 46)
+                .stroke(Color.white.opacity(0.95), lineWidth: 1.5)
+                .frame(width: diameter, height: diameter)
             Circle()
                 .fill(Color.white)
                 .frame(width: 5, height: 5)
+            // Four short diagonal ticks sitting on the ring (NE / SE / SW / NW),
+            // oriented radially outward.
             ForEach(0..<4, id: \.self) { i in
+                let radians = CGFloat((45 + Double(i) * 90)) * .pi / 180
                 Capsule()
                     .fill(Color.white)
-                    .frame(width: i.isMultiple(of: 2) ? 1.6 : 11, height: i.isMultiple(of: 2) ? 11 : 1.6)
-                    .offset(
-                        x: i == 1 ? 23 : i == 3 ? -23 : 0,
-                        y: i == 0 ? -23 : i == 2 ? 23 : 0
-                    )
+                    .frame(width: 2, height: tickLength)
+                    .rotationEffect(.radians(radians - .pi / 2))
+                    .offset(x: cos(radians) * diameter / 2, y: sin(radians) * diameter / 2)
             }
         }
-        .shadow(color: .black.opacity(0.35), radius: 1.5)
-        .allowsHitTesting(false)
+        .shadow(color: .black.opacity(0.4), radius: 2)
         .accessibilityHidden(true)
     }
 }
@@ -283,37 +510,51 @@ struct PlaysLikeLinePill: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: -6) {
-                Text("\(yards)y")
-                    .font(.system(size: 20, weight: .bold, design: .rounded).monospacedDigit())
+            HStack(spacing: -14) {
+                ZStack(alignment: .center) {
+                    Circle()
+                        .fill(Color.black.opacity(0.95))
+                    HStack(alignment: .lastTextBaseline, spacing: 1) {
+                        Text("\(yards)")
+                            .font(.system(size: 22, weight: .bold, design: .rounded).monospacedDigit())
+                        Text("y")
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .padding(.leading, -1)
+                    }
                     .foregroundStyle(.white)
-                    .frame(width: 62, height: 62)
-                    .background(Color.black, in: Circle())
-                    .zIndex(1)
-
-                VStack(alignment: .leading, spacing: 1) {
-                    HStack(spacing: 3) {
-                        Text("Plays like")
-                            .font(.caption.weight(.semibold))
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 9, weight: .bold))
-                    }
-                    HStack(spacing: 4) {
-                        Text("\(playsLike)y")
-                            .font(.subheadline.weight(.bold).monospacedDigit())
-                        if let club, !club.isEmpty {
-                            Text(club)
-                                .font(.subheadline.weight(.bold))
-                        }
-                    }
                 }
-                .foregroundStyle(.black)
-                .padding(.leading, 14)
-                .padding(.trailing, 12)
+                .frame(width: 60, height: 60)
+                .zIndex(1)
+
+                HStack(spacing: 5) {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Plays Like")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(Color.black.opacity(0.55))
+                        HStack(alignment: .lastTextBaseline, spacing: 4) {
+                            HStack(alignment: .lastTextBaseline, spacing: 0) {
+                                Text("\(playsLike)")
+                                    .font(.system(size: 22, weight: .bold, design: .rounded).monospacedDigit())
+                                Text("y")
+                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            }
+                            if let club, !club.isEmpty {
+                                Text(club)
+                                    .font(.system(size: 21, weight: .bold, design: .rounded))
+                            }
+                        }
+                        .foregroundStyle(.black)
+                    }
+                    .padding(.leading, 22)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Color.black.opacity(0.7))
+                        .padding(.trailing, 11)
+                }
                 .padding(.vertical, 8)
                 .background(Color.white, in: Capsule())
             }
-            .shadow(color: .black.opacity(0.28), radius: 5, y: 1)
+            .shadow(color: .black.opacity(0.3), radius: 6, y: 2)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text(accessibilityText))
