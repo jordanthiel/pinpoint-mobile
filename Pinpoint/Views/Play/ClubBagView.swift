@@ -6,6 +6,7 @@ struct ClubBagView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var showAdd = false
+    @State private var showNFC = false
     @State private var editing: ClubBagEntry?
 
     var body: some View {
@@ -17,6 +18,9 @@ struct ClubBagView: View {
                         Text("Rename clubs for your set (4-hybrid, 60°, mini driver) and set each carry. The map uses these numbers.")
                             .font(.subheadline)
                             .foregroundStyle(PinpointTheme.secondaryText)
+
+                        Button { showNFC = true } label: { Label("Set up NFC club tags", systemImage: "wave.3.right") }
+                            .buttonStyle(SecondaryButtonStyle())
 
                         ForEach(rounds.clubBag.displayClubs) { entry in
                             clubRow(entry)
@@ -36,7 +40,7 @@ struct ClubBagView: View {
                             editing = nil
                         }
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(PinpointTheme.accent)
+                        .foregroundStyle(PinpointTheme.accentText)
                         .frame(maxWidth: .infinity)
                     }
                     .padding(20)
@@ -49,9 +53,10 @@ struct ClubBagView: View {
                     Button("Done") { dismiss() }
                 }
             }
+            .sheet(isPresented: $showNFC) { NFCTagSetupView() }
             .sheet(isPresented: $showAdd) {
                 addClubSheet
-                    .preferredColorScheme(.dark)
+                    .preferredColorScheme(.light)
                     .presentationDetents([.medium, .large])
             }
             .sheet(item: $editing) { entry in
@@ -60,7 +65,7 @@ struct ClubBagView: View {
                 } onDelete: {
                     rounds.removeBagEntry(id: entry.id)
                 }
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(.light)
                 .presentationDetents([.medium, .large])
             }
         }
@@ -73,12 +78,12 @@ struct ClubBagView: View {
             HStack(spacing: 12) {
                 Text(entry.club.shortName)
                     .font(.headline.weight(.bold).monospacedDigit())
-                    .foregroundStyle(PinpointTheme.accent)
+                    .foregroundStyle(PinpointTheme.accentText)
                     .frame(width: 40, alignment: .leading)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(entry.fullLabel)
                         .font(.headline)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(PinpointTheme.primaryText)
                     if entry.nickname?.isEmpty == false {
                         Text(entry.club.displayName)
                             .font(.caption)
@@ -88,9 +93,9 @@ struct ClubBagView: View {
                 Spacer()
                 Text("\(Int(entry.carryYards.rounded())) yds")
                     .font(.title3.weight(.bold).monospacedDigit())
-                    .foregroundStyle(.white)
+                    .foregroundStyle(PinpointTheme.primaryText)
                 Image(systemName: "pencil.circle.fill")
-                    .foregroundStyle(PinpointTheme.accent)
+                    .foregroundStyle(PinpointTheme.accentText)
             }
             .padding(14)
             .background(PinpointTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -111,7 +116,7 @@ struct ClubBagView: View {
                             HStack {
                                 Text(club.shortName)
                                     .font(.headline.monospacedDigit())
-                                    .foregroundStyle(PinpointTheme.accent)
+                                    .foregroundStyle(PinpointTheme.accentText)
                                     .frame(width: 40, alignment: .leading)
                                 Text(club.displayName)
                                 Spacer()
@@ -177,7 +182,7 @@ struct ClubEditorSheet: View {
                                             .padding(.vertical, 8)
                                             .background(entry.club == club ? PinpointTheme.accent : PinpointTheme.surfaceElevated,
                                                         in: Capsule())
-                                            .foregroundStyle(entry.club == club ? .white : PinpointTheme.secondaryText)
+                                            .foregroundStyle(entry.club == club ? PinpointTheme.primaryText : PinpointTheme.secondaryText)
                                     }
                                     .buttonStyle(.plain)
                                 }

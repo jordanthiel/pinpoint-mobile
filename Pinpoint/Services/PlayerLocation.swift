@@ -1,62 +1,90 @@
 import CoreLocation
 import Foundation
+import UIKit
 
-/// Live GPS for the on-course rangefinder. Distances prefer this point
-/// when the golfer is actually standing on the hole.
+/// Lightweight view subscription. Every screen and the round share one GPS receiver.
 @Observable
-final class PlayerLocation: NSObject, CLLocationManagerDelegate {
+final class PlayerLocation: NSObject {
+    @ObservationIgnored var onFix: ((GolfLocationSample) -> Void)?
     var coordinate: GeoPoint?
     var heading: Double?
     var authorizationDenied = false
-
-    @ObservationIgnored private let manager = CLLocationManager()
+    private var lastFixAt: Date?
+    @ObservationIgnored fileprivate let background: Bool
     @ObservationIgnored private var started = false
-
-    override init() {
-        super.init()
-        manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
-        manager.distanceFilter = 2
-        manager.activityType = .fitness
-        manager.pausesLocationUpdatesAutomatically = false
+    var freshCoordinate: GeoPoint? {
+        guard let lastFixAt, abs(lastFixAt.timeIntervalSinceNow) < 30 else { return nil }
+        return coordinate
     }
+    static func point(near time: Date) -> GeoPoint? { PhoneGPS.shared.point(near: time) }
+    init(background: Bool = false) { self.background = background; super.init() }
+    func start() { started = true; PhoneGPS.shared.subscribe(self) }
+    func stop() { guard started else { return }; started = false; PhoneGPS.shared.unsubscribe(self) }
+    fileprivate func receive(_ fix: CLLocation) {
+        lastFixAt = fix.timestamp
+        let point = GeoPoint(latitude: fix.coordinate.latitude, longitude: fix.coordinate.longitude)
+        if coordinate != point { coordinate = point }
+        onFix?(GolfLocationSample(point: point, timestamp: fix.timestamp, accuracy: fix.horizontalAccuracy, speed: fix.speed))
+    }
+}
 
-    func start() {
-        started = true
+private final class PhoneGPS: NSObject, CLLocationManagerDelegate {
+    static let shared = PhoneGPS()
+    private let clients = NSHashTable<PlayerLocation>.weakObjects()
+    private var fixes: [CLLocation] = []
+    private var running = false
+    private lazy var manager: CLLocationManager = {
+        let value = CLLocationManager()
+        value.delegate = self
+        // Meter-level golf accuracy without navigation's continuous extra sensor work.
+        value.desiredAccuracy = kCLLocationAccuracyBest
+        value.distanceFilter = kCLDistanceFilterNone // Stationary fixes are required for dwell detection.
+        value.activityType = .fitness
+        value.pausesLocationUpdatesAutomatically = false
+        return value
+    }()
+    func point(near time: Date) -> GeoPoint? {
+        guard let fix = fixes.min(by: { abs($0.timestamp.timeIntervalSince(time)) < abs($1.timestamp.timeIntervalSince(time)) }),
+              abs(fix.timestamp.timeIntervalSince(time)) <= 20 else { return nil }
+        return GeoPoint(latitude: fix.coordinate.latitude, longitude: fix.coordinate.longitude)
+    }
+    func subscribe(_ client: PlayerLocation) {
+        let new = !clients.contains(client)
+        clients.add(client)
+        configure()
+        if new, let fix = fixes.last, abs(fix.timestamp.timeIntervalSinceNow) < 30 { client.receive(fix) }
+    }
+    func unsubscribe(_ client: PlayerLocation) { clients.remove(client); configure() }
+    private func configure() {
+        let subscribers = clients.allObjects
+        guard !subscribers.isEmpty else { manager.stopUpdatingLocation(); running = false; return }
+        let background = subscribers.contains { $0.background }
+        manager.allowsBackgroundLocationUpdates = background
+        manager.showsBackgroundLocationIndicator = background
+        let denied = manager.authorizationStatus == .denied || manager.authorizationStatus == .restricted
+        for client in subscribers where client.authorizationDenied != denied { client.authorizationDenied = denied }
         switch manager.authorizationStatus {
         case .notDetermined:
-            manager.requestWhenInUseAuthorization()
+            if UIApplication.shared.applicationState == .active { manager.requestWhenInUseAuthorization() }
         case .authorizedAlways, .authorizedWhenInUse:
-            authorizationDenied = false
-            manager.startUpdatingLocation()
-            if CLLocationManager.headingAvailable() {
-                manager.startUpdatingHeading()
+            if !running { running = true; manager.startUpdatingLocation() }
+            if background, UIApplication.shared.applicationState == .active,
+               manager.authorizationStatus == .authorizedWhenInUse,
+               !UserDefaults.standard.bool(forKey: "pinpoint.location.alwaysRequested") {
+                UserDefaults.standard.set(true, forKey: "pinpoint.location.alwaysRequested")
+                manager.requestAlwaysAuthorization()
             }
-        default:
-            authorizationDenied = true
+        default: manager.stopUpdatingLocation(); running = false
         }
     }
-
-    func stop() {
-        started = false
-        manager.stopUpdatingLocation()
-        manager.stopUpdatingHeading()
-    }
-
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        guard started else { return }
-        start()
-    }
-
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) { configure() }
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let loc = locations.last else { return }
-        // A 100m+ fix looks like the next hole. Ignore it.
-        guard loc.horizontalAccuracy > 0, loc.horizontalAccuracy <= 40 else { return }
-        coordinate = GeoPoint(latitude: loc.coordinate.latitude, longitude: loc.coordinate.longitude)
-    }
-
-    func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
-        let value = newHeading.trueHeading >= 0 ? newHeading.trueHeading : newHeading.magneticHeading
-        heading = value
+        guard let fix = locations.last, fix.horizontalAccuracy > 0, fix.horizontalAccuracy <= 40,
+              abs(fix.timestamp.timeIntervalSinceNow) < 30,
+              fixes.last.map({ fix.timestamp.timeIntervalSince($0.timestamp) >= 1 }) ?? true else { return }
+        // Only the last minute is needed to locate a Watch swing. Don't retain thousands of duplicate fixes.
+        fixes.removeAll { fix.timestamp.timeIntervalSince($0.timestamp) > 60 }
+        fixes.append(fix)
+        for client in clients.allObjects { client.receive(fix) }
     }
 }

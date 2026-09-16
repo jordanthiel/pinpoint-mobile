@@ -6,20 +6,32 @@ struct RoundSummaryView: View {
     @Environment(RoundStore.self) private var rounds
     @Environment(\.dismiss) private var dismiss
 
+    var selectedRound: GolfRound? = nil
+
+    @State private var showEnd = false
+    @State private var showScorecard = false
     @State private var recap = ""
     @State private var showClubs = false
 
     var body: some View {
         ZStack {
             PinpointTheme.background.ignoresSafeArea()
-            if let round = rounds.activeRound ?? rounds.pastRounds.first {
+            if let round = selectedRound ?? rounds.activeRound ?? rounds.pastRounds.first {
                 ScrollView {
                     VStack(spacing: 16) {
                         hero(round: round)
+                        Button { showScorecard = true } label: {
+                            Label("Scorecard & hole stats", systemImage: "list.bullet.rectangle").frame(maxWidth: .infinity)
+                        }.buttonStyle(SecondaryButtonStyle())
                         holeStrip(round: round)
+                        NavigationLink { RoundShotReviewView(round: round, holeNumber: round.holeScores.first?.holeNumber ?? 1) } label: {
+                            Label("Review shots hole by hole", systemImage: "map").frame(maxWidth: .infinity)
+                        }.buttonStyle(PrimaryButtonStyle())
                         statsCard(round: round)
+                        RoundDetailStatsView(round: round)
                         analysisCard(round: round)
-                        recapCard(round: round)
+                        if round.status == .active && round.id == rounds.activeRound?.id { recapCard(round: round) }
+                        else if !round.recap.isEmpty { Text(round.recap) }
                         Button {
                             showClubs = true
                         } label: {
@@ -28,13 +40,11 @@ struct RoundSummaryView: View {
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(PrimaryButtonStyle())
-                        if round.status == .active {
+                        if round.status == .active && round.id == rounds.activeRound?.id {
                             Button {
-                                rounds.setRecap(recap)
-                                rounds.finishRound()
-                                dismiss()
+                                showEnd = true
                             } label: {
-                                Text("Exit & Save Round")
+                                Text("End round")
                                     .font(.headline)
                                     .frame(maxWidth: .infinity)
                             }
@@ -43,12 +53,15 @@ struct RoundSummaryView: View {
                     }
                     .padding(16)
                 }
+                .contentMargins(.bottom, FloatingNavigation.clearance, for: .scrollContent)
+                .sheet(isPresented: $showScorecard) { ScorecardView(selectedRound: round) }
                 .navigationTitle("Round Recap")
                 .navigationBarTitleDisplayMode(.inline)
                 .onAppear { recap = round.recap }
+                .sheet(isPresented: $showEnd) { EndRoundSheet(recap: recap) { dismiss() } }
                 .sheet(isPresented: $showClubs) {
                     ClubBagView()
-                        .preferredColorScheme(.dark)
+                        .preferredColorScheme(.light)
                         .presentationDetents([.medium, .large])
                         .presentationDragIndicator(.visible)
                 }
@@ -58,34 +71,35 @@ struct RoundSummaryView: View {
 
     private func hero(round: GolfRound) -> some View {
         VStack(spacing: 6) {
+            Text(round.historyLabel).font(.subheadline.weight(.semibold))
             Text(round.courseName)
                 .font(.headline)
                 .foregroundStyle(.white.opacity(0.85))
             HStack(spacing: 24) {
                 VStack {
-                    Text("To Par")
+                    Text("To Par · Finished Holes")
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.6))
-                    Text(round.toParLabel)
+                    Text(round.completedToParLabel)
                         .font(.system(size: 44, weight: .bold).monospacedDigit())
                 }
                 VStack {
-                    Text("Gross/Net")
+                    Text("Score")
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.6))
-                    Text("\(round.totalGross)/\(round.totalGross)")
+                    Text("\(round.totalGross)")
                         .font(.system(size: 44, weight: .bold).monospacedDigit())
                 }
             }
-            Text("Par \(round.totalPar) · \(round.teeName) · \(round.durationLabel)")
+            Text("Scored par \(round.completedHoles.reduce(0) { $0 + (round.hole($1.holeNumber)?.par ?? 4) }) · \(round.teeName) · \(round.durationLabel)")
                 .font(.caption)
                 .foregroundStyle(.white.opacity(0.6))
         }
         .frame(maxWidth: .infinity)
         .padding(20)
+        .foregroundStyle(.white)
         .background(
-            LinearGradient(colors: [Color(red: 0.08, green: 0.10, blue: 0.16),
-                                    Color(red: 0.14, green: 0.10, blue: 0.24)],
+            LinearGradient(colors: [PinpointTheme.primaryText, PinpointTheme.primaryText],
                            startPoint: .topLeading, endPoint: .bottomTrailing),
             in: RoundedRectangle(cornerRadius: 18, style: .continuous)
         )
@@ -95,12 +109,15 @@ struct RoundSummaryView: View {
         VStack(alignment: .leading, spacing: 8) {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
-                    ForEach(round.holeScores) { hs in
+                    ForEach(round.playedHoleScores) { hs in
+                        NavigationLink { RoundShotReviewView(round: round, holeNumber: hs.holeNumber) } label: {
                         VStack(spacing: 2) {
                             Text("\(hs.holeNumber)")
                                 .font(.caption2)
                                 .foregroundStyle(PinpointTheme.secondaryText)
                             Text(hs.hasScore ? "\(hs.grossScore)" : "–")
+                                .frame(height: 34)
+                                .background { if hs.hasScore { ScoreMark(score: hs.grossScore, par: round.hole(hs.holeNumber)?.par ?? 4, size: 30) } }
                                 .font(.headline.monospacedDigit())
                                 .foregroundStyle(hs.hasScore
                                     ? PlayUI.scoreColor(score: hs.grossScore,
@@ -108,6 +125,7 @@ struct RoundSummaryView: View {
                                     : PinpointTheme.secondaryText)
                         }
                         .frame(width: 36)
+                        }.buttonStyle(.plain)
                     }
                 }
             }
@@ -119,7 +137,7 @@ struct RoundSummaryView: View {
     private func statsCard(round: GolfRound) -> some View {
         let s = rounds.stats(for: [round])
         return PlayUI.card {
-            Text("Strokes Gained Stats")
+            Text("Round performance")
                 .font(.headline)
             HStack(spacing: 10) {
                 StatTile(title: "Fairways", value: s.fairwayPct.map { "\(Int($0))%" } ?? "–",
@@ -151,7 +169,7 @@ struct RoundSummaryView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Hole \(item.0)")
                                 .font(.caption.weight(.semibold))
-                                .foregroundStyle(PinpointTheme.accent)
+                                .foregroundStyle(PinpointTheme.accentText)
                             Text(item.1)
                                 .font(.subheadline)
                         }
@@ -165,7 +183,7 @@ struct RoundSummaryView: View {
         PlayUI.card {
             Text("Add Round Recap")
                 .font(.headline)
-                .foregroundStyle(PinpointTheme.accent)
+                .foregroundStyle(PinpointTheme.accentText)
             TextField("Highlight or key takeaway from this round…", text: $recap, axis: .vertical)
                 .lineLimit(3...)
                 .padding(10)

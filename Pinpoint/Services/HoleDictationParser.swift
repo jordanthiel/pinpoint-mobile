@@ -23,6 +23,8 @@ struct HoleDictationResult: Equatable {
         var breakDirection: String = ""
         /// Spoken detail that didn't map to a field (feel, wind, misc color).
         var note: String
+        var observations: ShotObservations = .init()
+        var sourceQuote: String? = nil
     }
 
     var shots: [ParsedShot]
@@ -35,7 +37,7 @@ struct HoleDictationResult: Equatable {
     var confidence: Double // 0...1
     var warnings: [String]
 
-    var isEmpty: Bool { shots.isEmpty && puttsMentioned == nil }
+    var isEmpty: Bool { shots.isEmpty && puttsMentioned == nil && scoreCall == nil && leftoverNote.isEmpty }
 }
 
 /// Rule-based, on-device parser. No network, deterministic, simulator-safe.
@@ -61,6 +63,14 @@ enum HoleDictationParser {
 
         for clause in clauses {
             if isMostlyPutt(clause) {
+                // A score-first total isn't the first shot in the narrated trail.
+                // The store appends these counted putts after the full swings.
+                if clause.range(of: #"\bwith\s+(?:zero|one|two|three|four|\d+)[ -]putts?\b"#, options: .regularExpression) != nil,
+                   let count = parsePutts(clause) {
+                    putts = count
+                    leftoverBits.append(clause)
+                    continue
+                }
                 let n = max(1, countPuttMentions(clause))
                 if let existing = parsePutts(clause) {
                     putts = (putts ?? 0) + max(existing, n)
@@ -70,20 +80,12 @@ enum HoleDictationParser {
                 let note = leftover(in: clause, club: .putter, contact: parseContact(clause),
                                     shape: parseShape(clause), quality: parseQuality(clause),
                                     lie: parseLie(clause), leftFeet: parseLeftDistance(clause))
-                if shots.last?.club == .putter {
-                    var last = shots[shots.count - 1]
-                    if last.note.isEmpty { last.note = note }
-                    else if !note.isEmpty { last.note += "; " + note }
-                    if last.quality == nil { last.quality = parseQuality(clause) }
-                    if last.outcome.isEmpty { last.outcome = parseOutcome(clause) }
-                    if last.breakDirection.isEmpty { last.breakDirection = parseBreak(clause) }
-                    shots[shots.count - 1] = last
-                } else if GolfClub.match(in: clause) == .putter || n > 0 {
+                if GolfClub.match(in: clause) == .putter || n > 0 {
                     shots.append(.init(
                         club: .putter, lie: .green, contact: parseContact(clause),
                         shape: parseShape(clause), quality: parseQuality(clause) ?? (clause.contains("miss") ? .poor : nil),
                         leftFeet: parseLeftDistance(clause), putts: n,
-                        outcome: parseOutcome(clause), breakDirection: parseBreak(clause), note: note
+                        outcome: parseOutcome(clause), breakDirection: parseBreak(clause), note: note, observations: parseObservations(clause)
                     ))
                 }
                 continue
@@ -110,9 +112,10 @@ enum HoleDictationParser {
                 club: club, lie: lie, contact: contact, shape: shape,
                 quality: quality, leftFeet: leftFeet, putts: nil,
                 outcome: outcome, distanceYards: distanceYards,
-                breakDirection: breakDirection, note: note
+                breakDirection: breakDirection, note: note, observations: parseObservations(clause)
             )
             if parsed.club == nil, var last = shots.last {
+                last.observations.merge(parsed.observations)
                 if last.contact == nil { last.contact = parsed.contact }
                 if last.shape == nil { last.shape = parsed.shape }
                 if last.quality == nil { last.quality = parsed.quality }
@@ -191,7 +194,7 @@ enum HoleDictationParser {
             work = work.replacingOccurrences(of: sep, with: " · ")
         }
         // Also split before "hit a <club>" / "hit <club>".
-        if let regex = try? NSRegularExpression(pattern: #"\b(?:hit|then hit|then)\s+(?:a\s+|an\s+)?"#) {
+        if let regex = try? NSRegularExpression(pattern: #"\b(?:hit|then hit|then)\s+(?:a\s+|an\s+)?(?=(?:driver|putter|(?:[a-z]+|[0-9]) (?:iron|wood|wedge)|hybrid)\b)"#) {
             work = regex.stringByReplacingMatches(in: work, range: NSRange(work.startIndex..., in: work), withTemplate: " · ")
         }
 
@@ -300,22 +303,56 @@ enum HoleDictationParser {
     // MARK: - Attributes
 
     static func parseLie(_ clause: String) -> Lie? {
-        let t = " \(clause) "
-        if t.contains(" off the tee ") || t.contains(" from the tee ") || t.contains(" teed ") { return .tee }
-        if t.contains(" fairway ") { return .fairway }
-        if t.contains(" bunker ") || t.contains(" from the sand ") || t.contains(" in the sand ") { return .sand }
-        if t.contains(" rough ") { return .rough }
-        if t.contains(" recovery ") || t.contains(" punch ") { return .recovery }
-        if t.contains(" fringe ") || t.contains(" collar ") { return .fringe }
-        if t.contains(" on the green ") || t.contains(" from the green ") { return .green }
+        if clause.contains("off the tee") || clause.contains("from the tee") { return .tee }
+        for (words, lie) in [("fairway", Lie.fairway), ("rough", .rough), ("bunker", .sand), ("sand", .sand), ("fringe", .fringe), ("green", .green), ("trees", .recovery)] {
+            if clause.contains("from the " + words) || clause.contains("out of the " + words) { return lie }
+        }
         return nil
+    }
+
+    static func parseObservations(_ clause: String) -> ShotObservations {
+        let t = clause.lowercased()
+        func has(_ pattern: String) -> Bool { t.range(of: pattern, options: .regularExpression) != nil }
+        func number(_ pattern: String) -> Double? {
+            guard let re = try? NSRegularExpression(pattern: pattern),
+                  let m = re.firstMatch(in: t, range: NSRange(t.startIndex..., in: t)),
+                  let r = Range(m.range(at: 1), in: t) else { return nil }
+            return Double(t[r])
+        }
+        var result = ShotObservations()
+        for finish in ShotFinish.allCases where finish != .holed {
+            let word = finish == .bunker ? "(?:bunker|sand)" : finish.rawValue
+            if has("(?:finished|landed|ended up|rolled|into|onto|found|hit|in) (?:in |on |the |a )*" + word + "\\b") {
+                result.finish = finish
+            }
+        }
+        if has(#"\b(?:went|hit it|finished) (?:ob|out of bounds)\b"#) { result.finish = .outOfBounds }
+        if has(#"\b(?:missed|miss|finished|left it) (?:it |the green |the fairway )?(?:short and |long and )?left\b|\bleft of (?:the )?(?:pin|hole|target|green|fairway)\b"#) { result.lateralMiss = .left }
+        if has(#"\b(?:missed|miss|finished|left it) (?:it |the green |the fairway )?(?:short and |long and )?right\b|\bright of (?:the )?(?:pin|hole|target|green|fairway)\b"#) { result.lateralMiss = .right }
+        if has(#"\b(?:short of|came up short|left it short|missed short|finished short|missed (?:left|right) and short)\b"#) { result.depthMiss = .short }
+        if has(#"\b(?:went long|finished long|missed long|over the green|flew the green|missed (?:left|right) and long)\b"#) { result.depthMiss = .long }
+        let isPutt = isMostlyPutt(t) || GolfClub.match(in: t) == .putter
+        if isPutt {
+            result.puttBreak = PuttBreak(rawValue: parseBreak(t))
+            if has(#"\b(?:straight putt|no break|didn't break)\b"#) { result.puttBreak = .straight }
+            if has(#"\b(?:high side|missed high)\b"#) { result.puttMissSide = .high }
+            if has(#"\b(?:low side|missed low)\b"#) { result.puttMissSide = .low }
+            if has(#"\b(?:missed|miss|left it short|came up short)\b"#) { result.holed = false }
+        }
+        if has(#"\b(?:holed it|sank it|made the putt|drained it)\b"#) && !has(#"\b(?:not|never|nearly|almost) (?:holed|sank|made|drained)\b"#) {
+            result.holed = true; result.finish = .holed
+        }
+        result.carryYards = number(#"\b(?:carried|carry of) (?:it |about )?(\d+(?:\.\d+)?) (?:yards?|yds?)\b"#)
+        result.startingDistanceFeet = number(#"\bfrom (\d+(?:\.\d+)?) (?:feet|foot|ft)\b"#)
+        if let yards = number(#"\bfrom (\d+(?:\.\d+)?) (?:yards?|yds?)\b"#) { result.startingDistanceFeet = yards * 3 }
+        return result
     }
 
     static func parseContact(_ clause: String) -> Contact? {
         let t = " \(clause) "
         if t.contains(" toed ") || t.contains(" off the toe ") || t.contains(" out of the toe ")
             || t.contains(" toey ") { return .toe }
-        if t.contains(" off the heel ") || t.contains(" hosel ") || t.contains(" shank ") { return .shank }
+        if t.contains(" hosel ") || t.contains(" shank ") { return .shank }
         if t.contains(" heel ") { return .heel }
         if t.contains(" thin ") || t.contains(" bladed ") || t.contains(" skull") { return .thin }
         if t.contains(" fat ") || t.contains(" chunk") || t.contains(" heavy ") || t.contains(" behind it ") { return .fat }
@@ -328,8 +365,6 @@ enum HoleDictationParser {
 
     static func parseShape(_ clause: String) -> ShotShape? {
         let t = " \(clause) "
-        if t.contains(" missed left ") || t.contains(" miss left ") || t.contains(" left of ") { return .pull }
-        if t.contains(" missed right ") || t.contains(" miss right ") || t.contains(" right of ") { return .push }
         if t.contains(" pull") { return .pull }
         if t.contains(" push") { return .push }
         if t.contains(" slice") { return .slice }
@@ -403,7 +438,7 @@ enum HoleDictationParser {
             "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12,
             "fifteen": 15, "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50,
         ]
-        let pattern = #"(?:to|about|roughly|around)\s+(\d+|[a-z]+)\s*(feet|foot|ft|yards?|yds?)\b"#
+        let pattern = #"(?:to(?:\s+about)?|leaving)\s+(\d+|[a-z]+)\s*(feet|foot|ft|yards?|yds?)\b"#
         if let regex = try? NSRegularExpression(pattern: pattern),
            let m = regex.firstMatch(in: t, range: NSRange(t.startIndex..., in: t)),
            let numRange = Range(m.range(at: 1), in: t),
@@ -415,9 +450,6 @@ enum HoleDictationParser {
                 return unit.hasPrefix("y") ? value * 3 : value
             }
         }
-        if t.contains("pin high") || t.contains("hole high") { return 15 }
-        if t.contains(" gimme") || t.contains(" kick-in") || t.contains(" kick in") { return 3 }
-        if t.contains(" stuffed ") || t.contains(" tight ") { return 6 }
         return nil
     }
 
@@ -433,20 +465,17 @@ enum HoleDictationParser {
            let n = Int(t[r]) { return n }
         if t.contains(" made the putt") || t.contains(" sank it") || t.contains(" holed it")
             || t.contains(" one-putted") || t.contains(" one putted") { return 1 }
-        if (t.contains(" miss") && t.contains(" putt")) || (t.contains(" lagged ") && t.contains(" putt")) {
-            return 2
-        }
         return nil
     }
 
     static func parseScoreCall(_ text: String) -> String? {
-        let t = " \(text) "
-        if t.contains(" for a birdie") || t.contains(" for birdie") { return "birdie" }
-        if t.contains(" for an eagle") || t.contains(" for eagle") { return "eagle" }
-        if t.contains(" for a bogey") || t.contains(" for bogey") { return "bogey" }
-        if t.contains(" for a double") || t.contains(" for double") { return "double" }
-        if t.contains(" for a par") || t.contains(" for par") || t.contains(" saved par") { return "par" }
-        return nil
+        // Last stated result wins (e.g. “missed for birdie, made par”).
+        // Course descriptions and putt intentions alone aren't card scores.
+        let pattern = #"\b(albatross|eagle|birdie|double(?: bogey)?|triple(?: bogey)?|bogey|par)\b(?![ -]+(?:three|four|five|3|4|5|putt|chance|opportunity)\b)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { return nil }
+        let ns = text as NSString
+        guard let match = regex.matches(in: text, range: NSRange(location: 0, length: ns.length)).last else { return nil }
+        return ns.substring(with: match.range(at: 1)).lowercased().replacingOccurrences(of: " bogey", with: "")
     }
 
     static func isMostlyPutt(_ clause: String) -> Bool {

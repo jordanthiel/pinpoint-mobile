@@ -24,7 +24,7 @@ struct StartRoundView: View {
                             .foregroundStyle(PinpointTheme.secondaryText)
                         Text(course.name)
                             .font(.title3.weight(.bold))
-                            .foregroundStyle(PinpointTheme.accent)
+                            .foregroundStyle(PinpointTheme.accentText)
 
                         startHolePicker
 
@@ -50,6 +50,12 @@ struct StartRoundView: View {
                             }
                         }
                         Text("Smart Tracking uses satellite GPS for distances, drop-a-pin shot entry, watch detections, and end-of-hole dictation.")
+                            .font(.footnote)
+                            .foregroundStyle(PinpointTheme.secondaryText)
+
+                        Label("Keep tracking when your phone locks", systemImage: "location.fill")
+                            .font(.subheadline.weight(.semibold))
+                        Text("For shot locations throughout your round, allow Always location access when asked. Tracking stops when you save or discard your round. You can change access in Settings.")
                             .font(.footnote)
                             .foregroundStyle(PinpointTheme.secondaryText)
 
@@ -128,7 +134,7 @@ struct StartRoundView: View {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .stroke(selected ? PinpointTheme.accent : .clear, lineWidth: 1.5)
                 }
-                .foregroundStyle(selected ? PinpointTheme.accent : .white)
+                .foregroundStyle(selected ? PinpointTheme.accent : PinpointTheme.primaryText)
         }
         .buttonStyle(.plain)
     }

@@ -69,7 +69,7 @@ struct PlaybackBarView: View {
                         .font(.title2)
                         .foregroundStyle(.white)
                         .frame(width: 44, height: 44)
-                        .background(PinpointTheme.surfaceElevated, in: Circle())
+                        .background(PinpointTheme.mapSurface, in: Circle())
                 }
                 .accessibilityLabel(isPlaying ? "Pause" : "Play")
 

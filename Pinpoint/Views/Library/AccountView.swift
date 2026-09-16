@@ -2,6 +2,8 @@ import Auth
 import SwiftUI
 
 struct AccountView: View {
+    @Environment(RoundStore.self) private var rounds
+    @Environment(GolfCloudSync.self) private var golfSync
     @Environment(SwingLibraryStore.self) private var library
     @Environment(\.dismiss) private var dismiss
 
@@ -74,22 +76,26 @@ struct AccountView: View {
                         .frame(width: 52, height: 52)
                     Text(accountInitial)
                         .font(.title2.weight(.semibold))
-                        .foregroundStyle(PinpointTheme.accent)
+                        .foregroundStyle(PinpointTheme.accentText)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(library.accountEmail ?? "Signed in")
                         .font(.headline)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(PinpointTheme.primaryText)
                         .textSelection(.enabled)
-                    Text("Synced with this iPhone")
+                    Text(rounds.cloudStatus)
                         .font(.subheadline)
                         .foregroundStyle(PinpointTheme.secondaryText)
                 }
             }
 
-            Text("Swings you upload are stored in the cloud and show up on any device using this account.")
+            Text("Rounds, scores, shots, your bag, and practice sessions sync automatically with this account. Swing videos sync when uploaded.")
                 .foregroundStyle(PinpointTheme.secondaryText)
+
+            Button { Task { await golfSync.sync() } } label: {
+                Label(rounds.cloudSyncing ? "Syncing…" : "Sync golf data now", systemImage: "arrow.triangle.2.circlepath")
+            }.buttonStyle(SecondaryButtonStyle()).disabled(rounds.cloudSyncing)
 
             Button {
                 Task { await library.signOut() }
@@ -133,7 +139,7 @@ struct AccountView: View {
                 withAnimation(.easeInOut(duration: 0.18)) { mode = .signUp }
             }
             .font(.subheadline.weight(.semibold))
-            .foregroundStyle(PinpointTheme.accent)
+            .foregroundStyle(PinpointTheme.accentText)
             .frame(maxWidth: .infinity)
         }
     }
@@ -213,7 +219,7 @@ struct AccountView: View {
             if let infoMessage {
                 Text(infoMessage)
                     .font(.subheadline)
-                    .foregroundStyle(PinpointTheme.accent)
+                    .foregroundStyle(PinpointTheme.accentText)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -252,7 +258,7 @@ struct AccountView: View {
                             mode == item ? PinpointTheme.accent : Color.clear,
                             in: RoundedRectangle(cornerRadius: 10, style: .continuous)
                         )
-                        .foregroundStyle(.white)
+                        .foregroundStyle(PinpointTheme.primaryText)
                 }
                 .buttonStyle(.plain)
             }
@@ -272,13 +278,13 @@ struct AccountView: View {
                     }
                 }
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(PinpointTheme.accent)
+                .foregroundStyle(PinpointTheme.accentText)
             case .resetPassword:
                 Button("Back to sign in") {
                     withAnimation(.easeInOut(duration: 0.18)) { mode = .signIn }
                 }
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(PinpointTheme.accent)
+                .foregroundStyle(PinpointTheme.accentText)
             case .signUp, .checkEmail:
                 EmptyView()
             }
@@ -290,13 +296,13 @@ struct AccountView: View {
         VStack(alignment: .leading, spacing: 12) {
             Image(systemName: icon)
                 .font(.title2.weight(.semibold))
-                .foregroundStyle(PinpointTheme.accent)
+                .foregroundStyle(PinpointTheme.accentText)
                 .frame(width: 44, height: 44)
                 .background(PinpointTheme.accent.opacity(0.16), in: Circle())
 
             Text(title)
                 .font(.title2.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(PinpointTheme.primaryText)
 
             Text(subtitle)
                 .font(.body)
@@ -427,9 +433,9 @@ private enum AuthMode: Hashable {
     var subtitle: String {
         switch self {
         case .signIn:
-            return "Sign in to upload swings and open them on any iPhone."
+            return "Sign in to sync rounds, scores, shots, your bag, and practice across devices."
         case .signUp:
-            return "Save swings in the cloud so you can review them later on another device."
+            return "Keep your golf data together across devices. Your existing local rounds will sync with your first account."
         case .resetPassword:
             return "Enter the email for your account. We'll send a link to choose a new password."
         case .checkEmail:
@@ -504,7 +510,7 @@ private struct AuthFieldView<Trailing: View>: View {
             .submitLabel(submitLabel)
             .focused(focusedField, equals: field)
             .onSubmit(onSubmit)
-            .foregroundStyle(.white)
+            .foregroundStyle(PinpointTheme.primaryText)
             .tint(PinpointTheme.accent)
 
             trailing()
@@ -519,7 +525,7 @@ private struct AuthFieldView<Trailing: View>: View {
     }
 
     private var prompt: Text {
-        Text(title).foregroundStyle(.white.opacity(0.35))
+        Text(title).foregroundStyle(PinpointTheme.secondaryText)
     }
 }
 

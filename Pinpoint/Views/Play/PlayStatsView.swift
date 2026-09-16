@@ -21,7 +21,7 @@ struct PlayStatsView: View {
             .navigationTitle("My Golf")
             .sheet(isPresented: $showClubs) {
                 ClubBagView()
-                    .preferredColorScheme(.dark)
+                    .preferredColorScheme(.light)
                     .presentationDetents([.large])
                     .presentationDragIndicator(.visible)
             }
@@ -61,7 +61,7 @@ struct PlayStatsView: View {
                 Spacer()
                 Button("Edit distances") { showClubs = true }
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(PinpointTheme.accent)
+                    .foregroundStyle(PinpointTheme.accentText)
             }
             Text("The GPS map picks a club from these carries as you pan.")
                 .font(.caption)
@@ -87,7 +87,7 @@ struct PlayStatsView: View {
             Text("Rounds Played")
                 .font(.headline)
             if rounds.pastRounds.isEmpty && rounds.activeRound == nil {
-                Text("No finished rounds yet.")
+                Text("No saved rounds yet.")
                     .font(.subheadline)
                     .foregroundStyle(PinpointTheme.secondaryText)
             }
@@ -103,10 +103,12 @@ struct PlayStatsView: View {
             }
             ForEach(rounds.pastRounds) { round in
                 NavigationLink {
-                    RoundSummaryView()
+                    if round.status == .active {
+                        ActiveRoundView().onAppear { rounds.resumeRound(round.id) }
+                    } else { RoundSummaryView(selectedRound: round) }
                 } label: {
                     historyRow(title: round.courseName,
-                               subtitle: "\(round.startedAt.formatted(date: .abbreviated, time: .omitted)) · \(round.holeScores.count) holes",
+                               subtitle: "\(round.startedAt.formatted(date: .abbreviated, time: .omitted)) · \(round.historyLabel)",
                                trailing: "\(round.totalGross)")
                 }
                 .buttonStyle(.plain)

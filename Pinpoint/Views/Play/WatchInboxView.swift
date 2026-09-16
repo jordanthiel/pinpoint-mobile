@@ -14,6 +14,7 @@ struct WatchInboxView: View {
     /// Hole to attach claimed shots to. Defaults to the active hole.
     var holeNumber: Int?
 
+    @State private var reviewing: SwingCandidate?
     @State private var claiming: WatchShotEvent?
     @State private var claimClub: GolfClub = .iron7
     @State private var claimLie: Lie = .fairway
@@ -23,7 +24,21 @@ struct WatchInboxView: View {
             PinpointTheme.background.ignoresSafeArea()
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    statusCard
+                    Text("Start Track swings on your Watch’s Shots page. Possible swings appear as orange markers on the hole map. Review here or tap a marker to correct its position, choose a club, or dismiss a practice swing.")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                    ForEach((rounds.activeRound?.swingCandidates ?? []).filter { $0.state == .pending }) { event in
+                        Button { reviewing = event } label: {
+                            HStack {
+                                Image(systemName: "applewatch").foregroundStyle(.orange)
+                                VStack(alignment: .leading) {
+                                    Text("Hole \(event.hole) · Possible swing")
+                                    Text("\(event.timestamp.formatted(date: .omitted, time: .shortened)) · \(event.locationSource.capitalized) position").font(.caption)
+                                }
+                                Spacer(); Image(systemName: "chevron.right")
+                            }.padding(12)
+                        }.buttonStyle(.plain)
+                    }
+                    DisclosureGroup("Phone impact detector") { statusCard }
                     if rounds.watchDetector.pendingEvents.isEmpty {
                         emptyState
                     } else {
@@ -34,7 +49,7 @@ struct WatchInboxView: View {
                             rounds.watchDetector.clearClaimed()
                         }
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(PinpointTheme.accent)
+                        .foregroundStyle(PinpointTheme.accentText)
                     }
                 }
                 .padding(16)
@@ -42,9 +57,10 @@ struct WatchInboxView: View {
         }
         .navigationTitle("Watch Tracking")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $reviewing) { SwingReviewSheet(event: $0) }
         .sheet(item: $claiming) { event in
             claimSheet(event)
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(.light)
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
         }
@@ -59,7 +75,7 @@ struct WatchInboxView: View {
             HStack {
                 Image(systemName: rounds.watchDetector.isListening ? "applewatch.radiowaves.left.and.right" : "applewatch")
                     .font(.title2)
-                    .foregroundStyle(PinpointTheme.accent)
+                    .foregroundStyle(PinpointTheme.accentText)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(rounds.watchDetector.isListening ? "Listening for strikes" : "Detection paused")
                         .font(.headline)
@@ -104,10 +120,10 @@ struct WatchInboxView: View {
         VStack(spacing: 10) {
             Image(systemName: "applewatch")
                 .font(.system(size: 44))
-                .foregroundStyle(PinpointTheme.accent)
+                .foregroundStyle(PinpointTheme.accentText)
             Text("No swings detected yet")
                 .font(.headline)
-            Text("Swing with your phone in your pocket (or a paired watch) and strikes appear here. Nothing is added to your card until you claim it.")
+            Text("Start tracking on your Watch to map possible swings. Confirmed shots are added to the shot trail; your saved score stays unchanged.")
                 .font(.subheadline)
                 .foregroundStyle(PinpointTheme.secondaryText)
                 .multilineTextAlignment(.center)
@@ -119,7 +135,7 @@ struct WatchInboxView: View {
     private func eventRow(_ event: WatchShotEvent) -> some View {
         HStack(spacing: 12) {
             Image(systemName: event.source == "watch" ? "applewatch" : event.source == "simulated" ? "wand.and.stars" : "iphone")
-                .foregroundStyle(PinpointTheme.accent)
+                .foregroundStyle(PinpointTheme.accentText)
                 .frame(width: 30)
             VStack(alignment: .leading, spacing: 2) {
                 Text(event.isLikelyStrike ? "Likely strike" : "Possible swing")
@@ -143,7 +159,7 @@ struct WatchInboxView: View {
                 .foregroundStyle(.white)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
-                .background(PinpointTheme.accent, in: Capsule())
+                .background(PinpointTheme.primaryText, in: Capsule())
                 .buttonStyle(.plain)
                 Button {
                     rounds.watchDetector.remove(event)
@@ -209,7 +225,7 @@ struct WatchInboxView: View {
                             number: rounds.nextShotNumber(targetHole),
                             club: claimClub, lie: claimLie,
                             distanceToPinBeforeYards: ball.distanceYards,
-                            carryYards: claimClub.isPutter ? nil : rounds.bagCarry(for: claimClub),
+                            carryYards: nil, includeInTrueDistance: false,
                             source: .watch, timestamp: event.timestamp
                         )
                         if rounds.activeRound != nil {

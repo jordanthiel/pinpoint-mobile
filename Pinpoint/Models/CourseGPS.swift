@@ -127,6 +127,13 @@ struct HoleLayout: Codable, Hashable, Equatable {
 
     var headingDegrees: Double { tee.bearing(to: pin) }
 
+    /// Look into the green from the final fairway segment, including on doglegs.
+    /// Anchor to the mapped green so adjusting the flag cannot rotate the view.
+    var greenApproachHeading: Double {
+        let approach = path.reversed().first { $0.yards(to: greenCenter) >= 40 } ?? tee
+        return approach.bearing(to: greenCenter)
+    }
+
     func cameraDistance(extra: Double = 1.0) -> Double {
         let yards = max(160, tee.yards(to: pin) * 1.75)
         return (yards / 1.09361) * 2.15 * extra
@@ -151,6 +158,37 @@ struct HoleLayout: Codable, Hashable, Equatable {
             left -= leg
         }
         return corridor.last ?? pin
+    }
+
+    /// Place the opening shot at the driver's measured distance, on the mapped
+    /// fairway. Distance is from the golfer, not the sum of dogleg path segments.
+    func initialShotTarget(from origin: GeoPoint, carryYards: Double = GolfClub.driver.stockYards, par: Int? = nil) -> GeoPoint {
+        let carry = carryYards.isFinite && carryYards > 0 ? carryYards : GolfClub.driver.stockYards
+        if par == 3 || origin.yards(to: pin) <= carry { return pin }
+        var corridor = path.count >= 2 ? path : [tee, pin]
+        corridor[0] = tee; corridor[corridor.count - 1] = pin
+        var nearestIndex = 0
+        var nearestT = 0.0
+        var nearestCross = Double.infinity
+        for index in 0..<(corridor.count - 1) {
+            let a = corridor[index], b = corridor[index + 1]
+            let t = min(1, max(0, a.projectionT(onto: b, from: origin)))
+            let cross = origin.yards(to: a.interpolated(to: b, t: t))
+            if cross < nearestCross { nearestCross = cross; nearestIndex = index; nearestT = t }
+        }
+        for index in nearestIndex..<(corridor.count - 1) {
+            let a = corridor[index], b = corridor[index + 1]
+            var low = index == nearestIndex ? nearestT : 0
+            if origin.yards(to: b) < carry { continue }
+            var high = 1.0
+            for _ in 0..<32 {
+                let mid = (low + high) / 2
+                if origin.yards(to: a.interpolated(to: b, t: mid)) < carry { low = mid }
+                else { high = mid }
+            }
+            return a.interpolated(to: b, t: (low + high) / 2)
+        }
+        return pin
     }
 
     var cameraCenter: GeoPoint {
@@ -813,5 +851,45 @@ enum GeorgetownGPS {
             }
         }
         return true
+    }
+}
+
+/// Separate enter/exit radii stop GPS noise or small finger movements from
+/// flickering between the two-leg planner and a direct flag measurement.
+enum RangefinderSnap {
+    /// Follow progress along the mapped hole, including doglegs. Once consumed,
+    /// the target becomes the pin and stays there through small GPS reversals.
+    static func advancingTarget(origin: GeoPoint, target: GeoPoint, pin: GeoPoint, layout: HoleLayout) -> GeoPoint {
+        guard layout.distanceToCorridor(origin) <= 100 else { return target }
+        if target.yards(to: pin) <= 15 { return pin }
+        let playerProgress = layout.project(origin).along
+        let targetProgress = layout.project(target).along
+        if origin.yards(to: target) <= 20 || playerProgress >= targetProgress - 10 {
+            return pin
+        }
+        return target
+    }
+
+
+    static func isDirect(origin: GeoPoint, target: GeoPoint, pin: GeoPoint, wasDirect: Bool) -> Bool {
+        origin.yards(to: pin) <= (wasDirect ? 45 : 35)
+            || target.yards(to: pin) <= (wasDirect ? 25 : 15)
+    }
+}
+
+
+struct RangefinderLeg: Identifiable {
+    enum Kind { case flag, first, second }
+    var id: Kind
+    var start: GeoPoint
+    var end: GeoPoint
+    var yards: Double { start.yards(to: end) }
+}
+
+extension RangefinderSnap {
+    static func legs(origin: GeoPoint, target: GeoPoint, pin: GeoPoint, direct: Bool) -> [RangefinderLeg] {
+        if direct { return [RangefinderLeg(id: .flag, start: origin, end: pin)] }
+        return [RangefinderLeg(id: .first, start: origin, end: target),
+                RangefinderLeg(id: .second, start: target, end: pin)]
     }
 }

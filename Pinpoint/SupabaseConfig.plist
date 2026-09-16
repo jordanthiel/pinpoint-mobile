@@ -3,8 +3,8 @@
 <plist version="1.0">
 <dict>
 	<key>SUPABASE_URL</key>
-	<string>http://192.168.0.114:54331</string>
+	<string>https://wcobniubsmvvrggzrkhh.supabase.co</string>
 	<key>SUPABASE_ANON_KEY</key>
-	<string>sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH</string>
+	<string>sb_publishable_cGHNgOgMtsMqJNdlEQUjpQ_jRsKI-Qd</string>
 </dict>
 </plist>

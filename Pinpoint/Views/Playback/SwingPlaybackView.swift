@@ -36,6 +36,8 @@ struct SwingPlaybackView: View {
                 videoStage
             }
         }
+        .foregroundStyle(.white)
+        .toolbarColorScheme(.dark, for: .navigationBar)
         .overlay(alignment: .trailing) {
             if current.hasLocalVideo {
                 FrameScrubberView(
@@ -52,7 +54,8 @@ struct SwingPlaybackView: View {
         }
         .defersSystemGestures(on: .trailing)
         .background(DisableInteractivePopGesture())
-        .navigationTitle(current.title)
+        .preference(key: PinpointImmersiveKey.self, value: true)
+            .navigationTitle(current.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
@@ -89,6 +92,12 @@ struct SwingPlaybackView: View {
         }
         .safeAreaInset(edge: .bottom) {
             if current.hasLocalVideo {
+                VStack(spacing: 0) {
+                    SwingReviewControls(swingID: current.id, frame: playback.currentFrame, time: playback.currentTime) { frame in
+                        playback.beginScrub()
+                        playback.scrub(toFrame: frame)
+                        playback.endScrub()
+                    }
                 PlaybackBarView(
                     isPlaying: playback.isPlaying,
                     currentFrame: playback.currentFrame,
@@ -104,6 +113,7 @@ struct SwingPlaybackView: View {
                     onScrubEnd: { playback.endScrub() },
                     onSetRate: { playback.setRate($0) }
                 )
+                }
             }
         }
         .task {
@@ -183,7 +193,7 @@ struct SwingPlaybackView: View {
         }
         .sheet(isPresented: $showTagEditor) {
             SwingTagEditorView(swing: current)
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(.light)
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
         }

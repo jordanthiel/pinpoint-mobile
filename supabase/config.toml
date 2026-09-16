@@ -382,3 +382,7 @@ s3_region = "env(S3_REGION)"
 s3_access_key = "env(S3_ACCESS_KEY)"
 # Configures AWS_SECRET_ACCESS_KEY for S3 bucket
 s3_secret_key = "env(S3_SECRET_KEY)"
+
+[functions.golf-ai]
+# The function validates the bearer token with Auth before any paid request.
+verify_jwt = false

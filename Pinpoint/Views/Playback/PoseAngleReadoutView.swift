@@ -15,10 +15,10 @@ struct PoseAngleReadoutView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "line.3.horizontal")
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(PinpointTheme.secondaryText)
+                        .foregroundStyle(Color.white.opacity(0.65))
                     Text("Angles")
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(PinpointTheme.secondaryText)
+                        .foregroundStyle(Color.white.opacity(0.65))
                         .textCase(.uppercase)
                     Spacer(minLength: 8)
                     if let onDismiss {
@@ -51,7 +51,7 @@ struct PoseAngleReadoutView: View {
 
                         Text(reading.degreesText)
                             .font(.system(.caption, design: .rounded).weight(.bold))
-                            .foregroundStyle(reading.measured == nil ? PinpointTheme.secondaryText : Color(hex: "F5D76E"))
+                            .foregroundStyle(reading.measured == nil ? Color.white.opacity(0.65) : Color(hex: "F5D76E"))
                             .monospacedDigit()
                     }
                 }

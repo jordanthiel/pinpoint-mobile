@@ -70,13 +70,6 @@ final class WatchShotDetector: NSObject {
 
     override init() {
         super.init()
-        #if canImport(WatchConnectivity)
-        if WCSession.isSupported() {
-            let session = WCSession.default
-            session.delegate = self
-            session.activate()
-        }
-        #endif
     }
 
     // MARK: - Listening (iPhone mic + motion fusion)
@@ -199,26 +192,3 @@ final class WatchShotDetector: NSObject {
 
     var unclaimedCount: Int { pendingEvents.filter { !$0.claimed }.count }
 }
-
-#if canImport(WatchConnectivity)
-extension WatchShotDetector: WCSessionDelegate {
-    func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {
-        Task { @MainActor in
-            watchReachable = session.isWatchAppInstalled && session.isReachable
-        }
-    }
-
-    func sessionDidBecomeInactive(_ session: WCSession) {}
-    func sessionDidDeactivate(_ session: WCSession) {}
-
-    func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
-        ingestWatchMessage(message)
-    }
-
-    func sessionReachabilityDidChange(_ session: WCSession) {
-        Task { @MainActor in
-            watchReachable = session.isReachable
-        }
-    }
-}
-#endif

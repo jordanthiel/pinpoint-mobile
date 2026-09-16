@@ -7,19 +7,20 @@ enum PinpointSupabase {
 
     static let client: SupabaseClient? = {
         guard let url = configURL, let key = configKey else { return nil }
-        return SupabaseClient(supabaseURL: url, supabaseKey: key)
+        return SupabaseClient(supabaseURL: url, supabaseKey: key,
+                              options: .init(auth: .init(emitLocalSessionAsInitialSession: true)))
     }()
 
     static var isConfigured: Bool { client != nil }
 
-    private static var configURL: URL? {
+    static var configURL: URL? {
         guard let raw = string("SUPABASE_URL"),
               !raw.contains("YOUR_PROJECT"),
               let url = URL(string: raw) else { return nil }
         return url
     }
 
-    private static var configKey: String? {
+    static var configKey: String? {
         guard let key = string("SUPABASE_ANON_KEY"),
               !key.isEmpty,
               key != "YOUR_ANON_KEY" else { return nil }

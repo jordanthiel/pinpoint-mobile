@@ -2,13 +2,13 @@ import SwiftUI
 
 /// Shared bits for the Play (on-course) experience.
 enum PlayUI {
-    static let cardRadius: CGFloat = 18
+    static let cardRadius: CGFloat = PinpointTheme.Radius.card
 
     static func card<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 10, content: content)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(16)
-            .background(PinpointTheme.surface, in: RoundedRectangle(cornerRadius: cardRadius, style: .continuous))
+            .padding(PinpointTheme.Space.page)
+            .pinpointCard()
     }
 
     static func scoreColor(score: Int, par: Int) -> Color {
@@ -33,7 +33,7 @@ struct WindBadge: View {
             VStack(alignment: .leading, spacing: 0) {
                 Text("Wind")
                     .font(.caption2.weight(.semibold))
-                    .foregroundStyle(PinpointTheme.secondaryText)
+                    .foregroundStyle(.white.opacity(0.65))
                 Text("\(Int(mph)) mph")
                     .font(.subheadline.weight(.bold))
             }
@@ -92,7 +92,7 @@ struct HolePickerBar: View {
                                 n == current ? PinpointTheme.accent : PinpointTheme.surfaceElevated,
                                 in: Circle()
                             )
-                            .foregroundStyle(n == current ? .white : PinpointTheme.secondaryText)
+                            .foregroundStyle(n == current ? PinpointTheme.primaryText : PinpointTheme.secondaryText)
                     }
                     .buttonStyle(.plain)
                 }
@@ -199,7 +199,7 @@ struct BirdiesBlueBadge: View {
             .font(.system(size: size * 0.55, weight: .heavy))
             .foregroundStyle(.white)
             .frame(width: size, height: size)
-            .background(Color(red: 20 / 255, green: 130 / 255, blue: 240 / 255), in: Circle())
+            .background(PinpointTheme.primaryText, in: Circle())
     }
 }
 
@@ -398,78 +398,79 @@ struct BirdiesDockButton: View {
     }
 }
 
-/// Two-tone bottom-center hole pill: black label section + raised chevron tab.
+/// Independent previous/score/next controls, matching the on-course score bar.
 struct BirdiesHolePill: View {
+    var par: Int
     var holeNumber: Int
+    var score: Int?
+    var canGoBack: Bool
+    var canGoForward: Bool
+    var back: () -> Void
+    var forward: () -> Void
     var action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 0) {
-                Text("Hole \(holeNumber)")
-                    .font(.system(size: 20, weight: .semibold, design: .rounded).monospacedDigit())
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity, minHeight: 60)
-                    .background(Color.black.opacity(0.95))
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 56, height: 60)
-                    .background(Color(red: 0.22, green: 0.23, blue: 0.26).opacity(0.95))
+        HStack(spacing: 0) {
+            navigationButton("chevron.left", label: "Previous hole", enabled: canGoBack, action: back)
+            Button(action: action) {
+                VStack(spacing: 4) {
+                    Text(score == nil ? "Hole" : "Edit Hole \(holeNumber)")
+                        .font(.system(size: 12, weight: .semibold))
+                        .lineLimit(1).minimumScaleFactor(0.8)
+                    Text(String(score ?? holeNumber))
+                        .background { if let score { ScoreMark(score: score, par: par, size: 36) } }
+                        .font(.system(size: 30, weight: .medium, design: .rounded).monospacedDigit())
+                }
+                .foregroundStyle(PinpointTheme.primaryText)
+                .frame(maxWidth: .infinity)
+                .frame(height: 64)
+                .background(PinpointTheme.accent, in: RoundedRectangle(cornerRadius: 12))
+                .contentShape(Rectangle())
             }
-            .clipShape(Capsule())
+            .buttonStyle(.plain)
+            .accessibilityLabel("Hole \(holeNumber), \(score.map { "score \($0), edit score" } ?? "enter score")")
+            .accessibilityIdentifier("holeScoreButton")
+            navigationButton("chevron.right", label: "Next hole", enabled: canGoForward, action: forward)
+        }
+        .background(Color.black.opacity(0.78), in: RoundedRectangle(cornerRadius: 14))
+    }
+
+    private func navigationButton(_ symbol: String, label: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 19, weight: .semibold))
+                .foregroundStyle(.white.opacity(enabled ? 1 : 0.3))
+                .frame(width: 44, height: 64)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(Text("Hole \(holeNumber)"))
+        .disabled(!enabled)
+        .accessibilityLabel(label)
     }
 }
 
 /// Wind card on the right rail: "Wind >" label, diagonal wind arrow, mph.
 struct BirdiesWindCard: View {
-    var mph: Double
-    var fromDegrees: Double
-
+    var mph: Double?
+    var fromDegrees: Double?
+    var mapHeading: Double = 0
+    var status: String = ""
     var body: some View {
-        VStack(spacing: 4) {
-            HStack(spacing: 4) {
-                Text("Wind")
-                    .font(.system(size: 13, weight: .semibold))
-                BirdiesBlueBadge(size: 14)
+        VStack(spacing: 6) {
+            Text("Wind").font(.system(size: 13, weight: .semibold))
+            if let fromDegrees, mph != nil {
+                // A north wind blows south. arrow.down starts pointing south.
+                Image(systemName: "arrow.down").font(.system(size: 27, weight: .bold))
+                    .rotationEffect(.degrees(fromDegrees - mapHeading)).frame(height: 42)
+            } else {
+                Image(systemName: mph == nil ? "wind" : "circle.dotted").font(.title2).frame(height: 42)
             }
-            ZStack {
-                Image(systemName: "arrow.down")
-                    .font(.system(size: 11, weight: .regular))
-                    .foregroundStyle(.white.opacity(0.55))
-                    .rotationEffect(.degrees(windHeading + 180))
-                    .offset(x: -15, y: 10)
-                Image(systemName: "arrow.down")
-                    .font(.system(size: 11, weight: .regular))
-                    .foregroundStyle(.white.opacity(0.55))
-                    .rotationEffect(.degrees(windHeading + 180))
-                    .offset(x: 15, y: -12)
-                Image(systemName: "arrow.down")
-                    .font(.system(size: 27, weight: .bold))
-                    .foregroundStyle(.white)
-                    .rotationEffect(.degrees(windHeading + 180))
-            }
-            .frame(height: 52)
-            HStack(alignment: .lastTextBaseline, spacing: 3) {
-                Text("\(Int(mph.rounded()))")
-                    .font(.system(size: 20, weight: .bold, design: .rounded).monospacedDigit())
-                Text("mph")
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundStyle(.white.opacity(0.9))
-            }
-        }
-        .foregroundStyle(.white)
-        .frame(width: 68)
-        .padding(.vertical, 9)
-        .background(Color.black.opacity(0.92), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            Text(mph.map { "\(Int($0.rounded())) mph" } ?? "—")
+                .font(.system(size: 18, weight: .bold)).monospacedDigit()
+            Text(status).font(.system(size: 9)).lineLimit(1).minimumScaleFactor(0.7)
+        }.foregroundStyle(.white).frame(width: 68).padding(.vertical, 9)
+            .background(Color.black.opacity(0.92), in: RoundedRectangle(cornerRadius: 18))
     }
-
-    /// Reference art blows toward bottom-right; rotate the whole glyph group
-    /// by the measured wind direction so the big arrow matches compass truth.
-    private var windHeading: Double { fromDegrees }
 }
 
 /// Landing-spot reticle on the play line, matching the 18Birdies satellite crosshair.

@@ -8,13 +8,22 @@ struct ShotEditorView: View {
     var holeNumber: Int
     var holeYardage: Int
     var existing: TrackedShot?
+    var suggested: TrackedShot? = nil
     var prefillStart: GeoPoint? = nil
     var prefillEnd: GeoPoint? = nil
+    var onDeleteSuggestion: (() -> Void)?
     var onDone: () -> Void = {}
+    @State private var movingLocation = false
+    @State private var initialized = false
+    @State private var saveError = false
 
+    @State private var correctedStart: GeoPoint?
+    @State private var lieEdited = false
     @State private var lie: Lie = .tee
     @State private var penalty: Int = 0
     @State private var club: GolfClub?
+    @State private var clubSuggested = false
+    @State private var actualDistance = ""
     @State private var distanceToPin = ""
     @State private var carry = ""
     @State private var includeTrue = true
@@ -39,9 +48,37 @@ struct ShotEditorView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 18) {
                         header
+                        if let start = correctedStart {
+                            PositioningMap(initialPoint: start, distance: 350, locationTrail: rounds.locationTrail(holeNumber)) { _ in }
+                                .overlay { PlacementMarker(symbol: "mappin", color: PinpointTheme.accent) }
+                                .id(start)
+                                .frame(height: 180).clipShape(RoundedRectangle(cornerRadius: 18))
+                                .allowsHitTesting(false)
+                                .accessibilityLabel("Shot location, movement trail and recorded stops")
+                        }
+                        if correctedStart != nil {
+                            Button { movingLocation = true } label: {
+                                Label("Move Shot Location", systemImage: "map.fill")
+                                    .frame(maxWidth: .infinity, minHeight: 48)
+                            }.buttonStyle(SecondaryButtonStyle())
+                            if let start = correctedStart, let end = prefillEnd ?? existing?.end {
+                                Text("Mapped distance: \(Int(start.yards(to: end).rounded())) yds")
+                                    .font(.headline.monospacedDigit())
+                            }
+                        }
+                        if isEditing || onDeleteSuggestion != nil {
+                            Button("Delete Shot", role: .destructive) { deleteShot() }
+                                .buttonStyle(.bordered).frame(maxWidth: .infinity, alignment: .trailing)
+                        }
                         lieSection
-                        penaltySection
                         clubSection
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Actual Distance").font(.headline)
+                            TextField("Distance in yards", text: $actualDistance).keyboardType(.decimalPad)
+                                .padding(12).background(PinpointTheme.surfaceElevated, in: RoundedRectangle(cornerRadius: 12))
+                            Text("Calculated from mapped shot locations. Includes roll.").font(.caption).foregroundStyle(.secondary)
+                            if clubSuggested { Text("Club suggested from distance · tap a club to change it").font(.caption).foregroundStyle(.secondary) }
+                        }
                         distanceSection
                         detailSection(contactTitle: "Contact", selection: $contact,
                                       options: Contact.allCases, label: \.label)
@@ -50,10 +87,13 @@ struct ShotEditorView: View {
                         detailSection(contactTitle: "Quality", selection: $quality,
                                       options: ShotQuality.allCases, label: \.label)
                         noteSection
-                        saveRow
                     }
                     .padding(20)
                 }
+            }
+            .safeAreaInset(edge: .bottom) {
+                saveRow.padding(.horizontal, 20).padding(.vertical, 12)
+                    .background(.regularMaterial)
             }
             .navigationTitle(isEditing ? "Edit Shot" : "Add Shot")
             .navigationBarTitleDisplayMode(.inline)
@@ -61,60 +101,92 @@ struct ShotEditorView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
-                if isEditing {
-                    ToolbarItem(placement: .destructiveAction) {
-                        Button("Delete", role: .destructive) {
-                            if let existing {
-                                rounds.deleteShot(holeNumber, id: existing.id)
-                            }
-                            dismiss()
-                            onDone()
+            }
+            .fullScreenCover(isPresented: $movingLocation) {
+                if let start = correctedStart {
+                    ShotLocationEditor(initialPoint: start, locationTrail: rounds.locationTrail(holeNumber), endpoint: prefillEnd ?? existing?.end) { point in
+                        correctedStart = point
+                        updateMappedDistance(from: point)
+                        if let pin = rounds.activeRound?.pinCoordinate(for: holeNumber) {
+                            distanceToPin = String(Int(point.yards(to: pin).rounded()))
                         }
                     }
                 }
             }
+            .alert("Shot not saved", isPresented: $saveError) { Button("OK", role: .cancel) { } }
+                message: { Text(rounds.lastError ?? "Try again.") }
             .onAppear(perform: prefill)
         }
     }
 
+    private func deleteShot() {
+        if let existing { rounds.deleteShot(holeNumber, id: existing.id) }
+        else { onDeleteSuggestion?() }
+        dismiss()
+        onDone()
+    }
+
     private func prefill() {
+        guard !initialized else { return }
+        initialized = true
         if let existing {
+            correctedStart = existing.start ?? prefillStart
             lie = existing.lie
             club = existing.club
+            clubSuggested = existing.clubWasSuggested == true
             contact = existing.contact
             shape = existing.shape ?? .straight
             quality = existing.quality
             includeTrue = existing.includeInTrueDistance
-            if let d = existing.distanceToPinBeforeYards { distanceToPin = "\(Int(d))" }
+            if let start = correctedStart, let pin = rounds.activeRound?.pinCoordinate(for: holeNumber) {
+                distanceToPin = String(Int(start.yards(to: pin).rounded()))
+            } else if let d = existing.distanceToPinBeforeYards { distanceToPin = "\(Int(d))" }
             if let c = existing.carryYards { carry = "\(Int(c))" }
             note = existing.note
         } else if let round = rounds.activeRound {
+            clubSuggested = true
+            correctedStart = suggested?.start ?? rounds.suggestedStop(holeNumber) ?? prefillStart
             let ball = rounds.ballState(holeNumber)
             lie = ball.lie
-            if let start = prefillStart, let pin = round.pinCoordinate(for: holeNumber) {
+            if let start = correctedStart, let pin = round.pinCoordinate(for: holeNumber) {
                 distanceToPin = "\(Int(start.yards(to: pin).rounded()))"
             } else {
                 distanceToPin = "\(Int(ball.distanceYards))"
             }
-            if let start = prefillStart, let end = prefillEnd {
-                carry = "\(Int(start.yards(to: end).rounded()))"
+            if prefillStart != nil, prefillEnd != nil {
+                // Map distance is not measured carry.
+                includeTrue = false
             }
             let count = round.score(for: holeNumber)?.shots.count ?? 0
             if count == 0 {
                 club = holeYardage > 220 ? .driver : .iron7
                 lie = .tee
             } else {
-                let helping = cos(Double(holeNumber) * 0.7)
+                let wind = round.courseWind.flatMap { $0.isFresh() ? $0 : nil }
+                let bearing = round.playLayout(for: holeNumber)?.headingDegrees ?? 0
+                let helping = wind?.helping(toward: bearing) ?? 0
                 let playsLike = CaddieEngine.playsLike(yards: ball.distanceYards,
-                                                       windMph: round.windMph, windHelping: helping)
+                                                       windMph: wind?.mph ?? 0, windHelping: helping)
                 club = CaddieEngine.recommendClub(for: playsLike, bag: rounds.clubBag)?.club
             }
+        }
+        if let start = correctedStart { updateMappedDistance(from: start) }
+        else if let distance = existing?.mappedDistanceYards { actualDistance = String(Int(distance.rounded())) }
+    }
+
+    private func updateMappedDistance(from start: GeoPoint) {
+        guard let end = prefillEnd ?? existing?.end else { return }
+        let yards = start.yards(to: end)
+        actualDistance = String(Int(yards.rounded()))
+        if club == nil || clubSuggested {
+            club = CaddieEngine.suggestedShotClub(for: yards, bag: rounds.clubBag)
+            clubSuggested = true
         }
     }
 
     private var header: some View {
         HStack {
-            Text("Shot \(existing?.number ?? rounds.nextShotNumber(holeNumber))")
+            Text("Shot \(existing?.number ?? suggested?.number ?? rounds.nextShotNumber(holeNumber))")
                 .font(.headline)
             + Text("  (Distance to Pin)")
                 .font(.subheadline)
@@ -145,6 +217,7 @@ struct ShotEditorView: View {
     private func lieButton(_ l: Lie) -> some View {
         Button {
             lie = l
+            lieEdited = true
             if l == .green { club = .putter }
         } label: {
             VStack(spacing: 6) {
@@ -152,8 +225,8 @@ struct ShotEditorView: View {
                     .font(.headline.weight(.bold))
                     .frame(width: 52, height: 52)
                     .background(lie == l ? .white : PinpointTheme.surfaceElevated, in: Circle())
-                    .overlay(Circle().stroke(lie == l ? PinpointTheme.accent : Color.white.opacity(0.12), lineWidth: 1.5))
-                    .foregroundStyle(lie == l ? PinpointTheme.accent : .white)
+                    .overlay(Circle().stroke(lie == l ? PinpointTheme.accent : PinpointTheme.hairline, lineWidth: 1.5))
+                    .foregroundStyle(lie == l ? PinpointTheme.accent : PinpointTheme.primaryText)
                 Text(l.label)
                     .font(.caption2)
                     .foregroundStyle(PinpointTheme.secondaryText)
@@ -193,25 +266,26 @@ struct ShotEditorView: View {
                 Spacer()
                 // Quick filter: long / mid / short.
                 Menu {
-                    Button("Driver / Woods") { club = .driver }
-                    Button("Long iron / Hybrid") { club = .iron5 }
-                    Button("Short iron / Wedge") { club = .pitchingWedge }
-                    Button("Putter") { club = .putter }
+                    Button("Driver / Woods") { clubSuggested = false; club = .driver }
+                    Button("Long iron / Hybrid") { clubSuggested = false; club = .iron5 }
+                    Button("Short iron / Wedge") { clubSuggested = false; club = .pitchingWedge }
+                    Button("Putter") { clubSuggested = false; club = .putter }
                 } label: {
                     Image(systemName: "line.3.horizontal.decrease.circle")
-                        .foregroundStyle(PinpointTheme.accent)
+                        .foregroundStyle(PinpointTheme.accentText)
                 }
             }
             if let club {
                 Text(rounds.clubBag.entry(for: club)?.fullLabel ?? club.displayName)
                     .font(.largeTitle.weight(.bold))
-                    .foregroundStyle(PinpointTheme.accent)
+                    .foregroundStyle(PinpointTheme.accentText)
                     .frame(maxWidth: .infinity)
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(editorClubs) { c in
                         Button {
+                            clubSuggested = false
                             club = c
                             if c.isPutter { lie = .green }
                         } label: {
@@ -221,7 +295,7 @@ struct ShotEditorView: View {
                                 .padding(.vertical, 10)
                                 .background(club == c ? PinpointTheme.accent : PinpointTheme.surfaceElevated,
                                             in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                                .foregroundStyle(club == c ? .white : PinpointTheme.secondaryText)
+                                .foregroundStyle(club == c ? PinpointTheme.primaryText : PinpointTheme.secondaryText)
                         }
                         .buttonStyle(.plain)
                     }
@@ -249,7 +323,7 @@ struct ShotEditorView: View {
                 .background(PinpointTheme.surfaceElevated, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             Toggle("Include this shot in True Distance?", isOn: $includeTrue)
                 .font(.subheadline)
-            if let start = existing?.start ?? prefillStart, let end = existing?.end ?? prefillEnd {
+            if let start = correctedStart ?? existing?.start ?? prefillStart, let end = existing?.end ?? prefillEnd {
                 Text("Mapped \(Int(start.yards(to: end).rounded())) yds from the satellite drop.")
                     .font(.caption)
                     .foregroundStyle(PinpointTheme.secondaryText)
@@ -273,7 +347,7 @@ struct ShotEditorView: View {
                                 .padding(.vertical, 8)
                                 .background(selection.wrappedValue == opt ? PinpointTheme.accent.opacity(0.25) : PinpointTheme.surfaceElevated,
                                             in: Capsule())
-                                .foregroundStyle(selection.wrappedValue == opt ? PinpointTheme.accent : .white)
+                                .foregroundStyle(selection.wrappedValue == opt ? PinpointTheme.accent : PinpointTheme.primaryText)
                         }
                         .buttonStyle(.plain)
                     }
@@ -298,7 +372,7 @@ struct ShotEditorView: View {
                                 .padding(.vertical, 8)
                                 .background(selection.wrappedValue == opt ? PinpointTheme.accent.opacity(0.25) : PinpointTheme.surfaceElevated,
                                             in: Capsule())
-                                .foregroundStyle(selection.wrappedValue == opt ? PinpointTheme.accent : .white)
+                                .foregroundStyle(selection.wrappedValue == opt ? PinpointTheme.accent : PinpointTheme.primaryText)
                         }
                         .buttonStyle(.plain)
                     }
@@ -322,16 +396,12 @@ struct ShotEditorView: View {
 
     private var saveRow: some View {
         Button {
-            let start = existing?.start ?? prefillStart
+            let start = correctedStart ?? existing?.start ?? prefillStart
             let end = existing?.end ?? prefillEnd
-            let computedCarry: Double? = {
-                if let value = Double(carry) { return value }
-                if let start, let end { return start.yards(to: end) }
-                return nil
-            }()
-            let shot = TrackedShot(
-                id: existing?.id ?? UUID(),
-                number: existing?.number ?? rounds.nextShotNumber(holeNumber),
+            let computedCarry = Double(carry)
+            var shot = TrackedShot(
+                id: existing?.id ?? suggested?.id ?? UUID(),
+                number: existing?.number ?? suggested?.number ?? rounds.nextShotNumber(holeNumber),
                 club: club,
                 lie: lie,
                 distanceToPinBeforeYards: Double(distanceToPin),
@@ -346,18 +416,25 @@ struct ShotEditorView: View {
                 timestamp: existing?.timestamp ?? Date(),
                 note: note
             )
+            shot.lieWasInferred = lieEdited ? false : (existing?.lieWasInferred ?? (existing == nil ? true : nil))
+            shot.nfcTagID = existing?.nfcTagID
+            shot.bagEntryID = existing?.bagEntryID
+            shot.observations = existing?.observations
+            shot.traveledYards = existing?.traveledYards
+            shot.mappedDistanceYards = Double(actualDistance)
+            shot.clubWasSuggested = clubSuggested
+            shot.remainingFeet = existing?.remainingFeet
             if existing != nil {
-                rounds.updateShot(holeNumber, shot)
+                guard rounds.updateShot(holeNumber, shot) else { saveError = true; return }
+            } else if suggested != nil, let start {
+                guard rounds.moveShot(holeNumber, shot: shot, to: start) else { saveError = true; return }
             } else {
-                rounds.addShot(holeNumber, shot)
-            }
-            if penalty > 0 {
-                rounds.updateHole(holeNumber) { $0.penaltyStrokes += penalty }
+                guard rounds.addShot(holeNumber, shot) else { saveError = true; return }
             }
             dismiss()
             onDone()
         } label: {
-            Text("Save")
+            Text(isEditing ? "Save Changes" : "Save Shot")
                 .font(.headline)
                 .frame(maxWidth: .infinity)
         }

@@ -49,6 +49,12 @@ enum CaddieEngine {
         return (rec.entry.club, rec.swingEffort)
     }
 
+    /// Recorded non-putting shots must not become putts just because a chip is short.
+    static func suggestedShotClub(for yards: Double, bag: ClubBag) -> GolfClub? {
+        let options = bag.shotClubs
+        return (options.first { $0.carryYards >= yards } ?? options.last)?.club
+    }
+
     /// Label for a live rangefinder number, e.g. "142 Yds · 8i".
     static func yardsClubLabel(yards: Double, bag: ClubBag, prefix: String = "") -> String {
         let yds = "\(prefix)\(Int(yards.rounded())) Yds"

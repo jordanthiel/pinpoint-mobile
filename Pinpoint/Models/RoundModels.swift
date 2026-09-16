@@ -255,13 +255,68 @@ struct GeoPoint: Codable, Hashable, Equatable {
 
 // MARK: - Shot
 
+/// Explicitly reported observations. Nil means unknown, never a default outcome.
+enum ShotFinish: String, Codable, CaseIterable, Identifiable {
+    case fairway, rough, bunker, fringe, green, trees, water, outOfBounds = "out of bounds", holed
+    var id: String { rawValue }
+}
+enum LateralMiss: String, Codable, CaseIterable, Identifiable {
+    case left, right
+    var id: String { rawValue }
+}
+enum DepthMiss: String, Codable, CaseIterable, Identifiable {
+    case short, long
+    var id: String { rawValue }
+}
+enum PuttBreak: String, Codable, CaseIterable, Identifiable {
+    case leftToRight = "left to right", rightToLeft = "right to left", straight
+    var id: String { rawValue }
+}
+enum PuttMissSide: String, Codable, CaseIterable, Identifiable {
+    case high, low
+    var id: String { rawValue }
+}
+struct ShotObservations: Codable, Hashable, Equatable {
+    var finish: ShotFinish?
+    var lateralMiss: LateralMiss?
+    var depthMiss: DepthMiss?
+    var puttBreak: PuttBreak?
+    var puttMissSide: PuttMissSide?
+    var holed: Bool?
+    var carryYards: Double?
+    var startingDistanceFeet: Double?
+
+    var evidence: String {
+        "finish=\(finish?.rawValue ?? "unknown") lateralMiss=\(lateralMiss?.rawValue ?? "unknown") depthMiss=\(depthMiss?.rawValue ?? "unknown") puttBreak=\(puttBreak?.rawValue ?? "unknown") puttMissSide=\(puttMissSide?.rawValue ?? "unknown") holed=\(holed.map(String.init) ?? "unknown") startFeet=\(startingDistanceFeet.map { String($0) } ?? "unknown")"
+    }
+    mutating func merge(_ other: Self) {
+        finish = other.finish ?? finish
+        lateralMiss = other.lateralMiss ?? lateralMiss
+        depthMiss = other.depthMiss ?? depthMiss
+        puttBreak = other.puttBreak ?? puttBreak
+        puttMissSide = other.puttMissSide ?? puttMissSide
+        holed = other.holed ?? holed
+        carryYards = other.carryYards ?? carryYards
+        startingDistanceFeet = other.startingDistanceFeet ?? startingDistanceFeet
+    }
+}
+
 struct TrackedShot: Identifiable, Codable, Hashable, Equatable {
     var id: UUID
     var number: Int
     var club: GolfClub?
     var lie: Lie
+    /// True when lie is only a map/display fallback, not a reported observation.
+    var nfcTagID: String? = nil
+    var bagEntryID: UUID? = nil
+    var lieWasInferred: Bool?
     var distanceToPinBeforeYards: Double?
     var carryYards: Double?
+    var observations: ShotObservations?
+    var traveledYards: Double?
+    var mappedDistanceYards: Double?
+    var clubWasSuggested: Bool?
+    var remainingFeet: Double?
     var start: GeoPoint?
     var end: GeoPoint?
     var contact: Contact?
@@ -311,7 +366,7 @@ struct TrackedShot: Identifiable, Codable, Hashable, Equatable {
     var summary: String {
         var bits: [String] = []
         if let club { bits.append(club.displayName) }
-        bits.append("from \(lie.label)")
+        if lieWasInferred != true { bits.append("from \(lie.label)") }
         if let carryYards { bits.append("\(Int(carryYards)) yds") }
         if let shape, shape != .straight { bits.append(shape.label.lowercased()) }
         if let contact, contact != .pure { bits.append("off the \(contact.label.lowercased())") }
@@ -386,21 +441,26 @@ enum ScoringMode: String, Codable, CaseIterable, Identifiable {
 }
 
 enum RoundStatus: String, Codable {
-    case active, finished
+    case active, finished, unfinished
 }
 
 // MARK: - Hole score (live)
 
 struct HoleScore: Identifiable, Codable, Hashable, Equatable {
+    var locationSamples: [GolfLocationSample]?
     var id: UUID
     var holeNumber: Int // 1-based course hole number
     var shots: [TrackedShot]
     var penaltyStrokes: Int
+    var penaltiesByShot: [Int: Int]?
     var pinPosition: PinPosition
     /// Optional override when the golfer dragged the tee marker.
     var teeLatitude: Double?
     var teeLongitude: Double?
     var firstPuttFeet: Double?
+    var firstPuttPosition: GeoPoint?
+    /// Do not recreate positions the golfer explicitly removed.
+    var dismissedShotSuggestions: Int?
     var dictateTranscript: String
     /// Leftover spoken detail that didn't fit a structured field — for later analysis.
     var analysisNote: String?
@@ -451,8 +511,24 @@ struct HoleScore: Identifiable, Codable, Hashable, Equatable {
     /// Official card score. Shot mapping never overwrites `recordedScore`.
     var grossScore: Int { recordedScore ?? (shots.count + penaltyStrokes) }
     /// Official putt count. Shot mapping never overwrites `recordedPutts`.
+    var hasKnownPutts: Bool { recordedPutts != nil || shots.contains(where: \.isPutt) }
+
     var putts: Int { recordedPutts ?? shots.filter(\.isPutt).count }
-    var hasScore: Bool { recordedScore != nil || !shots.isEmpty || penaltyStrokes > 0 }
+    // Live shot logs are not a completed scorecard. Preserve explicitly completed legacy cards.
+    var hasScore: Bool { recordedScore != nil || (isComplete && (!shots.isEmpty || penaltyStrokes > 0)) }
+
+    /// Physical non-putting strokes implied by the card, independent of mapped GPS records.
+    var expectedShotCount: Int? {
+        guard let score = recordedScore, let putts = recordedPutts,
+              score > 0, putts >= 0, penaltyStrokes >= 0,
+              putts + penaltyStrokes <= score else { return nil }
+        return score - putts - penaltyStrokes
+    }
+
+    /// Respect deliberate deletions until the golfer changes the score breakdown.
+    var suggestedShotCount: Int? {
+        expectedShotCount.map { max(0, $0 - max(0, dismissedShotSuggestions ?? 0)) }
+    }
 
     /// Chip values for the hole score sheet: par−3 through par+4, plus any current outlier.
     static func scoreChipValues(par: Int, current: Int? = nil) -> [Int] {
@@ -467,6 +543,7 @@ struct HoleScore: Identifiable, Codable, Hashable, Equatable {
     }
 
     mutating func applyRecordedScore(score: Int, putts: Int, penalties: Int, fairwayHit: Bool?) {
+        if recordedScore != score || recordedPutts != putts || penaltyStrokes != penalties { dismissedShotSuggestions = nil }
         recordedScore = max(1, score)
         recordedPutts = max(0, putts)
         penaltyStrokes = max(0, penalties)
@@ -483,6 +560,7 @@ struct HoleScore: Identifiable, Codable, Hashable, Equatable {
         case "par": return par
         case "bogey": return par + 1
         case "double": return par + 2
+        case "triple": return par + 3
         default: return nil
         }
     }
@@ -503,8 +581,7 @@ struct HoleScore: Identifiable, Codable, Hashable, Equatable {
     func fairwayHit(par: Int) -> Bool? {
         guard par > 3 else { return nil }
         if let recordedFairwayHit { return recordedFairwayHit }
-        guard shots.count >= 2 else { return nil }
-        let second = shots[1]
+        guard let second = shots.first(where: { $0.number == 2 }), second.lieWasInferred != true else { return nil }
         return second.lie == .fairway || second.lie == .green
     }
 
@@ -544,13 +621,19 @@ struct GolfRound: Identifiable, Codable, Hashable, Equatable {
     var holesSnapshot: [GolfHole]
     var holeScores: [HoleScore] // in play order
     var currentHoleNumber: Int
+    /// Explicit played-hole selection for a round finished after nine; retain all raw data.
+    var savedHoleNumbers: [Int]? = nil
+    var companionCommandIDs: [UUID]? = nil
+    var swingCandidates: [SwingCandidate]? = nil
     var status: RoundStatus
     var startedAt: Date
     var finishedAt: Date?
+    var courseWind: CourseWind? = nil
     var windMph: Double
     var windFromDegrees: Double
     var recap: String
     var courseRating: String
+    var handicapTee: CourseTee? = nil
 
     init(
         id: UUID = UUID(),
@@ -587,6 +670,7 @@ struct GolfRound: Identifiable, Codable, Hashable, Equatable {
         self.windFromDegrees = windFromDegrees
         recap = ""
         courseRating = ""
+        handicapTee = course.tee(named: teeName)
     }
 
     func hole(_ number: Int) -> GolfHole? {
@@ -597,9 +681,32 @@ struct GolfRound: Identifiable, Codable, Hashable, Equatable {
         holeScores.first { $0.holeNumber == number }
     }
 
-    var totalGross: Int { holeScores.reduce(0) { $0 + $1.grossScore } }
+    /// Respect nine-hole rounds and rounds starting on a different tee.
+    func nextHole(after number: Int) -> Int? {
+        guard let index = holeScores.firstIndex(where: { $0.holeNumber == number }),
+              index + 1 < holeScores.count else { return nil }
+        return holeScores[index + 1].holeNumber
+    }
+
+    var playedHoleScores: [HoleScore] {
+        guard let savedHoleNumbers else { return holeScores }
+        return holeScores.filter { savedHoleNumbers.contains($0.holeNumber) }
+    }
+
+    var nineHoleNumbers: [Int]? {
+        let scored = holeScores.filter(\.hasScore)
+        return scored.count == 9 ? scored.map(\.holeNumber) : nil
+    }
+
+    var historyLabel: String {
+        if status == .active { return "In progress · Hole \(currentHoleNumber)" }
+        if status == .unfinished { return "Unfinished · \(holeScores.filter(\.hasScore).count) of \(holeScores.count) holes scored" }
+        return "\(playedHoleScores.count) holes"
+    }
+
+    var totalGross: Int { playedHoleScores.reduce(0) { $0 + $1.grossScore } }
     var totalPar: Int {
-        holeScores.reduce(0) { $0 + (hole($1.holeNumber)?.par ?? 4) }
+        playedHoleScores.reduce(0) { $0 + (hole($1.holeNumber)?.par ?? 4) }
     }
 
     var toPar: Int { totalGross - totalPar }
@@ -612,7 +719,7 @@ struct GolfRound: Identifiable, Codable, Hashable, Equatable {
     /// Holes the player has finished. Mid-round, to-par over *all* holes is
     /// meaningless (e.g. 3 strokes on hole 1 of 18 reads "-69"), so the resume
     /// card scores only completed holes.
-    var completedHoles: [HoleScore] { holeScores.filter(\.isComplete) }
+    var completedHoles: [HoleScore] { playedHoleScores.filter(\.isComplete) }
 
     var completedToPar: Int {
         completedHoles.reduce(0) { $0 + $1.grossScore - (hole($1.holeNumber)?.par ?? 4) }
@@ -659,6 +766,8 @@ struct GolfRound: Identifiable, Codable, Hashable, Equatable {
     func ballCoordinate(for holeNumber: Int) -> GeoPoint? {
         guard let layout = playLayout(for: holeNumber) ?? layout(for: holeNumber) else { return nil }
         let hole = score(for: holeNumber)
+        // An origin-only log says where the swing happened, not where the ball landed.
+        if let last = hole?.shots.last, last.end == nil, last.carryYards == nil, let start = last.start { return start }
         if let end = hole?.shots.last(where: { $0.end != nil })?.end {
             return end
         }
@@ -676,6 +785,8 @@ struct GolfRound: Identifiable, Codable, Hashable, Equatable {
                 remaining = end.yards(to: pin)
             } else if let carry = shot.carryYards {
                 remaining = max(0, remaining - carry)
+            } else if let start = shot.start, let pin = pinCoordinate(for: holeNumber) {
+                remaining = start.yards(to: pin)
             } else if let d = shot.distanceToPinBeforeYards {
                 remaining = max(0, d - (shot.club?.stockYards ?? 150))
             } else {
@@ -732,5 +843,57 @@ enum GolfFormat {
         guard let value else { return "–" }
         if value < 20 { return String(format: "%.0f", value) }
         return "\(Int(value.rounded()))"
+    }
+}
+
+
+extension TrackedShot {
+    /// A mapped stroke ends at the next swing origin. The final approach ends at
+    /// the first putt, not the cup. Do not invent an endpoint for unknown putts.
+    func mappedEndpoint(nextStart: GeoPoint?, firstPutt: GeoPoint?, pin: GeoPoint, putts: Int?) -> GeoPoint? {
+        if let nextStart { return nextStart }
+        if let firstPutt { return firstPutt }
+        if let end { return end }
+        return putts == 0 ? pin : nil
+    }
+}
+
+
+extension HoleScore {
+    static func suggestedPutts(score: Int, par: Int, penalties: Int = 0, nonPuttingShots: Int = 0) -> Int {
+        let strokes = max(0, score - penalties)
+        guard strokes > 1 else { return 0 }
+        if nonPuttingShots > 0 { return min(4, max(0, strokes - nonPuttingShots)) }
+        return min(strokes - 1, min(3, max(1, strokes - max(1, par - 2))))
+    }
+}
+
+struct RecordedShotLeg: Identifiable {
+    var id: UUID
+    var start: GeoPoint
+    var end: GeoPoint
+}
+
+extension HoleScore {
+    func shotOrigin(at index: Int, tee: GeoPoint) -> GeoPoint? {
+        guard shots.indices.contains(index) else { return nil }
+        return shots[index].start ?? (index == 0 ? tee : shots[index - 1].end)
+    }
+
+    func recordedShotLegs(tee: GeoPoint, pin: GeoPoint) -> [RecordedShotLeg] {
+        var result: [RecordedShotLeg] = []
+        for index in shots.indices {
+            guard let start = shotOrigin(at: index, tee: tee) else { continue }
+            let next = index + 1 < shots.count ? shotOrigin(at: index + 1, tee: tee) : nil
+            let end = next ?? shots[index].end ?? (index == shots.count - 1 ? firstPuttPosition : nil)
+                ?? (index == shots.count - 1 && recordedPutts == 0 ? pin : nil)
+            if let end, start.yards(to: end) > 0.1 {
+                result.append(RecordedShotLeg(id: shots[index].id, start: start, end: end))
+            }
+        }
+        if let firstPuttPosition, firstPuttPosition.yards(to: pin) > 0.1 {
+            result.append(RecordedShotLeg(id: id, start: firstPuttPosition, end: pin))
+        }
+        return result
     }
 }

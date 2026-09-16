@@ -28,7 +28,7 @@ struct SwingLibraryView: View {
                 PinpointTheme.background.ignoresSafeArea()
 
                 if library.swings.isEmpty {
-                    emptyState
+                    emptyState.padding(.bottom, FloatingNavigation.clearance)
                 } else {
                     VStack(spacing: 0) {
                         LibraryFilterBar(
@@ -37,14 +37,14 @@ struct SwingLibraryView: View {
                             onEdit: { showFilters = true }
                         )
                         if visibleSwings.isEmpty {
-                            filteredEmptyState
+                            filteredEmptyState.padding(.bottom, FloatingNavigation.clearance)
                         } else {
-                            swingGrid
+                            swingGrid.contentMargins(.bottom, FloatingNavigation.clearance, for: .scrollContent)
                         }
                     }
                 }
             }
-            .navigationTitle("Swings")
+            .navigationTitle("Swing studio").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     HStack(spacing: 12) {
@@ -74,7 +74,7 @@ struct SwingLibraryView: View {
                     } label: {
                         Image(systemName: "record.circle")
                             .font(.title3.weight(.semibold))
-                            .foregroundStyle(PinpointTheme.accent)
+                            .foregroundStyle(PinpointTheme.accentText)
                     }
                     .accessibilityLabel("Record a swing")
                 }
@@ -102,18 +102,18 @@ struct SwingLibraryView: View {
                 }
             )) {
                 AccountView()
-                    .preferredColorScheme(.dark)
+                    .preferredColorScheme(.light)
                     .presentationDragIndicator(.visible)
             }
             .sheet(isPresented: $showFilters) {
                 LibraryFilterSheet(filter: $filter, customTags: library.customTagsInLibrary)
-                    .preferredColorScheme(.dark)
+                    .preferredColorScheme(.light)
                     .presentationDetents([.medium, .large])
                     .presentationDragIndicator(.visible)
             }
             .sheet(item: $tagEditorSwing) { swing in
                 SwingTagEditorView(swing: swing)
-                    .preferredColorScheme(.dark)
+                    .preferredColorScheme(.light)
                     .presentationDetents([.medium, .large])
                     .presentationDragIndicator(.visible)
             }
@@ -162,6 +162,17 @@ struct SwingLibraryView: View {
 
     private var swingGrid: some View {
         ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Button { showRecorder = true } label: {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Your next swing starts here.").font(.title2.bold())
+                            Text("Capture • Slow motion • Pose • Tempo").font(.caption).foregroundStyle(PinpointTheme.secondaryText)
+                        }
+                        Spacer()
+                        Image(systemName: "video.badge.plus").font(.title).foregroundStyle(PinpointTheme.accentText)
+                    }.padding(18).background(PinpointTheme.surface, in: RoundedRectangle(cornerRadius: 20))
+                }.buttonStyle(.plain)
             LazyVGrid(columns: columns, spacing: 14) {
                 ForEach(visibleSwings) { swing in
                     NavigationLink {
@@ -204,6 +215,7 @@ struct SwingLibraryView: View {
                     }
                 }
             }
+            }
             .padding(16)
         }
     }
@@ -212,8 +224,8 @@ struct SwingLibraryView: View {
         VStack(spacing: 18) {
             Image(systemName: "figure.golf")
                 .font(.system(size: 56))
-                .foregroundStyle(PinpointTheme.accent)
-            Text("No swings yet")
+                .foregroundStyle(PinpointTheme.accentText)
+            Text("Build a swing you trust.")
                 .font(.title2.weight(.semibold))
             Text("Record in extra slow motion, then scrub frame by frame and mark positions, lines, and angles.")
                 .font(.body)
@@ -238,7 +250,7 @@ struct SwingLibraryView: View {
             Spacer()
             Image(systemName: "line.3.horizontal.decrease.circle")
                 .font(.system(size: 40))
-                .foregroundStyle(PinpointTheme.accent)
+                .foregroundStyle(PinpointTheme.accentText)
             Text("No matching swings")
                 .font(.title3.weight(.semibold))
             Text("Try a different date, camera view, club, or tag.")
@@ -250,7 +262,7 @@ struct SwingLibraryView: View {
                 filter.clear()
             }
             .font(.headline)
-            .foregroundStyle(PinpointTheme.accent)
+            .foregroundStyle(PinpointTheme.accentText)
             Spacer()
         }
         .frame(maxWidth: .infinity)
@@ -293,7 +305,7 @@ struct SwingCardView: View {
 
             Text(current.title)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(PinpointTheme.primaryText)
                 .lineLimit(2)
             Text("\(current.resolutionLabel) · \(Int(current.frameRate.rounded())) FPS")
                 .font(.caption)

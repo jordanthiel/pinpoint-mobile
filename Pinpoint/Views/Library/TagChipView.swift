@@ -21,12 +21,12 @@ struct TagChip: View {
             }
         }
         .font(compact ? .caption2.weight(.semibold) : .subheadline.weight(.semibold))
-        .foregroundStyle(.white)
+        .foregroundStyle(PinpointTheme.primaryText)
         .frame(maxWidth: expands ? .infinity : nil)
         .padding(.horizontal, compact ? 7 : 12)
         .padding(.vertical, compact ? 4 : 10)
         .background(
-            selected ? PinpointTheme.accent : (compact ? Color.white.opacity(0.12) : PinpointTheme.surfaceElevated),
+            selected ? PinpointTheme.accent : (compact ? PinpointTheme.surfaceElevated : PinpointTheme.surfaceElevated),
             in: Capsule()
         )
 

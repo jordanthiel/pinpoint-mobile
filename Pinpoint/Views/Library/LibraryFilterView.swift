@@ -87,7 +87,7 @@ struct LibraryFilterBar: View {
                             .fontWeight(.semibold)
                     }
                     .font(.subheadline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(PinpointTheme.primaryText)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .background(

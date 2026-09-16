@@ -7,6 +7,7 @@ struct ClubBagEntry: Identifiable, Codable, Hashable, Equatable {
     var carryYards: Double
     /// “4 Hybrid”, “60°”, etc. Empty uses the stock name.
     var nickname: String?
+    var nfcTagID: String? = nil
 
     init(id: UUID = UUID(), club: GolfClub, carryYards: Double? = nil, nickname: String? = nil) {
         self.id = id
@@ -48,9 +49,17 @@ struct ClubBag: Codable, Equatable {
         clubs.filter { !$0.club.isPutter }.sorted { $0.carryYards < $1.carryYards }
     }
 
-    /// Longest first, for the bag editor and pickers.
+    /// Standard bag order, independent of edited carries or cloud record order.
+    /// Keep duplicate club types together, with a stable tie-breaker across devices.
     var displayClubs: [ClubBagEntry] {
-        clubs.sorted { $0.carryYards > $1.carryYards }
+        let order = Dictionary(uniqueKeysWithValues: GolfClub.allCases.enumerated().map { ($0.element, $0.offset) })
+        return clubs.sorted {
+            let left = order[$0.club, default: Int.max]
+            let right = order[$1.club, default: Int.max]
+            if left != right { return left < right }
+            if $0.carryYards != $1.carryYards { return $0.carryYards > $1.carryYards }
+            return $0.id.uuidString < $1.id.uuidString
+        }
     }
 
     func entry(for club: GolfClub) -> ClubBagEntry? {

@@ -1,0 +1,2955 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gpx version="1.1" creator="Pinpoint GPS QA" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Georgetown Country Club — holes 1–3</name>
+    <desc>Synthetic golf-cart route based on the exact GeorgetownGPS tees, hole corridors, green fronts and pins used by Pinpoint. Rough/greenside stops and drive paths are approximate QA scenarios, not surveyed cart paths. Pinpoint/Models/CourseGPS.swift (GeorgetownGPS); underlying map coordinates © OpenStreetMap contributors, ODbL 1.0: https://www.openstreetmap.org/copyright</desc>
+  </metadata>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:00.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:01.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:02.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:03.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:04.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:05.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:06.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:07.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:08.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:09.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:10.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:11.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:12.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:13.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:14.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:15.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:16.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:17.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:18.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:19.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:20.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:21.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:22.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:23.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:24.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:25.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:26.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:27.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:28.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:29.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:30.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:31.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:32.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:33.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:34.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:35.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:36.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:37.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:38.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:39.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:40.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:41.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:42.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:43.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:44.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507934" lon="-97.6957171">
+    <time>2026-09-14T15:00:45.000Z</time>
+    <name>Hole 1 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6507497" lon="-97.6957292">
+    <time>2026-09-14T15:00:46.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6507059" lon="-97.6957413">
+    <time>2026-09-14T15:00:47.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6506622" lon="-97.6957534">
+    <time>2026-09-14T15:00:48.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6506184" lon="-97.6957655">
+    <time>2026-09-14T15:00:49.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6505747" lon="-97.6957775">
+    <time>2026-09-14T15:00:50.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6505309" lon="-97.6957896">
+    <time>2026-09-14T15:00:51.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6504872" lon="-97.6958017">
+    <time>2026-09-14T15:00:52.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6504434" lon="-97.6958138">
+    <time>2026-09-14T15:00:53.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6503997" lon="-97.6958259">
+    <time>2026-09-14T15:00:54.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6503559" lon="-97.6958380">
+    <time>2026-09-14T15:00:55.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6503122" lon="-97.6958501">
+    <time>2026-09-14T15:00:56.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6502684" lon="-97.6958622">
+    <time>2026-09-14T15:00:57.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6502247" lon="-97.6958742">
+    <time>2026-09-14T15:00:58.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6501809" lon="-97.6958863">
+    <time>2026-09-14T15:00:59.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6501372" lon="-97.6958984">
+    <time>2026-09-14T15:01:00.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6500934" lon="-97.6959105">
+    <time>2026-09-14T15:01:01.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6500497" lon="-97.6959226">
+    <time>2026-09-14T15:01:02.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6500060" lon="-97.6959347">
+    <time>2026-09-14T15:01:03.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6499622" lon="-97.6959468">
+    <time>2026-09-14T15:01:04.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6499185" lon="-97.6959589">
+    <time>2026-09-14T15:01:05.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6498747" lon="-97.6959709">
+    <time>2026-09-14T15:01:06.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6498310" lon="-97.6959830">
+    <time>2026-09-14T15:01:07.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6497872" lon="-97.6959951">
+    <time>2026-09-14T15:01:08.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6497435" lon="-97.6960072">
+    <time>2026-09-14T15:01:09.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6496997" lon="-97.6960193">
+    <time>2026-09-14T15:01:10.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6496560" lon="-97.6960314">
+    <time>2026-09-14T15:01:11.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6496122" lon="-97.6960435">
+    <time>2026-09-14T15:01:12.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6495685" lon="-97.6960556">
+    <time>2026-09-14T15:01:13.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6495247" lon="-97.6960677">
+    <time>2026-09-14T15:01:14.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6494810" lon="-97.6960797">
+    <time>2026-09-14T15:01:15.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6494372" lon="-97.6960918">
+    <time>2026-09-14T15:01:16.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6493935" lon="-97.6961039">
+    <time>2026-09-14T15:01:17.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6493497" lon="-97.6961160">
+    <time>2026-09-14T15:01:18.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6493060" lon="-97.6961281">
+    <time>2026-09-14T15:01:19.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6492623" lon="-97.6961402">
+    <time>2026-09-14T15:01:20.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6492185" lon="-97.6961523">
+    <time>2026-09-14T15:01:21.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6491748" lon="-97.6961644">
+    <time>2026-09-14T15:01:22.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6491310" lon="-97.6961764">
+    <time>2026-09-14T15:01:23.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6490873" lon="-97.6961885">
+    <time>2026-09-14T15:01:24.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6490435" lon="-97.6962006">
+    <time>2026-09-14T15:01:25.000Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:25.544Z</time>
+    <name>Hole 1 — cart to fairway</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:26.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:27.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:28.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:29.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:30.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:31.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:32.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:33.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:34.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:35.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:36.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:37.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:38.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:39.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:40.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:41.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:42.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:43.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:44.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:45.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:46.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:47.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:48.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:49.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:50.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:51.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:52.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:53.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:54.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:55.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:56.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:57.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:58.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:01:59.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6490197" lon="-97.6962072">
+    <time>2026-09-14T15:02:00.544Z</time>
+    <name>Hole 1 — fairway / approach</name>
+  </wpt>
+  <wpt lat="30.6489779" lon="-97.6962264">
+    <time>2026-09-14T15:02:01.544Z</time>
+    <name>Hole 1 — cart to greenside</name>
+  </wpt>
+  <wpt lat="30.6489361" lon="-97.6962456">
+    <time>2026-09-14T15:02:02.544Z</time>
+    <name>Hole 1 — cart to greenside</name>
+  </wpt>
+  <wpt lat="30.6488942" lon="-97.6962648">
+    <time>2026-09-14T15:02:03.544Z</time>
+    <name>Hole 1 — cart to greenside</name>
+  </wpt>
+  <wpt lat="30.6488524" lon="-97.6962840">
+    <time>2026-09-14T15:02:04.544Z</time>
+    <name>Hole 1 — cart to greenside</name>
+  </wpt>
+  <wpt lat="30.6488106" lon="-97.6963032">
+    <time>2026-09-14T15:02:05.544Z</time>
+    <name>Hole 1 — cart to greenside</name>
+  </wpt>
+  <wpt lat="30.6487688" lon="-97.6963224">
+    <time>2026-09-14T15:02:06.544Z</time>
+    <name>Hole 1 — cart to greenside</name>
+  </wpt>
+  <wpt lat="30.6487269" lon="-97.6963416">
+    <time>2026-09-14T15:02:07.544Z</time>
+    <name>Hole 1 — cart to greenside</name>
+  </wpt>
+  <wpt lat="30.6486851" lon="-97.6963608">
+    <time>2026-09-14T15:02:08.544Z</time>
+    <name>Hole 1 — cart to greenside</name>
+  </wpt>
+  <wpt lat="30.6486433" lon="-97.6963800">
+    <time>2026-09-14T15:02:09.544Z</time>
+    <name>Hole 1 — cart to greenside</name>
+  </wpt>
+  <wpt lat="30.6486015" lon="-97.6963992">
+    <time>2026-09-14T15:02:10.544Z</time>
+    <name>Hole 1 — cart to greenside</name>
+  </wpt>
+  <wpt lat="30.6485597" lon="-97.6964184">
+    <time>2026-09-14T15:02:11.544Z</time>
+    <name>Hole 1 — cart to greenside</name>
+  </wpt>
+  <wpt lat="30.6485178" lon="-97.6964376">
+    <time>2026-09-14T15:02:12.544Z</time>
+    <name>Hole 1 — cart to greenside</name>
+  </wpt>
+  <wpt lat="30.6484760" lon="-97.6964568">
+    <time>2026-09-14T15:02:13.544Z</time>
+    <name>Hole 1 — cart to greenside</name>
+  </wpt>
+  <wpt lat="30.6484342" lon="-97.6964760">
+    <time>2026-09-14T15:02:14.544Z</time>
+    <name>Hole 1 — cart to greenside</name>
+  </wpt>
+  <wpt lat="30.6483924" lon="-97.6964952">
+    <time>2026-09-14T15:02:15.544Z</time>
+    <name>Hole 1 — cart to greenside</name>
+  </wpt>
+  <wpt lat="30.6483505" lon="-97.6965144">
+    <time>2026-09-14T15:02:16.544Z</time>
+    <name>Hole 1 — cart to greenside</name>
+  </wpt>
+  <wpt lat="30.6483087" lon="-97.6965336">
+    <time>2026-09-14T15:02:17.544Z</time>
+    <name>Hole 1 — cart to greenside</name>
+  </wpt>
+  <wpt lat="30.6482669" lon="-97.6965528">
+    <time>2026-09-14T15:02:18.544Z</time>
+    <name>Hole 1 — cart to greenside</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:19.543Z</time>
+    <name>Hole 1 — cart to greenside</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:20.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:21.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:22.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:23.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:24.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:25.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:26.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:27.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:28.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:29.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:30.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:31.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:32.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:33.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:34.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:35.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:36.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:37.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:38.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:39.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:40.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:41.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:42.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:43.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:44.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:45.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:46.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:47.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:48.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482251" lon="-97.6965720">
+    <time>2026-09-14T15:02:49.543Z</time>
+    <name>Hole 1 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6482152" lon="-97.6965720">
+    <time>2026-09-14T15:02:50.543Z</time>
+    <name>Hole 1 — walk to putting position</name>
+  </wpt>
+  <wpt lat="30.6482053" lon="-97.6965720">
+    <time>2026-09-14T15:02:51.543Z</time>
+    <name>Hole 1 — walk to putting position</name>
+  </wpt>
+  <wpt lat="30.6481954" lon="-97.6965720">
+    <time>2026-09-14T15:02:52.543Z</time>
+    <name>Hole 1 — walk to putting position</name>
+  </wpt>
+  <wpt lat="30.6481855" lon="-97.6965720">
+    <time>2026-09-14T15:02:53.543Z</time>
+    <name>Hole 1 — walk to putting position</name>
+  </wpt>
+  <wpt lat="30.6481756" lon="-97.6965720">
+    <time>2026-09-14T15:02:54.543Z</time>
+    <name>Hole 1 — walk to putting position</name>
+  </wpt>
+  <wpt lat="30.6481657" lon="-97.6965720">
+    <time>2026-09-14T15:02:55.543Z</time>
+    <name>Hole 1 — walk to putting position</name>
+  </wpt>
+  <wpt lat="30.6481559" lon="-97.6965720">
+    <time>2026-09-14T15:02:56.543Z</time>
+    <name>Hole 1 — walk to putting position</name>
+  </wpt>
+  <wpt lat="30.6481460" lon="-97.6965720">
+    <time>2026-09-14T15:02:57.543Z</time>
+    <name>Hole 1 — walk to putting position</name>
+  </wpt>
+  <wpt lat="30.6481361" lon="-97.6965720">
+    <time>2026-09-14T15:02:58.543Z</time>
+    <name>Hole 1 — walk to putting position</name>
+  </wpt>
+  <wpt lat="30.6481262" lon="-97.6965720">
+    <time>2026-09-14T15:02:59.543Z</time>
+    <name>Hole 1 — walk to putting position</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:00.441Z</time>
+    <name>Hole 1 — walk to putting position</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:01.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:02.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:03.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:04.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:05.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:06.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:07.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:08.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:09.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:10.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:11.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:12.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:13.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:14.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:15.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:16.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:17.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:18.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:19.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:20.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:21.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:22.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:23.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:24.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:25.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:26.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:27.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:28.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:29.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481173" lon="-97.6965720">
+    <time>2026-09-14T15:03:30.441Z</time>
+    <name>Hole 1 — first putt</name>
+  </wpt>
+  <wpt lat="30.6481096" lon="-97.6965750">
+    <time>2026-09-14T15:03:31.441Z</time>
+    <name>Hole 1 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6481020" lon="-97.6965780">
+    <time>2026-09-14T15:03:32.441Z</time>
+    <name>Hole 1 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6480943" lon="-97.6965810">
+    <time>2026-09-14T15:03:33.441Z</time>
+    <name>Hole 1 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6480866" lon="-97.6965840">
+    <time>2026-09-14T15:03:34.441Z</time>
+    <name>Hole 1 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6480789" lon="-97.6965869">
+    <time>2026-09-14T15:03:35.441Z</time>
+    <name>Hole 1 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6480713" lon="-97.6965899">
+    <time>2026-09-14T15:03:36.441Z</time>
+    <name>Hole 1 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6480636" lon="-97.6965929">
+    <time>2026-09-14T15:03:37.441Z</time>
+    <name>Hole 1 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6480559" lon="-97.6965959">
+    <time>2026-09-14T15:03:38.441Z</time>
+    <name>Hole 1 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6480482" lon="-97.6965989">
+    <time>2026-09-14T15:03:39.441Z</time>
+    <name>Hole 1 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6480406" lon="-97.6966019">
+    <time>2026-09-14T15:03:40.441Z</time>
+    <name>Hole 1 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6480329" lon="-97.6966049">
+    <time>2026-09-14T15:03:41.441Z</time>
+    <name>Hole 1 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6480252" lon="-97.6966079">
+    <time>2026-09-14T15:03:42.441Z</time>
+    <name>Hole 1 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:03:43.419Z</time>
+    <name>Hole 1 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:03:44.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:03:45.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:03:46.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:03:47.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:03:48.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:03:49.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:03:50.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:03:51.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:03:52.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:03:53.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:03:54.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:03:55.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:03:56.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:03:57.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:03:58.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:03:59.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:04:00.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:04:01.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:04:02.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:04:03.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:04:04.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:04:05.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:04:06.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:04:07.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6480177" lon="-97.6966108">
+    <time>2026-09-14T15:04:08.419Z</time>
+    <name>Hole 1 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6479952" lon="-97.6966116">
+    <time>2026-09-14T15:04:09.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6479728" lon="-97.6966124">
+    <time>2026-09-14T15:04:10.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6479503" lon="-97.6966133">
+    <time>2026-09-14T15:04:11.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6479278" lon="-97.6966141">
+    <time>2026-09-14T15:04:12.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6479053" lon="-97.6966149">
+    <time>2026-09-14T15:04:13.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6478829" lon="-97.6966157">
+    <time>2026-09-14T15:04:14.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6478604" lon="-97.6966165">
+    <time>2026-09-14T15:04:15.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6478379" lon="-97.6966174">
+    <time>2026-09-14T15:04:16.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6478155" lon="-97.6966182">
+    <time>2026-09-14T15:04:17.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6477930" lon="-97.6966190">
+    <time>2026-09-14T15:04:18.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6477705" lon="-97.6966198">
+    <time>2026-09-14T15:04:19.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6477480" lon="-97.6966207">
+    <time>2026-09-14T15:04:20.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6477256" lon="-97.6966215">
+    <time>2026-09-14T15:04:21.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6477031" lon="-97.6966223">
+    <time>2026-09-14T15:04:22.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6476806" lon="-97.6966231">
+    <time>2026-09-14T15:04:23.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6476581" lon="-97.6966239">
+    <time>2026-09-14T15:04:24.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6476357" lon="-97.6966248">
+    <time>2026-09-14T15:04:25.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6476132" lon="-97.6966256">
+    <time>2026-09-14T15:04:26.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6475907" lon="-97.6966264">
+    <time>2026-09-14T15:04:27.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6475683" lon="-97.6966272">
+    <time>2026-09-14T15:04:28.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6475458" lon="-97.6966280">
+    <time>2026-09-14T15:04:29.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6475233" lon="-97.6966289">
+    <time>2026-09-14T15:04:30.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6475008" lon="-97.6966297">
+    <time>2026-09-14T15:04:31.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6474784" lon="-97.6966305">
+    <time>2026-09-14T15:04:32.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6474559" lon="-97.6966313">
+    <time>2026-09-14T15:04:33.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6474334" lon="-97.6966322">
+    <time>2026-09-14T15:04:34.419Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:34.723Z</time>
+    <name>Transition — hole 1 green to hole 2 tee</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:35.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:36.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:37.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:38.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:39.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:40.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:41.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:42.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:43.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:44.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:45.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:46.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:47.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:48.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:49.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:50.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:51.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:52.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:53.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:54.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:55.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:56.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:57.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:58.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:04:59.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:05:00.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:05:01.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:05:02.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:05:03.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:05:04.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:05:05.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:05:06.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:05:07.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:05:08.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:05:09.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:05:10.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:05:11.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:05:12.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:05:13.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474266" lon="-97.6966324">
+    <time>2026-09-14T15:05:14.723Z</time>
+    <name>Hole 2 — mapped tee / driver</name>
+  </wpt>
+  <wpt lat="30.6474161" lon="-97.6966832">
+    <time>2026-09-14T15:05:15.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6474056" lon="-97.6967341">
+    <time>2026-09-14T15:05:16.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6473951" lon="-97.6967849">
+    <time>2026-09-14T15:05:17.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6473847" lon="-97.6968357">
+    <time>2026-09-14T15:05:18.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6473742" lon="-97.6968865">
+    <time>2026-09-14T15:05:19.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6473637" lon="-97.6969374">
+    <time>2026-09-14T15:05:20.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6473532" lon="-97.6969882">
+    <time>2026-09-14T15:05:21.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6473427" lon="-97.6970390">
+    <time>2026-09-14T15:05:22.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6473322" lon="-97.6970898">
+    <time>2026-09-14T15:05:23.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6473217" lon="-97.6971407">
+    <time>2026-09-14T15:05:24.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6473113" lon="-97.6971915">
+    <time>2026-09-14T15:05:25.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6473008" lon="-97.6972423">
+    <time>2026-09-14T15:05:26.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6472903" lon="-97.6972931">
+    <time>2026-09-14T15:05:27.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6472798" lon="-97.6973440">
+    <time>2026-09-14T15:05:28.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6472693" lon="-97.6973948">
+    <time>2026-09-14T15:05:29.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6472588" lon="-97.6974456">
+    <time>2026-09-14T15:05:30.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6472483" lon="-97.6974964">
+    <time>2026-09-14T15:05:31.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6472379" lon="-97.6975473">
+    <time>2026-09-14T15:05:32.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6472274" lon="-97.6975981">
+    <time>2026-09-14T15:05:33.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6472169" lon="-97.6976489">
+    <time>2026-09-14T15:05:34.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6472064" lon="-97.6976997">
+    <time>2026-09-14T15:05:35.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6471959" lon="-97.6977506">
+    <time>2026-09-14T15:05:36.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6471854" lon="-97.6978014">
+    <time>2026-09-14T15:05:37.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6471749" lon="-97.6978522">
+    <time>2026-09-14T15:05:38.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6471645" lon="-97.6979030">
+    <time>2026-09-14T15:05:39.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6471540" lon="-97.6979539">
+    <time>2026-09-14T15:05:40.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6471435" lon="-97.6980047">
+    <time>2026-09-14T15:05:41.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6471330" lon="-97.6980555">
+    <time>2026-09-14T15:05:42.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6471225" lon="-97.6981063">
+    <time>2026-09-14T15:05:43.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6471120" lon="-97.6981572">
+    <time>2026-09-14T15:05:44.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6471015" lon="-97.6982080">
+    <time>2026-09-14T15:05:45.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6470911" lon="-97.6982588">
+    <time>2026-09-14T15:05:46.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6470806" lon="-97.6983096">
+    <time>2026-09-14T15:05:47.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6470701" lon="-97.6983605">
+    <time>2026-09-14T15:05:48.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6470596" lon="-97.6984113">
+    <time>2026-09-14T15:05:49.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6470457" lon="-97.6984602">
+    <time>2026-09-14T15:05:50.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6470187" lon="-97.6985021">
+    <time>2026-09-14T15:05:51.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6469917" lon="-97.6985439">
+    <time>2026-09-14T15:05:52.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6469647" lon="-97.6985857">
+    <time>2026-09-14T15:05:53.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6469377" lon="-97.6986275">
+    <time>2026-09-14T15:05:54.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6469108" lon="-97.6986693">
+    <time>2026-09-14T15:05:55.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6468838" lon="-97.6987111">
+    <time>2026-09-14T15:05:56.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6468568" lon="-97.6987529">
+    <time>2026-09-14T15:05:57.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6468298" lon="-97.6987948">
+    <time>2026-09-14T15:05:58.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6468029" lon="-97.6988366">
+    <time>2026-09-14T15:05:59.723Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:00.503Z</time>
+    <name>Hole 2 — cart to rough</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:01.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:02.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:03.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:04.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:05.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:06.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:07.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:08.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:09.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:10.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:11.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:12.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:13.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:14.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:15.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:16.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:17.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:18.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:19.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:20.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:21.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:22.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:23.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:24.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:25.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:26.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:27.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:28.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:29.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:30.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:31.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:32.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:33.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:34.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:35.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:36.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:37.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:38.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:39.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467818" lon="-97.6988692">
+    <time>2026-09-14T15:06:40.503Z</time>
+    <name>Hole 2 — rough / recovery</name>
+  </wpt>
+  <wpt lat="30.6467521" lon="-97.6988927">
+    <time>2026-09-14T15:06:41.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6467223" lon="-97.6989162">
+    <time>2026-09-14T15:06:42.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6466926" lon="-97.6989397">
+    <time>2026-09-14T15:06:43.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6466628" lon="-97.6989632">
+    <time>2026-09-14T15:06:44.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6466331" lon="-97.6989868">
+    <time>2026-09-14T15:06:45.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6466033" lon="-97.6990103">
+    <time>2026-09-14T15:06:46.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6465736" lon="-97.6990338">
+    <time>2026-09-14T15:06:47.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6465438" lon="-97.6990573">
+    <time>2026-09-14T15:06:48.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6465141" lon="-97.6990808">
+    <time>2026-09-14T15:06:49.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6464843" lon="-97.6991043">
+    <time>2026-09-14T15:06:50.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6464546" lon="-97.6991278">
+    <time>2026-09-14T15:06:51.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6464248" lon="-97.6991513">
+    <time>2026-09-14T15:06:52.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6463951" lon="-97.6991748">
+    <time>2026-09-14T15:06:53.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6463653" lon="-97.6991983">
+    <time>2026-09-14T15:06:54.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6463356" lon="-97.6992219">
+    <time>2026-09-14T15:06:55.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6463058" lon="-97.6992454">
+    <time>2026-09-14T15:06:56.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6462761" lon="-97.6992689">
+    <time>2026-09-14T15:06:57.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6462463" lon="-97.6992924">
+    <time>2026-09-14T15:06:58.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6462166" lon="-97.6993159">
+    <time>2026-09-14T15:06:59.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6461868" lon="-97.6993394">
+    <time>2026-09-14T15:07:00.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6461571" lon="-97.6993629">
+    <time>2026-09-14T15:07:01.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6461273" lon="-97.6993864">
+    <time>2026-09-14T15:07:02.503Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:02.532Z</time>
+    <name>Hole 2 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:03.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:04.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:05.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:06.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:07.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:08.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:09.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:10.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:11.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:12.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:13.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:14.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:15.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:16.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:17.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:18.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:19.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:20.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:21.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:22.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:23.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:24.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:25.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:26.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:27.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:28.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:29.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:30.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:31.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:32.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:33.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:34.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:35.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:36.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461265" lon="-97.6993871">
+    <time>2026-09-14T15:07:37.532Z</time>
+    <name>Hole 2 — greenside / wedge</name>
+  </wpt>
+  <wpt lat="30.6461189" lon="-97.6993945">
+    <time>2026-09-14T15:07:38.532Z</time>
+    <name>Hole 2 — walk to first putt</name>
+  </wpt>
+  <wpt lat="30.6461113" lon="-97.6994018">
+    <time>2026-09-14T15:07:39.532Z</time>
+    <name>Hole 2 — walk to first putt</name>
+  </wpt>
+  <wpt lat="30.6461037" lon="-97.6994092">
+    <time>2026-09-14T15:07:40.532Z</time>
+    <name>Hole 2 — walk to first putt</name>
+  </wpt>
+  <wpt lat="30.6460961" lon="-97.6994165">
+    <time>2026-09-14T15:07:41.532Z</time>
+    <name>Hole 2 — walk to first putt</name>
+  </wpt>
+  <wpt lat="30.6460885" lon="-97.6994239">
+    <time>2026-09-14T15:07:42.532Z</time>
+    <name>Hole 2 — walk to first putt</name>
+  </wpt>
+  <wpt lat="30.6460809" lon="-97.6994313">
+    <time>2026-09-14T15:07:43.532Z</time>
+    <name>Hole 2 — walk to first putt</name>
+  </wpt>
+  <wpt lat="30.6460733" lon="-97.6994386">
+    <time>2026-09-14T15:07:44.532Z</time>
+    <name>Hole 2 — walk to first putt</name>
+  </wpt>
+  <wpt lat="30.6460657" lon="-97.6994460">
+    <time>2026-09-14T15:07:45.532Z</time>
+    <name>Hole 2 — walk to first putt</name>
+  </wpt>
+  <wpt lat="30.6460581" lon="-97.6994533">
+    <time>2026-09-14T15:07:46.532Z</time>
+    <name>Hole 2 — walk to first putt</name>
+  </wpt>
+  <wpt lat="30.6460505" lon="-97.6994607">
+    <time>2026-09-14T15:07:47.532Z</time>
+    <name>Hole 2 — walk to first putt</name>
+  </wpt>
+  <wpt lat="30.6460429" lon="-97.6994681">
+    <time>2026-09-14T15:07:48.532Z</time>
+    <name>Hole 2 — walk to first putt</name>
+  </wpt>
+  <wpt lat="30.6460353" lon="-97.6994754">
+    <time>2026-09-14T15:07:49.532Z</time>
+    <name>Hole 2 — walk to first putt</name>
+  </wpt>
+  <wpt lat="30.6460277" lon="-97.6994828">
+    <time>2026-09-14T15:07:50.532Z</time>
+    <name>Hole 2 — walk to first putt</name>
+  </wpt>
+  <wpt lat="30.6460201" lon="-97.6994901">
+    <time>2026-09-14T15:07:51.532Z</time>
+    <name>Hole 2 — walk to first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:07:51.716Z</time>
+    <name>Hole 2 — walk to first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:07:52.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:07:53.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:07:54.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:07:55.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:07:56.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:07:57.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:07:58.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:07:59.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:00.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:01.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:02.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:03.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:04.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:05.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:06.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:07.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:08.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:09.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:10.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:11.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:12.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:13.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:14.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:15.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:16.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:17.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:18.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:19.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:20.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460187" lon="-97.6994915">
+    <time>2026-09-14T15:08:21.716Z</time>
+    <name>Hole 2 — first putt</name>
+  </wpt>
+  <wpt lat="30.6460150" lon="-97.6994999">
+    <time>2026-09-14T15:08:22.716Z</time>
+    <name>Hole 2 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6460114" lon="-97.6995083">
+    <time>2026-09-14T15:08:23.716Z</time>
+    <name>Hole 2 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6460077" lon="-97.6995166">
+    <time>2026-09-14T15:08:24.716Z</time>
+    <name>Hole 2 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6460040" lon="-97.6995250">
+    <time>2026-09-14T15:08:25.716Z</time>
+    <name>Hole 2 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6460003" lon="-97.6995334">
+    <time>2026-09-14T15:08:26.716Z</time>
+    <name>Hole 2 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6459967" lon="-97.6995418">
+    <time>2026-09-14T15:08:27.716Z</time>
+    <name>Hole 2 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6459930" lon="-97.6995502">
+    <time>2026-09-14T15:08:28.716Z</time>
+    <name>Hole 2 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6459893" lon="-97.6995586">
+    <time>2026-09-14T15:08:29.716Z</time>
+    <name>Hole 2 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6459856" lon="-97.6995669">
+    <time>2026-09-14T15:08:30.716Z</time>
+    <name>Hole 2 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6459820" lon="-97.6995753">
+    <time>2026-09-14T15:08:31.716Z</time>
+    <name>Hole 2 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6459783" lon="-97.6995837">
+    <time>2026-09-14T15:08:32.716Z</time>
+    <name>Hole 2 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6459746" lon="-97.6995921">
+    <time>2026-09-14T15:08:33.716Z</time>
+    <name>Hole 2 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:34.588Z</time>
+    <name>Hole 2 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:35.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:36.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:37.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:38.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:39.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:40.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:41.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:42.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:43.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:44.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:45.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:46.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:47.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:48.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:49.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:50.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:51.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:52.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:53.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:54.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:55.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:56.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:57.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:58.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459714" lon="-97.6995994">
+    <time>2026-09-14T15:08:59.588Z</time>
+    <name>Hole 2 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6459542" lon="-97.6996055">
+    <time>2026-09-14T15:09:00.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6459370" lon="-97.6996116">
+    <time>2026-09-14T15:09:01.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6459198" lon="-97.6996177">
+    <time>2026-09-14T15:09:02.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6459026" lon="-97.6996239">
+    <time>2026-09-14T15:09:03.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6458854" lon="-97.6996300">
+    <time>2026-09-14T15:09:04.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6458682" lon="-97.6996361">
+    <time>2026-09-14T15:09:05.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6458510" lon="-97.6996422">
+    <time>2026-09-14T15:09:06.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6458338" lon="-97.6996483">
+    <time>2026-09-14T15:09:07.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6458166" lon="-97.6996544">
+    <time>2026-09-14T15:09:08.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6457994" lon="-97.6996605">
+    <time>2026-09-14T15:09:09.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6457822" lon="-97.6996667">
+    <time>2026-09-14T15:09:10.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6457650" lon="-97.6996728">
+    <time>2026-09-14T15:09:11.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6457478" lon="-97.6996789">
+    <time>2026-09-14T15:09:12.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6457306" lon="-97.6996850">
+    <time>2026-09-14T15:09:13.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6457134" lon="-97.6996911">
+    <time>2026-09-14T15:09:14.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6456962" lon="-97.6996972">
+    <time>2026-09-14T15:09:15.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6456790" lon="-97.6997033">
+    <time>2026-09-14T15:09:16.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6456618" lon="-97.6997095">
+    <time>2026-09-14T15:09:17.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6456446" lon="-97.6997156">
+    <time>2026-09-14T15:09:18.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6456274" lon="-97.6997217">
+    <time>2026-09-14T15:09:19.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6456102" lon="-97.6997278">
+    <time>2026-09-14T15:09:20.588Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:21.454Z</time>
+    <name>Transition — hole 2 green to hole 3 tee</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:22.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:23.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:24.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:25.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:26.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:27.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:28.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:29.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:30.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:31.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:32.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:33.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:34.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:35.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:36.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:37.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:38.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:39.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:40.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:41.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:42.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:43.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:44.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:45.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:46.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:47.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:48.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:49.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:50.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:51.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:52.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:53.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:54.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:55.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:56.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:57.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:58.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:09:59.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:10:00.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455953" lon="-97.6997331">
+    <time>2026-09-14T15:10:01.454Z</time>
+    <name>Hole 3 — par-three mapped tee / iron</name>
+  </wpt>
+  <wpt lat="30.6455677" lon="-97.6997675">
+    <time>2026-09-14T15:10:02.454Z</time>
+    <name>Hole 3 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6455401" lon="-97.6998019">
+    <time>2026-09-14T15:10:03.454Z</time>
+    <name>Hole 3 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6455125" lon="-97.6998363">
+    <time>2026-09-14T15:10:04.454Z</time>
+    <name>Hole 3 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6454848" lon="-97.6998706">
+    <time>2026-09-14T15:10:05.454Z</time>
+    <name>Hole 3 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6454572" lon="-97.6999050">
+    <time>2026-09-14T15:10:06.454Z</time>
+    <name>Hole 3 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6454296" lon="-97.6999394">
+    <time>2026-09-14T15:10:07.454Z</time>
+    <name>Hole 3 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6454020" lon="-97.6999738">
+    <time>2026-09-14T15:10:08.454Z</time>
+    <name>Hole 3 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6453744" lon="-97.7000082">
+    <time>2026-09-14T15:10:09.454Z</time>
+    <name>Hole 3 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6453468" lon="-97.7000426">
+    <time>2026-09-14T15:10:10.454Z</time>
+    <name>Hole 3 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6453192" lon="-97.7000770">
+    <time>2026-09-14T15:10:11.454Z</time>
+    <name>Hole 3 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6452915" lon="-97.7001114">
+    <time>2026-09-14T15:10:12.454Z</time>
+    <name>Hole 3 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6452639" lon="-97.7001457">
+    <time>2026-09-14T15:10:13.454Z</time>
+    <name>Hole 3 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6452363" lon="-97.7001801">
+    <time>2026-09-14T15:10:14.454Z</time>
+    <name>Hole 3 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6452087" lon="-97.7002145">
+    <time>2026-09-14T15:10:15.454Z</time>
+    <name>Hole 3 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6451811" lon="-97.7002489">
+    <time>2026-09-14T15:10:16.454Z</time>
+    <name>Hole 3 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6451535" lon="-97.7002833">
+    <time>2026-09-14T15:10:17.454Z</time>
+    <name>Hole 3 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6451259" lon="-97.7003177">
+    <time>2026-09-14T15:10:18.454Z</time>
+    <name>Hole 3 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6450982" lon="-97.7003521">
+    <time>2026-09-14T15:10:19.454Z</time>
+    <name>Hole 3 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6450706" lon="-97.7003865">
+    <time>2026-09-14T15:10:20.454Z</time>
+    <name>Hole 3 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:20.560Z</time>
+    <name>Hole 3 — cart toward green</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:21.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:22.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:23.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:24.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:25.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:26.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:27.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:28.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:29.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:30.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:31.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:32.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:33.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:34.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:35.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:36.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:37.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:38.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:39.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:40.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:41.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:42.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:43.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:44.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:45.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:46.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:47.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:48.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:49.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450677" lon="-97.7003901">
+    <time>2026-09-14T15:10:50.560Z</time>
+    <name>Hole 3 — greenside / chip</name>
+  </wpt>
+  <wpt lat="30.6450595" lon="-97.7003965">
+    <time>2026-09-14T15:10:51.560Z</time>
+    <name>Hole 3 — walk onto green</name>
+  </wpt>
+  <wpt lat="30.6450512" lon="-97.7004029">
+    <time>2026-09-14T15:10:52.560Z</time>
+    <name>Hole 3 — walk onto green</name>
+  </wpt>
+  <wpt lat="30.6450430" lon="-97.7004092">
+    <time>2026-09-14T15:10:53.560Z</time>
+    <name>Hole 3 — walk onto green</name>
+  </wpt>
+  <wpt lat="30.6450348" lon="-97.7004156">
+    <time>2026-09-14T15:10:54.560Z</time>
+    <name>Hole 3 — walk onto green</name>
+  </wpt>
+  <wpt lat="30.6450265" lon="-97.7004220">
+    <time>2026-09-14T15:10:55.560Z</time>
+    <name>Hole 3 — walk onto green</name>
+  </wpt>
+  <wpt lat="30.6450183" lon="-97.7004284">
+    <time>2026-09-14T15:10:56.560Z</time>
+    <name>Hole 3 — walk onto green</name>
+  </wpt>
+  <wpt lat="30.6450101" lon="-97.7004347">
+    <time>2026-09-14T15:10:57.560Z</time>
+    <name>Hole 3 — walk onto green</name>
+  </wpt>
+  <wpt lat="30.6450018" lon="-97.7004411">
+    <time>2026-09-14T15:10:58.560Z</time>
+    <name>Hole 3 — walk onto green</name>
+  </wpt>
+  <wpt lat="30.6449936" lon="-97.7004475">
+    <time>2026-09-14T15:10:59.560Z</time>
+    <name>Hole 3 — walk onto green</name>
+  </wpt>
+  <wpt lat="30.6449854" lon="-97.7004539">
+    <time>2026-09-14T15:11:00.560Z</time>
+    <name>Hole 3 — walk onto green</name>
+  </wpt>
+  <wpt lat="30.6449771" lon="-97.7004602">
+    <time>2026-09-14T15:11:01.560Z</time>
+    <name>Hole 3 — walk onto green</name>
+  </wpt>
+  <wpt lat="30.6449689" lon="-97.7004666">
+    <time>2026-09-14T15:11:02.560Z</time>
+    <name>Hole 3 — walk onto green</name>
+  </wpt>
+  <wpt lat="30.6449607" lon="-97.7004730">
+    <time>2026-09-14T15:11:03.560Z</time>
+    <name>Hole 3 — walk onto green</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:03.655Z</time>
+    <name>Hole 3 — walk onto green</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:04.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:05.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:06.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:07.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:08.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:09.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:10.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:11.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:12.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:13.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:14.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:15.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:16.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:17.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:18.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:19.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:20.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:21.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:22.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:23.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:24.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:25.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:26.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:27.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:28.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:29.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:30.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:31.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:32.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449599" lon="-97.7004736">
+    <time>2026-09-14T15:11:33.655Z</time>
+    <name>Hole 3 — first putt</name>
+  </wpt>
+  <wpt lat="30.6449535" lon="-97.7004794">
+    <time>2026-09-14T15:11:34.655Z</time>
+    <name>Hole 3 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6449472" lon="-97.7004852">
+    <time>2026-09-14T15:11:35.655Z</time>
+    <name>Hole 3 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6449408" lon="-97.7004910">
+    <time>2026-09-14T15:11:36.655Z</time>
+    <name>Hole 3 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6449344" lon="-97.7004968">
+    <time>2026-09-14T15:11:37.655Z</time>
+    <name>Hole 3 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6449280" lon="-97.7005026">
+    <time>2026-09-14T15:11:38.655Z</time>
+    <name>Hole 3 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6449217" lon="-97.7005084">
+    <time>2026-09-14T15:11:39.655Z</time>
+    <name>Hole 3 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6449153" lon="-97.7005142">
+    <time>2026-09-14T15:11:40.655Z</time>
+    <name>Hole 3 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6449089" lon="-97.7005200">
+    <time>2026-09-14T15:11:41.655Z</time>
+    <name>Hole 3 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6449026" lon="-97.7005258">
+    <time>2026-09-14T15:11:42.655Z</time>
+    <name>Hole 3 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6448962" lon="-97.7005316">
+    <time>2026-09-14T15:11:43.655Z</time>
+    <name>Hole 3 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6448898" lon="-97.7005374">
+    <time>2026-09-14T15:11:44.655Z</time>
+    <name>Hole 3 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:11:45.476Z</time>
+    <name>Hole 3 — walk to cup</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:11:46.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:11:47.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:11:48.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:11:49.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:11:50.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:11:51.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:11:52.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:11:53.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:11:54.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:11:55.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:11:56.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:11:57.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:11:58.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:11:59.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:12:00.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:12:01.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:12:02.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:12:03.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:12:04.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:12:05.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:12:06.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:12:07.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:12:08.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:12:09.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+  <wpt lat="30.6448846" lon="-97.7005422">
+    <time>2026-09-14T15:12:10.476Z</time>
+    <name>Hole 3 — finish putting</name>
+  </wpt>
+</gpx>

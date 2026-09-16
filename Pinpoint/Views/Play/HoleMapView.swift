@@ -9,29 +9,69 @@ struct HoleMapView: View {
     var layout: HoleLayout
     var pin: GeoPoint
     var tee: GeoPoint
+    var measurementOrigin: GeoPoint
+    var recordedHole: HoleScore
     var shots: [TrackedShot]
     var target: GeoPoint
     var showsUserLocation: Bool
     var bag: ClubBag = .standard
     var windMph: Double = 0
     var windHelping: Double = 0
+    var windFromDegrees: Double? = nil
+    var onHeadingChange: (Double) -> Void = { _ in }
     var onMoveTarget: (GeoPoint) -> Void
     var onMoveTee: (GeoPoint) -> Void
     var onSelectShot: ((TrackedShot) -> Void)?
+    var onMoveShot: (TrackedShot, GeoPoint) -> Void = { _, _ in }
     var onOpenBag: () -> Void = {}
+    var candidates: [SwingCandidate] = []
+    var onSelectCandidate: (SwingCandidate) -> Void = { _ in }
 
     @State private var selectedShotID: UUID?
     @State private var mapSize: CGSize = .zero
     @State private var cameraTick = 0
+    @State private var trailCache = GolfLocationTrailCache()
     @State private var draggingMarker = false
+    @State private var directToFlag = false
+    @GestureState private var shotGestureActive = false
+    @State private var draggedShotID: UUID?
+    @State private var shotDragOrigin: CGPoint?
+    @State private var shotPreview: GeoPoint?
+    private var displayedHole: HoleScore {
+        guard let id = draggedShotID, let point = shotPreview,
+              let index = recordedHole.shots.firstIndex(where: { $0.id == id }) else { return recordedHole }
+        var hole = recordedHole
+        hole.shots[index].start = point
+        return hole
+    }
+    private var effectiveTarget: GeoPoint { directToFlag ? pin : target }
+    private var planningLegs: [RangefinderLeg] {
+        RangefinderSnap.legs(origin: measurementOrigin, target: target, pin: pin, direct: directToFlag)
+    }
+    private var planningLine: [CLLocationCoordinate2D] {
+        [measurementOrigin.coordinate] + planningLegs.map { $0.end.coordinate }
+    }
+    private func refreshSnap() {
+        directToFlag = RangefinderSnap.isDirect(origin: measurementOrigin, target: target, pin: pin, wasDirect: directToFlag)
+    }
+    private func moveTarget(_ point: GeoPoint) {
+        directToFlag = RangefinderSnap.isDirect(origin: measurementOrigin, target: point, pin: pin, wasDirect: directToFlag)
+        onMoveTarget(directToFlag ? pin : point)
+    }
 
     var body: some View {
         MapReader { proxy in
             ZStack {
                 Map(position: $position, interactionModes: draggingMarker ? [] : [.pan, .zoom], selection: $selectedShotID) {
-                    MapPolyline(coordinates: [tee.coordinate, target.coordinate, pin.coordinate])
+                    MapPolyline(coordinates: planningLine)
                         .stroke(.white.opacity(0.96), lineWidth: 1.5)
 
+                    ForEach(displayedHole.recordedShotLegs(tee: tee, pin: pin)) { leg in
+                        MapPolyline(coordinates: [leg.start.coordinate, leg.end.coordinate])
+                            .stroke(.white.opacity(0.9), lineWidth: 2)
+                    }
+
+                    GolfTrailMapContent(history: trailCache.resolve(samples: recordedHole.locationSamples ?? [], swings: candidates))
                     // Green: translucent halo + solid white dot.
                     MapCircle(center: pin.coordinate, radius: 7)
                         .foregroundStyle(.white.opacity(0.28))
@@ -41,23 +81,24 @@ struct HoleMapView: View {
 
                     // Tee marker is projected as an overlay (TeePinView) below.
 
-                    ForEach(placedShots) { item in
-                        Marker(item.markerTitle, monogram: Text(item.monogram), coordinate: item.point.coordinate)
-                            .tint(item.isPutt ? Color(red: 0.18, green: 0.72, blue: 0.38) : Color(red: 0.13, green: 0.45, blue: 0.98))
-                            .tag(item.id)
+                    ForEach(candidates) { event in
+                        if let lat = event.latitude, let lon = event.longitude {
+                            Marker(event.locationSource == "estimated" ? "Estimated swing · Review" : "Detected swing · Review", systemImage: "questionmark", coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon))
+                                .tint(.orange).tag(event.id)
+                        }
                     }
-
                     if showsUserLocation {
                         UserAnnotation()
                     }
                 }
-                .mapStyle(.imagery(elevation: .realistic))
+                .mapStyle(.imagery(elevation: .flat))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .mapControls {
                     MapCompass()
                         .mapControlVisibility(.hidden)
                 }
-                .onMapCameraChange(frequency: .continuous) { _ in
+                .onMapCameraChange(frequency: .continuous) { context in
+                    onHeadingChange(context.camera.heading)
                     // Camera motion only refreshes overlay projections here.
                     // The target moves solely by dragging its marker, so the
                     // map can pan and zoom freely underneath a fixed target.
@@ -66,7 +107,8 @@ struct HoleMapView: View {
                 .onChange(of: selectedShotID) { _, id in
                     if let id, let shot = shots.first(where: { $0.id == id }) {
                         onSelectShot?(shot)
-                    }
+                    } else if let id, let event = candidates.first(where: { $0.id == id }) { onSelectCandidate(event) }
+                    selectedShotID = nil
                 }
                 .background {
                     GeometryReader { geo in
@@ -83,26 +125,36 @@ struct HoleMapView: View {
                 overlayPills(proxy: proxy, size: mapSize)
             }
             .coordinateSpace(name: MapDragSpace.name)
+            .onAppear(perform: refreshSnap)
+            .onChange(of: target) { _, _ in refreshSnap() }
+            .onChange(of: measurementOrigin) { _, _ in refreshSnap() }
+            .onChange(of: pin) { _, _ in refreshSnap() }
+            .onChange(of: shotGestureActive) { _, active in
+                if !active {
+                    draggedShotID = nil; shotDragOrigin = nil; shotPreview = nil; draggingMarker = false
+                }
+            }
         }
     }
 
     @ViewBuilder
     private func overlayPills(proxy: MapProxy, size: CGSize) -> some View {
-        let carryYards = tee.yards(to: target)
-        let remainYards = target.yards(to: pin)
-
         // Draggable target crosshair, geo-anchored instead of fixed at the
         // screen center. Dragging moves only the target — the camera is
         // untouched, so the map stays where it is.
-        let targetSpot = markerSpot(for: target.coordinate, yOffset: 0, proxy: proxy, size: size)
-        ZStack { CenterCrosshair() }
+        let targetSpot = markerSpot(for: effectiveTarget.coordinate, yOffset: 0, proxy: proxy, size: size)
+        ZStack {
+            if directToFlag {
+                Image(uiImage: GolfFlagDrawing.image(color: .white)).offset(x: 10, y: -20)
+            } else { CenterCrosshair() }
+        }
             .frame(width: 52, height: 52)
             .contentShape(Rectangle())
             .position(targetSpot.point)
             .opacity(targetSpot.visible ? 1 : 0)
             .allowsHitTesting(targetSpot.visible)
-            .highPriorityGesture(markerDrag(proxy: proxy, onMove: onMoveTarget, isDragging: $draggingMarker))
-            .accessibilityLabel(Text("Target"))
+            .highPriorityGesture(markerDrag(proxy: proxy, onMove: moveTarget, isDragging: $draggingMarker))
+            .accessibilityLabel(Text(directToFlag ? "Target snapped to flag. Drag away to plan a layup." : "Target"))
 
         // Draggable tee marker with the same direct-drag interaction.
         let teeSpot = markerSpot(for: tee.coordinate, yOffset: -9.5, proxy: proxy, size: size)
@@ -110,30 +162,53 @@ struct HoleMapView: View {
             .frame(width: 48, height: 48)
             .contentShape(Rectangle())
             .position(teeSpot.point)
-            .opacity(teeSpot.visible ? 1 : 0)
-            .allowsHitTesting(teeSpot.visible)
+            .opacity(teeSpot.visible && !shotOverlapsTee ? 1 : 0)
+            .allowsHitTesting(teeSpot.visible && !shotOverlapsTee)
             .highPriorityGesture(markerDrag(proxy: proxy, onMove: onMoveTee, isDragging: $draggingMarker))
             .accessibilityLabel(Text("Tee"))
 
-        if carryYards > 8 {
-            let info = playsLike(for: carryYards)
-            let spot = lineSpot(proxy: proxy, from: tee.coordinate, to: target.coordinate,
-                                t: 0.52, in: size) ?? fallbackSpot(fraction: 0.63, in: size)
-            PlaysLikeLinePill(yards: info.raw, playsLike: info.like, club: info.club, action: onOpenBag)
-                .position(spot)
+        // Explicit overlays cannot be culled by MapKit's marker collision rules.
+        ForEach(placedShots) { item in
+            let spot = markerSpot(for: item.point.coordinate, yOffset: -22, proxy: proxy, size: size)
+            Button {
+                if let shot = shots.first(where: { $0.id == item.id }) { onSelectShot?(shot) }
+            } label: {
+                VStack(spacing: 2) {
+                    Text(item.monogram).font(.system(size: 18, weight: .bold).monospacedDigit())
+                        .foregroundStyle(PinpointTheme.primaryText)
+                        .frame(width: 36, height: 36)
+                        .background(item.isPutt ? Color.green : PinpointTheme.accent, in: Circle())
+                        .overlay(Circle().stroke(.white, lineWidth: 3))
+                    Text(item.markerTitle).font(.caption2.bold()).foregroundStyle(.white)
+                        .padding(3).background(.black.opacity(0.85), in: Capsule())
+                }
+            }.buttonStyle(.plain)
+                .frame(minWidth: 52, minHeight: 60)
+                .contentShape(Rectangle())
+                .highPriorityGesture(shotDrag(id: item.id, origin: item.point, proxy: proxy))
+                .position(spot.point).opacity(spot.visible ? 1 : 0)
+                .allowsHitTesting(spot.visible)
+                .accessibilityLabel(item.markerTitle)
+                .accessibilityIdentifier("tracked-shot-\(item.number)")
         }
 
-        if remainYards > 8 {
-            let info = playsLike(for: remainYards)
-            let spot = lineSpot(proxy: proxy, from: target.coordinate, to: pin.coordinate,
-                                t: 0.48, in: size) ?? fallbackSpot(fraction: 0.35, in: size)
-            PlaysLikeLinePill(yards: info.raw, playsLike: info.like, club: info.club, action: onOpenBag)
-                .position(spot)
+        // Lines and labels share one collection. Changing to the distinct flag
+        // identity removes both layup labels instead of reusing the second one.
+        ForEach(planningLegs) { leg in
+            if leg.id == .flag || leg.yards > 8 {
+                let info = playsLike(for: leg.yards, bearing: leg.start.bearing(to: leg.end))
+                let spot = lineSpot(proxy: proxy, from: leg.start.coordinate, to: leg.end.coordinate,
+                                    t: 0.5, in: size) ?? fallbackSpot(fraction: leg.id == .second ? 0.35 : 0.63, in: size)
+                PlaysLikeLinePill(yards: info.raw, playsLike: info.like, club: info.club, action: onOpenBag)
+                    .position(spot)
+                    .accessibilityIdentifier(leg.id == .flag ? "distance-to-flag" : (leg.id == .first ? "first-shot-distance" : "second-shot-distance"))
+            }
         }
     }
 
-    private func playsLike(for yards: Double) -> (raw: Int, like: Int, club: String?) {
-        let like = CaddieEngine.playsLike(yards: yards, windMph: windMph, windHelping: windHelping)
+    private func playsLike(for yards: Double, bearing: Double) -> (raw: Int, like: Int, club: String?) {
+        let helping = windFromDegrees.map { -cos((bearing - $0) * .pi / 180) } ?? windHelping
+        let like = CaddieEngine.playsLike(yards: yards, windMph: windMph, windHelping: helping)
         let club = CaddieEngine.recommendEntry(for: like, bag: bag)?.entry.shortLabel
         return (Int(yards.rounded()), Int(like.rounded()), club)
     }
@@ -149,6 +224,31 @@ struct HoleMapView: View {
               p.x > -40, p.x < size.width + 40
         else { return hidden }
         return (CGPoint(x: p.x, y: p.y + yOffset), true)
+    }
+
+    private func shotDrag(id: UUID, origin: GeoPoint, proxy: MapProxy) -> some Gesture {
+        DragGesture(minimumDistance: 3, coordinateSpace: .named(MapDragSpace.name))
+            .updating($shotGestureActive) { _, active, _ in active = true }
+            .onChanged { value in
+                if draggedShotID == nil {
+                    draggedShotID = id
+                    shotDragOrigin = proxy.convert(origin.coordinate, to: .named(MapDragSpace.name))
+                }
+                guard let anchor = shotDragOrigin else { return }
+                draggingMarker = true
+                let pixel = CGPoint(x: anchor.x + value.translation.width, y: anchor.y + value.translation.height - 56)
+                guard let coordinate = proxy.convert(pixel, from: .named(MapDragSpace.name)) else { return }
+                var point = GeoPoint(latitude: coordinate.latitude, longitude: coordinate.longitude)
+                let history = trailCache.resolve(samples: recordedHole.locationSamples ?? [], swings: candidates)
+                if let stop = history.nearest(to: point),
+                   let spot = proxy.convert(stop.point.coordinate, to: .named(MapDragSpace.name)),
+                   hypot(spot.x - pixel.x, spot.y - pixel.y) <= 28 { point = stop.point }
+                shotPreview = point
+            }
+            .onEnded { _ in
+                if let point = shotPreview, let shot = shots.first(where: { $0.id == id }) { onMoveShot(shot, point) }
+                draggedShotID = nil; shotDragOrigin = nil; shotPreview = nil; draggingMarker = false
+            }
     }
 
     /// Direct drag of a map marker: the finger point converts back to GPS and
@@ -220,31 +320,18 @@ struct HoleMapView: View {
         }
     }
 
-    private var placedShots: [PlacedShot] {
-        var items: [PlacedShot] = []
-        var cursor = tee
-        var remaining = tee.yards(to: pin)
-        for shot in shots {
-            if let end = shot.end {
-                cursor = end
-            } else {
-                let carry = shot.carryYards ?? shot.club?.stockYards ?? 120
-                remaining = max(0, remaining - carry)
-                cursor = layout.point(afterTravelling: tee.yards(to: pin) - remaining, toward: pin)
-            }
-            if shot.end != nil || !shot.isPutt {
-                var caption: String?
-                if let carry = shot.carryYards {
-                    caption = "\(shot.lie.code) · \(Int(carry))"
-                } else {
-                    caption = shot.lie.code
-                }
-                items.append(PlacedShot(id: shot.id, number: shot.number, point: cursor,
-                                        isPutt: shot.isPutt, caption: caption))
-            }
-        }
-        return items
+    private var shotOverlapsTee: Bool {
+        placedShots.contains { $0.point.yards(to: tee) < 8 }
     }
+
+    private var placedShots: [PlacedShot] {
+        shots.enumerated().compactMap { index, shot in
+            guard let origin = displayedHole.shotOrigin(at: index, tee: tee) else { return nil }
+            return PlacedShot(id: shot.id, number: shot.number, point: origin,
+                              isPutt: shot.isPutt, caption: shot.club?.shortName)
+        }
+    }
+
 }
 
 /// Teardrop tee marker with golfer glyph, matching the reference art.
@@ -275,5 +362,26 @@ struct TeePinShape: Shape {
         p.addLine(to: CGPoint(x: rect.midX + r * 0.55, y: r * 1.3))
         p.closeSubpath()
         return p
+    }
+}
+
+struct GolfTrailMapContent: MapContent {
+    var history: GolfLocationTrail
+    var body: some MapContent {
+        ForEach(Array(history.movementPaths.indices), id: \.self) { index in
+            MapPolyline(coordinates: history.movementPaths[index].map(\.coordinate))
+                .stroke(.white.opacity(0.55), style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [1, 11]))
+        }
+        ForEach(Array(history.breadcrumbs.indices), id: \.self) { index in
+            MapKit.Annotation("Movement", coordinate: history.breadcrumbs[index].coordinate) {
+                Circle().fill(Color.white.opacity(0.45)).frame(width: 6, height: 6).allowsHitTesting(false)
+            }.annotationTitles(.hidden)
+        }
+        ForEach(history.stops) { stop in
+            MapKit.Annotation("Stopped here", coordinate: stop.point.coordinate) {
+                Image(uiImage: stop.watchConfirmed ? GolfStopAppearance.watchImage : GolfStopAppearance.image)
+                    .frame(width: 38, height: 38).allowsHitTesting(false)
+            }.annotationTitles(.hidden)
+        }
     }
 }

@@ -9,6 +9,7 @@ struct RecordSwingView: View {
 
     @State private var camera = CameraService()
     @State private var showSettings = false
+    @State private var captureAngle = "Down the line"
     @State private var isStopping = false
     @State private var saveError: String?
     @State private var isAutoMode = false
@@ -55,6 +56,18 @@ struct RecordSwingView: View {
 
             VStack(spacing: 0) {
                 topBar
+                if !camera.isRecording && !isCountingDown {
+                    VStack(spacing: 8) {
+                        Picker("Camera angle", selection: $captureAngle) {
+                            Text("Down the line").tag("Down the line")
+                            Text("Face on").tag("Face on")
+                        }.pickerStyle(.segmented)
+                        Text(captureAngle == "Down the line"
+                             ? "Place your phone at hand height, behind you along your target line. Keep your full body and club in frame."
+                             : "Place your phone at hand height, facing your chest. Keep your full body and club in frame.")
+                            .font(.caption).multilineTextAlignment(.center).foregroundStyle(.white)
+                    }.padding(12).background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: 16)).padding(.horizontal, 20).padding(.top, 10)
+                }
                 Spacer()
                 if camera.isRecording {
                     recordingBadge
@@ -105,7 +118,7 @@ struct RecordSwingView: View {
             )
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
-            .preferredColorScheme(.dark)
+            .preferredColorScheme(.light)
         }
         .alert("Couldn't save swing", isPresented: Binding(
             get: { saveError != nil },
@@ -403,7 +416,8 @@ struct RecordSwingView: View {
             let swing = try await library.importRecording(
                 from: url,
                 preset: preset,
-                title: Self.defaultTitle()
+                title: Self.defaultTitle(),
+                tags: [(captureAngle == "Face on" ? CameraAngle.faceOn : .downTheLine).makeTag(source: .user)]
             )
             if library.isSignedIn {
                 Task { await library.upload(swing) }
@@ -526,7 +540,7 @@ struct CaptureSettingsSheet: View {
                 } label: {
                     Text(item)
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(PinpointTheme.primaryText)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                         .background(
@@ -540,20 +554,3 @@ struct CaptureSettingsSheet: View {
     }
 }
 
-struct PrimaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .foregroundStyle(.white)
-            .padding(.vertical, 14)
-            .background(PinpointTheme.accent.opacity(configuration.isPressed ? 0.75 : 1), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-    }
-}
-
-struct SecondaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .foregroundStyle(.white)
-            .padding(.vertical, 14)
-            .background(PinpointTheme.surfaceElevated.opacity(configuration.isPressed ? 0.75 : 1), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-    }
-}

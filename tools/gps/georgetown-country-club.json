@@ -1,0 +1,332 @@
+{
+  "name": "Georgetown Country Club \u2014 holes 1\u20133",
+  "description": "Synthetic golf-cart route based on the exact GeorgetownGPS tees, hole corridors, green fronts and pins used by Pinpoint. Rough/greenside stops and drive paths are approximate QA scenarios, not surveyed cart paths.",
+  "source": "Pinpoint/Models/CourseGPS.swift (GeorgetownGPS); underlying map coordinates \u00a9 OpenStreetMap contributors, ODbL 1.0: https://www.openstreetmap.org/copyright",
+  "phases": [
+    {
+      "kind": "stop",
+      "name": "Hole 1 \u2014 mapped tee / driver",
+      "seconds": 45,
+      "coordinate": [
+        30.6507934,
+        -97.6957171
+      ]
+    },
+    {
+      "kind": "move",
+      "name": "Hole 1 \u2014 cart to fairway",
+      "speed_mps": 5,
+      "coordinates": [
+        [
+          30.6507934,
+          -97.6957171
+        ],
+        [
+          30.6490197,
+          -97.6962072
+        ]
+      ]
+    },
+    {
+      "kind": "stop",
+      "name": "Hole 1 \u2014 fairway / approach",
+      "seconds": 35,
+      "coordinate": [
+        30.6490197,
+        -97.6962072
+      ]
+    },
+    {
+      "kind": "move",
+      "name": "Hole 1 \u2014 cart to greenside",
+      "speed_mps": 5,
+      "coordinates": [
+        [
+          30.6490197,
+          -97.6962072
+        ],
+        [
+          30.6482251,
+          -97.696572
+        ]
+      ]
+    },
+    {
+      "kind": "stop",
+      "name": "Hole 1 \u2014 greenside / chip",
+      "seconds": 30,
+      "coordinate": [
+        30.6482251,
+        -97.696572
+      ]
+    },
+    {
+      "kind": "move",
+      "name": "Hole 1 \u2014 walk to putting position",
+      "speed_mps": 1.1,
+      "coordinates": [
+        [
+          30.6482251,
+          -97.696572
+        ],
+        [
+          30.6481173,
+          -97.696572
+        ]
+      ]
+    },
+    {
+      "kind": "stop",
+      "name": "Hole 1 \u2014 first putt",
+      "seconds": 30,
+      "coordinate": [
+        30.6481173,
+        -97.696572
+      ]
+    },
+    {
+      "kind": "move",
+      "name": "Hole 1 \u2014 walk to cup",
+      "speed_mps": 0.9,
+      "coordinates": [
+        [
+          30.6481173,
+          -97.696572
+        ],
+        [
+          30.6480177,
+          -97.6966108
+        ]
+      ]
+    },
+    {
+      "kind": "stop",
+      "name": "Hole 1 \u2014 finish putting",
+      "seconds": 25,
+      "coordinate": [
+        30.6480177,
+        -97.6966108
+      ]
+    },
+    {
+      "kind": "move",
+      "name": "Transition \u2014 hole 1 green to hole 2 tee",
+      "speed_mps": 2.5,
+      "coordinates": [
+        [
+          30.6480177,
+          -97.6966108
+        ],
+        [
+          30.6474266,
+          -97.6966324
+        ]
+      ]
+    },
+    {
+      "kind": "stop",
+      "name": "Hole 2 \u2014 mapped tee / driver",
+      "seconds": 40,
+      "coordinate": [
+        30.6474266,
+        -97.6966324
+      ]
+    },
+    {
+      "kind": "move",
+      "name": "Hole 2 \u2014 cart to rough",
+      "speed_mps": 5,
+      "coordinates": [
+        [
+          30.6474266,
+          -97.6966324
+        ],
+        [
+          30.6470513,
+          -97.6984515
+        ],
+        [
+          30.6467818,
+          -97.6988692
+        ]
+      ]
+    },
+    {
+      "kind": "stop",
+      "name": "Hole 2 \u2014 rough / recovery",
+      "seconds": 40,
+      "coordinate": [
+        30.6467818,
+        -97.6988692
+      ]
+    },
+    {
+      "kind": "move",
+      "name": "Hole 2 \u2014 cart toward green",
+      "speed_mps": 4,
+      "coordinates": [
+        [
+          30.6467818,
+          -97.6988692
+        ],
+        [
+          30.6461265,
+          -97.6993871
+        ]
+      ]
+    },
+    {
+      "kind": "stop",
+      "name": "Hole 2 \u2014 greenside / wedge",
+      "seconds": 35,
+      "coordinate": [
+        30.6461265,
+        -97.6993871
+      ]
+    },
+    {
+      "kind": "move",
+      "name": "Hole 2 \u2014 walk to first putt",
+      "speed_mps": 1.1,
+      "coordinates": [
+        [
+          30.6461265,
+          -97.6993871
+        ],
+        [
+          30.6460187,
+          -97.6994915
+        ]
+      ]
+    },
+    {
+      "kind": "stop",
+      "name": "Hole 2 \u2014 first putt",
+      "seconds": 30,
+      "coordinate": [
+        30.6460187,
+        -97.6994915
+      ]
+    },
+    {
+      "kind": "move",
+      "name": "Hole 2 \u2014 walk to cup",
+      "speed_mps": 0.9,
+      "coordinates": [
+        [
+          30.6460187,
+          -97.6994915
+        ],
+        [
+          30.6459714,
+          -97.6995994
+        ]
+      ]
+    },
+    {
+      "kind": "stop",
+      "name": "Hole 2 \u2014 finish putting",
+      "seconds": 25,
+      "coordinate": [
+        30.6459714,
+        -97.6995994
+      ]
+    },
+    {
+      "kind": "move",
+      "name": "Transition \u2014 hole 2 green to hole 3 tee",
+      "speed_mps": 2,
+      "coordinates": [
+        [
+          30.6459714,
+          -97.6995994
+        ],
+        [
+          30.6455953,
+          -97.6997331
+        ]
+      ]
+    },
+    {
+      "kind": "stop",
+      "name": "Hole 3 \u2014 par-three mapped tee / iron",
+      "seconds": 40,
+      "coordinate": [
+        30.6455953,
+        -97.6997331
+      ]
+    },
+    {
+      "kind": "move",
+      "name": "Hole 3 \u2014 cart toward green",
+      "speed_mps": 4.5,
+      "coordinates": [
+        [
+          30.6455953,
+          -97.6997331
+        ],
+        [
+          30.6450677,
+          -97.7003901
+        ]
+      ]
+    },
+    {
+      "kind": "stop",
+      "name": "Hole 3 \u2014 greenside / chip",
+      "seconds": 30,
+      "coordinate": [
+        30.6450677,
+        -97.7003901
+      ]
+    },
+    {
+      "kind": "move",
+      "name": "Hole 3 \u2014 walk onto green",
+      "speed_mps": 1.1,
+      "coordinates": [
+        [
+          30.6450677,
+          -97.7003901
+        ],
+        [
+          30.6449599,
+          -97.7004736
+        ]
+      ]
+    },
+    {
+      "kind": "stop",
+      "name": "Hole 3 \u2014 first putt",
+      "seconds": 30,
+      "coordinate": [
+        30.6449599,
+        -97.7004736
+      ]
+    },
+    {
+      "kind": "move",
+      "name": "Hole 3 \u2014 walk to cup",
+      "speed_mps": 0.9,
+      "coordinates": [
+        [
+          30.6449599,
+          -97.7004736
+        ],
+        [
+          30.6448846,
+          -97.7005422
+        ]
+      ]
+    },
+    {
+      "kind": "stop",
+      "name": "Hole 3 \u2014 finish putting",
+      "seconds": 25,
+      "coordinate": [
+        30.6448846,
+        -97.7005422
+      ]
+    }
+  ]
+}
