@@ -1,0 +1,26 @@
+{
+  "" : {
+    "const-values" : "/Users/jthiel/projects/pinpoint-mobile/build/Pinpoint.build/Release-iphoneos/PinpointLiveActivity.build/Objects-normal/arm64/PinpointLiveActivity-primary.swiftconstvalues",
+    "dependencies" : "/Users/jthiel/projects/pinpoint-mobile/build/Pinpoint.build/Release-iphoneos/PinpointLiveActivity.build/Objects-normal/arm64/PinpointLiveActivity-primary.d",
+    "diagnostics" : "/Users/jthiel/projects/pinpoint-mobile/build/Pinpoint.build/Release-iphoneos/PinpointLiveActivity.build/Objects-normal/arm64/PinpointLiveActivity-primary.dia",
+    "emit-module-dependencies" : "/Users/jthiel/projects/pinpoint-mobile/build/Pinpoint.build/Release-iphoneos/PinpointLiveActivity.build/Objects-normal/arm64/PinpointLiveActivity-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/jthiel/projects/pinpoint-mobile/build/Pinpoint.build/Release-iphoneos/PinpointLiveActivity.build/Objects-normal/arm64/PinpointLiveActivity-primary-emit-module.dia",
+    "pch" : "/Users/jthiel/projects/pinpoint-mobile/build/Pinpoint.build/Release-iphoneos/PinpointLiveActivity.build/Objects-normal/arm64/PinpointLiveActivity-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/jthiel/projects/pinpoint-mobile/build/Pinpoint.build/Release-iphoneos/PinpointLiveActivity.build/Objects-normal/arm64/PinpointLiveActivity-primary.swiftdeps"
+  },
+  "/Users/jthiel/projects/pinpoint-mobile/LiveActivityShared/GolfActivityAttributes.swift" : {
+    "index-unit-output-path" : "/Pinpoint.build/Release-iphoneos/PinpointLiveActivity.build/Objects-normal/arm64/GolfActivityAttributes.o",
+    "llvm-bc" : "/Users/jthiel/projects/pinpoint-mobile/build/Pinpoint.build/Release-iphoneos/PinpointLiveActivity.build/Objects-normal/arm64/GolfActivityAttributes.bc",
+    "object" : "/Users/jthiel/projects/pinpoint-mobile/build/Pinpoint.build/Release-iphoneos/PinpointLiveActivity.build/Objects-normal/arm64/GolfActivityAttributes.o"
+  },
+  "/Users/jthiel/projects/pinpoint-mobile/LiveActivityShared/GolfActivityState.swift" : {
+    "index-unit-output-path" : "/Pinpoint.build/Release-iphoneos/PinpointLiveActivity.build/Objects-normal/arm64/GolfActivityState.o",
+    "llvm-bc" : "/Users/jthiel/projects/pinpoint-mobile/build/Pinpoint.build/Release-iphoneos/PinpointLiveActivity.build/Objects-normal/arm64/GolfActivityState.bc",
+    "object" : "/Users/jthiel/projects/pinpoint-mobile/build/Pinpoint.build/Release-iphoneos/PinpointLiveActivity.build/Objects-normal/arm64/GolfActivityState.o"
+  },
+  "/Users/jthiel/projects/pinpoint-mobile/PinpointLiveActivity/PinpointLiveActivity.swift" : {
+    "index-unit-output-path" : "/Pinpoint.build/Release-iphoneos/PinpointLiveActivity.build/Objects-normal/arm64/PinpointLiveActivity.o",
+    "llvm-bc" : "/Users/jthiel/projects/pinpoint-mobile/build/Pinpoint.build/Release-iphoneos/PinpointLiveActivity.build/Objects-normal/arm64/PinpointLiveActivity.bc",
+    "object" : "/Users/jthiel/projects/pinpoint-mobile/build/Pinpoint.build/Release-iphoneos/PinpointLiveActivity.build/Objects-normal/arm64/PinpointLiveActivity.o"
+  }
+}
