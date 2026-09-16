@@ -28,6 +28,10 @@ final class RoundStore {
     var practiceSessions: [PracticeSession] = [] { didSet { dataGeneration &+= 1; historyGeneration &+= 1 } }
     var cloudStatus = "Sign in to sync golf data"
     var cloudSyncing = false
+    /// Backend rows the last sync could not decode (left untouched server-side).
+    var cloudSkippedRecords = 0
+    /// Why the last sync failed, when it did. Cleared on the next success.
+    var cloudErrorDetail: String?
     @ObservationIgnored var onLocalChange: (() -> Void)?
     private(set) var cloudCheckpoint: GolfRecordCheckpoint?
     private(set) var cloudRevision = 0
@@ -65,6 +69,8 @@ final class RoundStore {
     func load() {
         persistenceQueue.sync {} // Drain older GPS snapshots before reading or switching accounts.
         localStorageHealthy = true
+        cloudSkippedRecords = 0
+        cloudErrorDetail = nil
         activeRound = nil; pastRounds = []; practiceSessions = []
         cloudRevision = 0; cloudBase = .empty; cloudCheckpoint = nil
         if fileManager.fileExists(atPath: stateURL.path) {
@@ -197,6 +203,7 @@ final class RoundStore {
             return .failed
         }
         guard dataGeneration == expectedGeneration, accountID == owner else { return .superseded }
+        cloudSkippedRecords = prepared.undecodableKeys.count
         if prepared.dataChanged {
             install(prepared.merged, activeID: prepared.activeID)
             notifyRoundEnded()

@@ -42,12 +42,71 @@ final class GolfCloudSync {
         }
     }
 
-    private struct Pull: Encodable { var after_cursor: Int }
     private struct Commit: Encodable { var changes: [GolfRecords.Change] }
     private struct Receipt: Decodable { var accepted: Bool }
 
+    /// One page of pull_golf_records. `end_cursor`/`has_more` come from the
+    /// paginated overload (migration 20260916120000); they are absent on the
+    /// legacy single-argument function, which is treated as one final page.
+    private struct PullPage: Decodable {
+        var cursor: Int
+        var end_cursor: Int?
+        var has_more: Bool?
+        var records: [GolfRecord]
+    }
+    private struct LegacyPullPage: Decodable {
+        var cursor: Int
+        var records: [GolfRecord]
+    }
+
+    /// Rows per pull page. Small pages keep each pull_golf_records call under
+    /// the backend statement timeout (Postgres 57014 on giant full-history pulls).
+    private let pullPageSize = 1000
+    /// Hard stop on pages per sync pass; guards against a stuck has_more.
+    private let pullMaxPages = 500
+    /// The paginated pull_golf_records overload may not be deployed yet. When
+    /// the backend reports an unknown function, fall back to the legacy call.
+    private var pullPaginationAvailable = true
+
+    private func fetchPullPage(_ scoped: SupabaseClient, after: Int) async throws -> PullPage {
+        if pullPaginationAvailable {
+            struct Params: Encodable { var after_cursor: Int; var page_limit: Int }
+            do {
+                let response = try await scoped.rpc("pull_golf_records",
+                    params: Params(after_cursor: after, page_limit: pullPageSize)).execute()
+                return try await Task.detached(priority: .utility) {
+                    try JSONDecoder().decode(PullPage.self, from: response.data)
+                }.value
+            } catch {
+                guard String(describing: error).contains("Could not find the function") else { throw error }
+                pullPaginationAvailable = false
+            }
+        }
+        struct LegacyParams: Encodable { var after_cursor: Int }
+        let response = try await scoped.rpc("pull_golf_records",
+            params: LegacyParams(after_cursor: after)).execute()
+        let legacy = try await Task.detached(priority: .utility) {
+            try JSONDecoder().decode(LegacyPullPage.self, from: response.data)
+        }.value
+        return PullPage(cursor: legacy.cursor, end_cursor: nil, has_more: nil, records: legacy.records)
+    }
+
+    private func syncedStatus() -> String {
+        store.cloudErrorDetail = nil
+        return store.cloudSkippedRecords == 0 ? "Golf data synced"
+            : "Golf data synced · \(store.cloudSkippedRecords) backend record(s) skipped — update the app to display them"
+    }
+
     func sync() async {
-        guard let client = PinpointSupabase.client, let account = store.accountID, store.localStorageHealthy else { return }
+        guard let client = PinpointSupabase.client else {
+            if store.accountID != nil { store.cloudErrorDetail = "Cloud sync isn't configured on this build — add the Supabase URL and anon key, then rebuild." }
+            return
+        }
+        guard let account = store.accountID else { return }
+        guard store.localStorageHealthy else {
+            store.cloudErrorDetail = store.lastError ?? "Local golf data couldn't be read. Your files have been kept."
+            return
+        }
         if syncing { requested = true; return }
         syncing = true; store.cloudSyncing = true
         let run = epoch
@@ -66,14 +125,28 @@ final class GolfCloudSync {
                 options: .init(auth: .init(autoRefreshToken: false, accessToken: { token })))
             for _ in 0..<4 {
                 let checkpoint = store.cloudCheckpoint ?? GolfRecordCheckpoint(cursor: 0, records: [])
-                let response = try await scoped.rpc("pull_golf_records", params: Pull(after_cursor: checkpoint.cursor)).execute()
-                let bytes = response.data
-                let delta = try await Task.detached(priority: .utility) {
-                    try JSONDecoder().decode(GolfRecordCheckpoint.self, from: bytes)
-                }.value
+                // Page through pull_golf_records following has_more. A single
+                // full-history pull times out server-side (Postgres 57014) once
+                // an account accumulates enough rows, and every retry re-attempts
+                // the same giant pull, so sync can never progress.
+                var afterCursor = checkpoint.cursor
+                var pulled: [GolfRecord] = []
+                var serverCursor = checkpoint.cursor
+                var pages = 0
+                while true {
+                    let page = try await fetchPullPage(scoped, after: afterCursor)
+                    guard run == epoch, store.accountID == account, client.auth.currentUser?.id == account else { return }
+                    pulled.append(contentsOf: page.records)
+                    serverCursor = page.cursor
+                    afterCursor = page.end_cursor ?? serverCursor
+                    pages += 1
+                    if page.has_more != true || pages >= pullMaxPages { break }
+                    try Task.checkCancellation()
+                }
+                let delta = GolfRecordCheckpoint(cursor: serverCursor, records: pulled)
                 guard run == epoch, store.accountID == account, client.auth.currentUser?.id == account else { return }
                 if delta.records.isEmpty, lastSyncedGeneration == store.dataGeneration {
-                    store.cloudStatus = "Golf data synced"
+                    store.cloudStatus = syncedStatus()
                     return
                 }
                 let generation = store.dataGeneration
@@ -96,7 +169,7 @@ final class GolfCloudSync {
                 let changes = prepared.changes
                 if changes.isEmpty {
                     lastSyncedGeneration = store.dataGeneration
-                    store.cloudStatus = "Golf data synced"
+                    store.cloudStatus = syncedStatus()
                     return
                 }
                 let _: Receipt = try await Task.detached(priority: .utility) {
@@ -110,6 +183,7 @@ final class GolfCloudSync {
             store.cloudStatus = "Changes saved locally · another device is syncing. Retrying soon."
         } catch {
             guard run == epoch else { return }
+            store.cloudErrorDetail = GolfSyncFailure.reason(for: error)
             store.cloudStatus = "Golf data saved locally · sync unavailable. We'll retry when connected."
         }
     }

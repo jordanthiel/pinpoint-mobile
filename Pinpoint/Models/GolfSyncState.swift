@@ -225,6 +225,78 @@ enum GolfRecords {
         for (i, practice) in state.practice.sorted(by: { $0.id.uuidString < $1.id.uuidString }).enumerated() { try append(practice, kind: "practice", id: practice.id, position: i) }
         return result
     }
+    /// Decodes pulled rows entity by entity. Rows this client cannot decode
+    /// (values written by a newer/different writer) are reported as bad keys
+    /// instead of failing the whole pull. Bad rows stay in the checkpoint
+    /// verbatim: the client must neither display, modify, nor tombstone what
+    /// it cannot understand. Children of a bad parent are bad too, so an
+    /// orphaned hole or shot is never mistaken for a deletion.
+    static func assembleTolerant(_ records: [GolfRecord]) -> (state: GolfCloudState, badKeys: Set<String>) {
+        let live = records.filter { !$0.deleted }
+        var bad = Set<String>()
+        func decode<T: Decodable>(_ type: T.Type, _ data: [String: GolfJSON]) -> T? {
+            guard let bytes = try? JSONEncoder().encode(GolfJSON.object(data)) else { return nil }
+            return try? JSONDecoder().decode(type, from: bytes)
+        }
+        func holeKey(_ row: GolfRecord) -> String { "\(row.round_id?.uuidString ?? ""):\(row.id.uuidString)" }
+        // Shots decode independently; orphans are excluded when the parent fails.
+        var shotsByHole: [String: [(position: Int, shot: TrackedShot)]] = [:]
+        var shotKeysByHole: [String: [String]] = [:]
+        for row in live where row.kind == "shot" {
+            shotKeysByHole[holeKey(row), default: []].append(row.key)
+            guard let shot: TrackedShot = decode(TrackedShot.self, row.data) else { bad.insert(row.key); continue }
+            shotsByHole[holeKey(row), default: []].append((row.position, shot))
+        }
+        // Holes pick up their decoded shots.
+        var holesByRound: [UUID: [(position: Int, hole: HoleScore)]] = [:]
+        var descendantKeysByRound: [UUID: [String]] = [:]
+        for row in live where row.kind == "hole" {
+            guard let roundID = row.round_id else {
+                bad.insert(row.key)
+                bad.formUnion(shotKeysByHole[holeKey(row)] ?? [])
+                continue
+            }
+            descendantKeysByRound[roundID, default: []].append(row.key)
+            descendantKeysByRound[roundID, default: []].append(contentsOf: shotKeysByHole[holeKey(row)] ?? [])
+            var data = row.data
+            data["shots"] = .array([])
+            guard var hole: HoleScore = decode(HoleScore.self, data) else {
+                bad.insert(row.key)
+                bad.formUnion(shotKeysByHole[holeKey(row)] ?? [])
+                continue
+            }
+            hole.shots = (shotsByHole[holeKey(row)] ?? []).sorted { $0.position < $1.position }.map { $0.shot }
+            holesByRound[roundID, default: []].append((row.position, hole))
+        }
+        // Rounds pick up their decoded holes.
+        var rounds: [(position: Int, round: GolfRound)] = []
+        for row in live where row.kind == "round" {
+            var data = row.data
+            data["holeScores"] = .array([])
+            guard var round: GolfRound = decode(GolfRound.self, data) else {
+                bad.insert(row.key)
+                bad.formUnion(descendantKeysByRound[row.id] ?? [])
+                continue
+            }
+            round.holeScores = (holesByRound[row.id] ?? []).sorted { $0.position < $1.position }.map { $0.hole }
+            rounds.append((row.position, round))
+        }
+        var clubs: [(position: Int, club: ClubBagEntry)] = []
+        for row in live where row.kind == "club" {
+            guard let club: ClubBagEntry = decode(ClubBagEntry.self, row.data) else { bad.insert(row.key); continue }
+            clubs.append((row.position, club))
+        }
+        var practice: [(position: Int, session: PracticeSession)] = []
+        for row in live where row.kind == "practice" {
+            guard let session: PracticeSession = decode(PracticeSession.self, row.data) else { bad.insert(row.key); continue }
+            practice.append((row.position, session))
+        }
+        let state = GolfCloudState(
+            rounds: rounds.sorted { $0.position < $1.position }.map { $0.round },
+            bag: ClubBag(clubs: clubs.sorted { $0.position < $1.position }.map { $0.club }),
+            practice: practice.sorted { $0.position < $1.position }.map { $0.session })
+        return (state, bad)
+    }
     static func assemble(_ records: [GolfRecord]) throws -> GolfCloudState {
         let rows = records.filter { !$0.deleted }.sorted { $0.position == $1.position ? $0.key < $1.key : $0.position < $1.position }
         let holesByRound = Dictionary(grouping: rows.filter { $0.kind == "hole" }, by: \.round_id)
@@ -246,7 +318,7 @@ enum GolfRecords {
         let deleted = Set(mirror.filter(\.deleted).map(\.key))
         return try assemble(flatten(state).filter { !deleted.contains($0.key) })
     }
-    static func changes(local: GolfCloudState, mirror: [GolfRecord]) throws -> [Change] {
+    static func changes(local: GolfCloudState, mirror: [GolfRecord], excluding: Set<String> = []) throws -> [Change] {
         let current = try flatten(local)
         let old = Dictionary(uniqueKeysWithValues: mirror.map { ($0.key, $0) })
         let keys = Set(current.map(\.key))
@@ -254,7 +326,9 @@ enum GolfRecords {
             if let before = old[row.key], before.deleted || (before.data == row.data && before.hole_id == row.hole_id && before.position == row.position) { return nil }
             return Change(row, expected: old[row.key]?.revision ?? 0)
         }
-        for var row in mirror where !row.deleted && !keys.contains(row.key) {
+        // Rows the client cannot decode stay untouched: a missing local copy
+        // is an understanding gap, never evidence of a deletion.
+        for var row in mirror where !row.deleted && !keys.contains(row.key) && !excluding.contains(row.key) {
             row.deleted = true; row.data = [:]; changes.append(Change(row, expected: row.revision))
         }
         return changes
@@ -263,6 +337,43 @@ enum GolfRecords {
 
 /// Pure reconciliation runs off the UI actor, including JSON conversion and the
 /// potentially large local checkpoint encoding.
+/// Human-readable sync failure reasons. Pure Foundation so the mapping is
+/// unit-testable; never includes tokens or credentials.
+enum GolfSyncFailure {
+    static func reason(for error: Error) -> String {
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .notConnectedToInternet, .networkConnectionLost, .dataNotAllowed:
+                return "No connection — rounds stay saved on this device and sync when you're back online."
+            case .timedOut:
+                return "The backend timed out — rounds stay saved on this device. Try Sync now."
+            default:
+                break
+            }
+        }
+        if error is DecodingError {
+            return "The backend sent a response this build can't read — update the app, then Sync now."
+        }
+        let details = String(describing: error).lowercased()
+        func has(_ words: String...) -> Bool { words.contains { details.contains($0) } }
+        if has("not connected", "offline", "network", "timed out", "connection lost", "connection reset", "broken pipe", "could not connect") {
+            return "No connection — rounds stay saved on this device and sync when you're back online."
+        }
+        if has("refresh token", "session expired", "session missing", "invalid jwt", "jwt expired", "user not found") {
+            return "Sign-in expired — sign out and back in, then Sync now."
+        }
+        if (has("function") && has("does not exist", "not find", "could not find"))
+            || has("42883", "schema cache", "pgrst202", "not found", "404") {
+            return "The backend is missing golf sync — apply the Supabase migrations to the linked project, then Sync now."
+        }
+        if has("401", "unauthorized", "403", "forbidden", "permission denied", "42501", "violates row-level", "restricts") {
+            return "The backend refused the request — sign out and back in. If it persists, check the project's migrations and RLS."
+        }
+        let snippet = String(String(describing: error).prefix(160))
+        return "Sync failed — \(snippet)"
+    }
+}
+
 struct GolfPreparedSync {
     var merged: GolfCloudState
     var remote: GolfCloudState
@@ -271,10 +382,14 @@ struct GolfPreparedSync {
     var encodedState: Data
     var activeID: UUID?
     var dataChanged: Bool
+    /// Checkpoint keys the client could not decode. They ride along verbatim
+    /// in the checkpoint and are excluded from uploads, so one unreadable row
+    /// can no longer block every other round from syncing.
+    var undecodableKeys: Set<String>
 
     static func prepare(local data: GolfCloudState, base: GolfCloudState, checkpoint: GolfRecordCheckpoint,
                         activeID: UUID?) throws -> Self {
-        let remote = try GolfRecords.assemble(checkpoint.records)
+        let (remote, undecodableKeys) = GolfRecords.assembleTolerant(checkpoint.records)
         let local = try GolfRecords.removingTombstones(from: data, mirror: checkpoint.records)
         let normalizedBase = try GolfRecords.assemble(GolfRecords.flatten(base))
         var merged: GolfCloudState
@@ -286,7 +401,8 @@ struct GolfPreparedSync {
         }
         let state = GolfLocalState(data: merged, activeID: activeID, revision: checkpoint.cursor, base: remote, checkpoint: checkpoint)
         return Self(merged: merged, remote: remote, checkpoint: checkpoint,
-                    changes: try GolfRecords.changes(local: merged, mirror: checkpoint.records),
-                    encodedState: try JSONEncoder().encode(state), activeID: activeID, dataChanged: merged != data)
+                    changes: try GolfRecords.changes(local: merged, mirror: checkpoint.records, excluding: undecodableKeys),
+                    encodedState: try JSONEncoder().encode(state), activeID: activeID, dataChanged: merged != data,
+                    undecodableKeys: undecodableKeys)
     }
 }

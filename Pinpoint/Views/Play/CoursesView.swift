@@ -70,6 +70,7 @@ struct CoursesView: View {
                     }
                 }.padding(20).padding(.bottom, FloatingNavigation.clearance)
             }.background(PinpointTheme.background).navigationTitle("Courses").navigationBarTitleDisplayMode(.inline)
+            .profileToolbar()
                 .refreshable { await catalog.refresh() }
                 .task { await catalog.refresh() }
                 .task(id: search) {

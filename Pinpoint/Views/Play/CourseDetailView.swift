@@ -100,6 +100,7 @@ struct CourseDetailView: View {
                 .sheet(isPresented: $showAccount) { AccountView() }
                 .sheet(isPresented: $showEnd) { EndRoundSheet() }
             .navigationTitle("Pinpoint").navigationBarTitleDisplayMode(.inline)
+            .profileToolbar()
                 .sheet(isPresented: $showBag) { ClubBagView() }
                 .sheet(isPresented: $showVoice) { HoleDictationView(holeNumber: rounds.activeRound?.currentHoleNumber ?? 1) }
                 .sheet(isPresented: $showStart) {
