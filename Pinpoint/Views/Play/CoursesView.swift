@@ -6,13 +6,16 @@ struct CoursesView: View {
     var onPlay: () -> Void
     @State private var location = PlayerLocation()
     @State private var search = ""
+    @State private var appliedQuery = ""
     @State private var nearby = false
     @State private var origin: GeoPoint?
     @State private var selected: CatalogCourse?
     @State private var mapsError = false
     @State private var locating = false
+    @State private var visibleCount = 100
+    private let pageSize = 100
     private var results: [CatalogCourse] {
-        let query = search.trimmingCharacters(in: .whitespacesAndNewlines)
+        let query = appliedQuery.trimmingCharacters(in: .whitespacesAndNewlines)
         return catalog.courses.filter { course in
             (query.isEmpty || "\(course.name) \(course.locality) \(course.address)".localizedCaseInsensitiveContains(query)) &&
             (!nearby || origin.map { $0.yards(to: course.point) <= 50 * 1760 } == true)
@@ -21,10 +24,11 @@ struct CoursesView: View {
             return a.name.localizedStandardCompare(b.name) == .orderedAscending
         }
     }
+    private var visibleResults: [CatalogCourse] { Array(results.prefix(visibleCount)) }
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
+                LazyVStack(alignment: .leading, spacing: 18) {
                     PinpointPageHeading(title: "Find your next round.", subtitle: "Explore courses in the Pinpoint directory.")
                     TextField("Search course, city or address", text: $search)
                         .textFieldStyle(.plain).padding(14).background(PinpointTheme.surface, in: RoundedRectangle(cornerRadius: 14))
@@ -54,15 +58,27 @@ struct CoursesView: View {
                     } else if !catalog.loading {
                         ContentUnavailableView("No courses found", systemImage: "flag", description: Text("Try another city or show all courses. New locations will appear here as they’re added to the directory."))
                     }
-                    ForEach(results) { course in
+                    ForEach(visibleResults) { course in
                         Button { selected = course } label: {
                             PinpointNavigationRow(title: course.name, subtitle: subtitle(course), symbol: "flag")
                         }.buttonStyle(.plain)
+                    }
+                    if results.count > visibleCount {
+                        Button("Show more (\(results.count - visibleCount) remaining)") {
+                            visibleCount += pageSize
+                        }.buttonStyle(SecondaryButtonStyle())
                     }
                 }.padding(20).padding(.bottom, FloatingNavigation.clearance)
             }.background(PinpointTheme.background).navigationTitle("Courses").navigationBarTitleDisplayMode(.inline)
                 .refreshable { await catalog.refresh() }
                 .task { await catalog.refresh() }
+                .task(id: search) {
+                    try? await Task.sleep(for: .milliseconds(300))
+                    guard !Task.isCancelled else { return }
+                    appliedQuery = search
+                }
+                .onChange(of: appliedQuery) { _, _ in visibleCount = 100 }
+                .onChange(of: nearby) { _, _ in visibleCount = 100 }
                 .onChange(of: location.coordinate) { _, point in
                     guard let point = location.freshCoordinate else { return }
                     origin = point; nearby = true; locating = false; location.stop()
