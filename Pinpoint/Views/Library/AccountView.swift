@@ -87,6 +87,18 @@ struct AccountView: View {
                     Text(rounds.cloudStatus)
                         .font(.subheadline)
                         .foregroundStyle(PinpointTheme.secondaryText)
+                    if let detail = rounds.cloudErrorDetail {
+                        Text(detail)
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                            .textSelection(.enabled)
+                    }
+                    if let report = rounds.cloudSkipReport {
+                        Text(report)
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                            .textSelection(.enabled)
+                    }
                 }
             }
 

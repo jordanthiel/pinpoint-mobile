@@ -5,6 +5,11 @@ struct ImprovementView: View {
     @State private var selected: PracticeFocus?
     private var sessions: [PracticeSession] { rounds.practiceSessions }
     private var evidence: GolfEvidence { GolfEvidence(rounds: Array(rounds.pastRounds.prefix(5)) + (rounds.activeRound.map { [$0] } ?? [])) }
+    /// Practice priorities target scratch (the goal); the Insights tab offers
+    /// peer-level views for where the golfer is right now.
+    private var plan: PracticeRecommendation {
+        evidence.practiceRecommendation(level: .default)
+    }
 
     var embedded = false
     var body: some View {
@@ -23,15 +28,42 @@ struct ImprovementView: View {
                         StatTile(title: "This week", value: "\(sessions.filter { Calendar.current.isDate($0.date, equalTo: Date(), toGranularity: .weekOfYear) }.count)")
                         StatTile(title: "Evidence", value: "\(evidence.completed.count)", subtitle: "scored holes")
                     }
-                    if evidence.focus.isEmpty {
+                    if plan.primary == nil && evidence.focus.isEmpty {
                         PlayUI.card {
                             Label("Build your baseline", systemImage: "scope").font(.title2.bold())
                             Text("Track scores, putts, penalties and fairways to reveal your priorities. Start with a distance-control session while your golf profile grows.").foregroundStyle(PinpointTheme.secondaryText)
                             Button("Start a putting baseline") { start(baseline) }.buttonStyle(PrimaryButtonStyle())
                         }
+                    } else if plan.primary != nil {
+                        Text("YOUR FOCUS AREAS").font(.caption.bold()).foregroundStyle(PinpointTheme.secondaryText)
+                        Text("Ranked by strokes lost vs scratch × recurrence × controllability × sample confidence.").font(.caption).foregroundStyle(PinpointTheme.secondaryText)
+                        Text(plan.takeaway).font(.subheadline).foregroundStyle(PinpointTheme.secondaryText)
+                        ForEach(Array([plan.primary, plan.secondary].compactMap { $0 }.enumerated()), id: \.element.category) { index, focus in
+                            PlayUI.card {
+                                HStack {
+                                    Label("\(index + 1). \(focus.title)", systemImage: focus.category.icon).font(.title3.bold())
+                                    Spacer()
+                                    Text(focus.kind.rawValue.capitalized).font(.caption).foregroundStyle(PinpointTheme.secondaryText)
+                                }
+                                Text(focus.cause).font(.subheadline).foregroundStyle(PinpointTheme.secondaryText)
+                                Text(focus.drill).font(.subheadline)
+                                Text(focus.target).font(.subheadline.bold()).foregroundStyle(PinpointTheme.accentText)
+                                Text("Transfer check: \(focus.transferMetric) — now \(focus.transferBaseline). Re-measure over the next 5 and 10 rounds.")
+                                    .font(.caption).foregroundStyle(PinpointTheme.secondaryText)
+                                let practiceFocus = PracticeFocus(id: focus.category.rawValue, title: focus.title, icon: focus.category.icon,
+                                                                  evidence: focus.cause, opportunity: focus.priority,
+                                                                  drill: focus.drill, target: focus.target)
+                                let recent = sessions.filter { $0.focus == focus.title }.prefix(3)
+                                if !recent.isEmpty {
+                                    Text("Recent results: " + recent.map { "\($0.made)/\($0.attempts)" }.joined(separator: " · "))
+                                        .font(.caption).foregroundStyle(PinpointTheme.secondaryText)
+                                }
+                                Button("Log a practice session") { start(practiceFocus) }.buttonStyle(PrimaryButtonStyle())
+                            }
+                        }
                     } else {
                         Text("YOUR FOCUS AREAS").font(.caption.bold()).foregroundStyle(PinpointTheme.secondaryText)
-                        Text("Ranked by recorded frequency and practice priority, not estimated strokes gained.").font(.caption).foregroundStyle(PinpointTheme.secondaryText)
+                        Text("Ranked by recorded frequency and practice priority, not estimated strokes gained. Add shot distances to unlock strokes-gained priorities.").font(.caption).foregroundStyle(PinpointTheme.secondaryText)
                         ForEach(Array(evidence.focus.enumerated()), id: \.element.id) { index, focus in
                             PlayUI.card {
                                 HStack {

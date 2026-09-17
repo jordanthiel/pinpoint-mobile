@@ -6,7 +6,7 @@ struct ScorecardView: View {
     @Environment(RoundStore.self) private var rounds
     @Environment(\.dismiss) private var dismiss
 
-    var selectedRound: GolfRound? = nil
+    var selectedRoundID: UUID? = nil
     @State private var tab: CardTab = .scores
     @State private var showSummary = false
     @State private var editingHole: HoleScore?
@@ -22,7 +22,7 @@ struct ScorecardView: View {
         NavigationStack {
             ZStack {
                 PinpointTheme.background.ignoresSafeArea()
-                if let round = selectedRound ?? rounds.activeRound ?? rounds.pastRounds.first {
+                if let round = rounds.round(id: selectedRoundID) {
                     VStack(spacing: 0) {
                         header(round: round)
                         Picker("Card", selection: $tab) {
@@ -61,10 +61,19 @@ struct ScorecardView: View {
                     .presentationDetents([.large])
             }
             .fullScreenCover(item: $reviewingHole) { hole in
-                PostScoreFlow(holeNumber: hole.holeNumber, initialStep: .shots) { reviewingHole = nil }
+                if selectedRoundID == nil, rounds.activeRound != nil {
+                    PostScoreFlow(holeNumber: hole.holeNumber, initialStep: .shots) { reviewingHole = nil }
+                } else if let round = rounds.round(id: selectedRoundID) {
+                    NavigationStack {
+                        RoundShotReviewView(roundID: round.id, holeNumber: hole.holeNumber)
+                            .toolbar { ToolbarItem(placement: .confirmationAction) {
+                                Button("Done") { reviewingHole = nil }
+                            } }
+                    }
+                }
             }
             .navigationDestination(isPresented: $showSummary) {
-                RoundSummaryView(selectedRound: selectedRound)
+                RoundSummaryView(selectedRoundID: selectedRoundID)
             }
         }
     }
@@ -74,7 +83,7 @@ struct ScorecardView: View {
             Text("\(round.startedAt.formatted(date: .numeric, time: .omitted)) · Duration: \(round.durationLabel)")
                 .font(.caption)
                 .foregroundStyle(PinpointTheme.secondaryText)
-            Text("\(round.holeScores.filter(\.hasScore).count) of \(round.holeScores.count) holes scored\(selectedRound == nil && round.status == .active ? " · Tap a score to edit" : "")")
+            Text("\(round.holeScores.filter(\.hasScore).count) of \(round.holeScores.count) holes scored\(selectedRoundID == nil && round.status == .active ? " · Tap a score to edit" : "")")
                 .font(.caption).foregroundStyle(PinpointTheme.secondaryText)
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -144,7 +153,7 @@ struct ScorecardView: View {
                 Text("Gross").font(.caption.weight(.bold)).padding(8)
                 ForEach(holes) { hs in
                     Button {
-                        if selectedRound == nil && round.status == .active { editingHole = hs }
+                        if selectedRoundID == nil && round.status == .active { editingHole = hs }
                     } label: {
                     ZStack {
                         if hs.hasScore {
@@ -159,7 +168,7 @@ struct ScorecardView: View {
                     .padding(.vertical, 8)
                     }
                     .buttonStyle(.plain)
-                    .disabled(selectedRound != nil || round.status != .active)
+                    .disabled(selectedRoundID != nil || round.status != .active)
                     .accessibilityLabel("Hole \(hs.holeNumber), \(hs.hasScore ? "score \(hs.grossScore)" : "not scored"), edit score")
                 }
                 Text("\(round.totalGross)")
@@ -173,10 +182,10 @@ struct ScorecardView: View {
                         reviewingHole = hs
                     } label: {
                         let count = hs.shots.filter { !$0.isPutt }.count
-                        Text(count == 0 ? (selectedRound == nil && round.status == .active ? "Add" : "—") : "\(count)")
+                        Text(count == 0 ? (selectedRoundID == nil && round.status == .active ? "Add" : "—") : "\(count)")
                             .font(.subheadline.weight(.semibold)).foregroundStyle(PinpointTheme.accentText)
                             .frame(minWidth: 44, minHeight: 44)
-                    }.buttonStyle(.plain).disabled(selectedRound != nil || round.status != .active)
+                    }.buttonStyle(.plain)
                         .accessibilityLabel("Hole \(hs.holeNumber), \(hs.shots.filter { !$0.isPutt }.count) saved shots, review or add shots")
                 }
                 Text("\(holes.reduce(0) { $0 + $1.shots.filter { !$0.isPutt }.count })")
@@ -258,7 +267,7 @@ struct ScorecardView: View {
 
     private func footer(round: GolfRound) -> some View {
         HStack(spacing: 10) {
-            if selectedRound == nil && round.status == .active {
+            if selectedRoundID == nil && round.status == .active {
                 Button {
                     dismiss()
                 } label: {

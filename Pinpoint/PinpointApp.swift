@@ -12,18 +12,40 @@ struct PinpointApp: App {
     @UIApplicationDelegateAdaptor(PhoneAppDelegate.self) private var phoneDelegate
     #endif
 
+    @ViewBuilder private var launchView: some View {
+        #if DEBUG
+        if CommandLine.arguments.contains("--ui-round-review") {
+            NavigationStack {
+                RoundSummaryView(selectedRoundID: rounds.pastRounds.first?.id)
+            }.task {
+                let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                    .appendingPathComponent("round-review-fixture.json")
+                if let bytes = try? Data(contentsOf: url),
+                   let checkpoint = try? JSONDecoder().decode(GolfRecordCheckpoint.self, from: bytes) {
+                    let data = GolfRecords.assembleTolerant(checkpoint.records).state
+                    _ = rounds.applyCloud(data, revision: checkpoint.cursor, base: data)
+                }
+            }
+        } else { ContentView() }
+        #else
+        ContentView()
+        #endif
+    }
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            launchView
                 .task { PhoneCompanionSession.shared.start(rounds: rounds) }
                 .task { await golfSync.observeAccount() }
                 .task {
                     while !Task.isCancelled {
+                        do { try await Task.sleep(for: .seconds(30)) } catch { return }
                         if scenePhase == .active {
                             RoundLiveActivity.shared.refresh(rounds: rounds)
-                            await golfSync.sync()
+                            // Retry unsent edits after connectivity returns;
+                            // acknowledged history is fetched only on request.
+                            if rounds.pendingUpload != nil || rounds.cloudData != rounds.cloudBase { await golfSync.sync() }
                         }
-                        do { try await Task.sleep(for: .seconds(30)) } catch { return }
                     }
                 }
                 .onChange(of: scenePhase) { _, phase in if phase == .active {

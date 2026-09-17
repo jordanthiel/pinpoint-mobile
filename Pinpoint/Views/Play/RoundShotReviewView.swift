@@ -3,15 +3,17 @@ import MapKit
 
 /// Read-only review of a specific saved round, independent of the round being played.
 struct RoundShotReviewView: View {
-    let round: GolfRound
+    @Environment(RoundStore.self) private var store
+    let roundID: UUID
+    private var round: GolfRound? { store.round(id: roundID) }
     @State var holeNumber: Int
     @State private var selectedShot: UUID?
     @State private var mapShot: TrackedShot?
-    private var hole: HoleScore? { round.score(for: holeNumber) }
+    private var hole: HoleScore? { round?.score(for: holeNumber) }
     private var shots: [TrackedShot] { (hole?.shots ?? []).sorted { $0.number < $1.number } }
-    private var numbers: [Int] { round.holeScores.map(\.holeNumber).sorted() }
+    private var numbers: [Int] { round?.holeScores.map(\.holeNumber).sorted() ?? [] }
     private func distance(for shot: TrackedShot) -> Double? {
-        if let hole, let layout = round.playLayout(for: holeNumber), let pin = round.pinCoordinate(for: holeNumber),
+        if let round, let hole, let layout = round.playLayout(for: holeNumber), let pin = round.pinCoordinate(for: holeNumber),
            let leg = hole.recordedShotLegs(tee: layout.tee, pin: pin).first(where: { $0.id == shot.id }) {
             return leg.start.yards(to: leg.end)
         }
@@ -29,7 +31,7 @@ struct RoundShotReviewView: View {
                     Button { move(1) } label: { Image(systemName: "chevron.right").frame(width: 44, height: 44) }
                         .disabled(holeNumber == numbers.last).accessibilityLabel("Next hole")
                 }
-                if let hole {
+                if let round, let hole {
                     Text("Par \(round.hole(holeNumber)?.par ?? 0) · \(hole.hasScore ? "Score \(hole.grossScore)" : "No final score") · \(hole.hasKnownPutts ? "\(hole.putts) putts" : "Putts unknown")")
                         .font(.headline)
                     if let layout = round.playLayout(for: holeNumber), let pin = round.pinCoordinate(for: holeNumber) {

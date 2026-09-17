@@ -1,8 +1,7 @@
 import Foundation
 
-/// Local-first store for on-course rounds. Persists to Application Support
-/// as JSON; Supabase sync for rounds ships with the migration in
-/// `supabase/migrations/*_rounds.sql` and reuses the app's auth session.
+/// Cloud responses live in memory. Disk holds the active round and pending
+/// mutations so play can continue through poor connectivity.
 @Observable
 final class RoundStore {
     @ObservationIgnored private(set) var dataGeneration: UInt64 = 0
@@ -28,11 +27,15 @@ final class RoundStore {
     var practiceSessions: [PracticeSession] = [] { didSet { dataGeneration &+= 1; historyGeneration &+= 1 } }
     var cloudStatus = "Sign in to sync golf data"
     var cloudSyncing = false
+    var cloudHistoryLoaded = false
     /// Backend rows the last sync could not decode (left untouched server-side).
     var cloudSkippedRecords = 0
     /// Why the last sync failed, when it did. Cleared on the next success.
     var cloudErrorDetail: String?
+    /// Which backend rows the last sync skipped, when any did.
+    var cloudSkipReport: String?
     @ObservationIgnored var onLocalChange: (() -> Void)?
+    private(set) var pendingUpload: GolfPendingUpload?
     private(set) var cloudCheckpoint: GolfRecordCheckpoint?
     private(set) var cloudRevision = 0
     private(set) var cloudBase: GolfCloudState = .empty
@@ -64,15 +67,24 @@ final class RoundStore {
         load()
     }
 
+    /// Navigation retains identity, never a snapshot of cloud data.
+    func round(id: UUID?) -> GolfRound? {
+        guard let id else { return activeRound ?? pastRounds.first }
+        if activeRound?.id == id { return activeRound }
+        return pastRounds.first { $0.id == id }
+    }
+
     // MARK: - Persistence
 
     func load() {
         persistenceQueue.sync {} // Drain older GPS snapshots before reading or switching accounts.
         localStorageHealthy = true
         cloudSkippedRecords = 0
+        cloudHistoryLoaded = false
         cloudErrorDetail = nil
+        cloudSkipReport = nil
         activeRound = nil; pastRounds = []; practiceSessions = []
-        cloudRevision = 0; cloudBase = .empty; cloudCheckpoint = nil
+        cloudRevision = 0; cloudBase = .empty; cloudCheckpoint = nil; pendingUpload = nil
         if fileManager.fileExists(atPath: stateURL.path) {
             do {
                 var state = try JSONDecoder().decode(GolfLocalState.self, from: Data(contentsOf: stateURL))
@@ -85,6 +97,10 @@ final class RoundStore {
                         if round.id == state.activeID, let index = state.data.rounds.firstIndex(where: { $0.id == round.id }) { state.data.rounds[index] = round }
                     }
                 }
+                // Migrate old full-history caches without dropping unsent edits.
+                pendingUpload = state.pendingUpload
+                state = state.localCache()
+                try writeState(state, to: stateURL)
                 install(state.data, activeID: state.activeID)
                 cloudRevision = state.revision; cloudBase = state.base; cloudCheckpoint = state.checkpoint
                 persistedHistoryGeneration = historyGeneration; persistedActiveID = activeRound?.id
@@ -172,7 +188,7 @@ final class RoundStore {
         if data == cloudData && revision == cloudRevision && base == cloudBase && checkpoint == cloudCheckpoint { return true }
         let state = GolfLocalState(data: data, activeID: activeRound?.id, revision: revision, base: base, checkpoint: checkpoint)
         do { try writeState(state, to: stateURL) }
-        catch { lastError = "Couldn't save downloaded golf data."; return false }
+        catch { lastError = "Couldn't save pending golf changes."; return false }
         install(data, activeID: state.activeID)
         cloudRevision = revision; cloudBase = base; cloudCheckpoint = checkpoint
         notifyRoundEnded()
@@ -185,7 +201,7 @@ final class RoundStore {
     /// gestures, and never install a snapshot superseded by edits during the wait.
     @MainActor
     func applyPreparedCloud(_ prepared: GolfPreparedSync, expectedGeneration: UInt64, owner: UUID?) async -> PreparedCloudResult {
-        guard dataGeneration == expectedGeneration, accountID == owner else { return .superseded }
+        guard dataGeneration == expectedGeneration, accountID == owner, pendingUpload == nil else { return .superseded }
         let destination = stateURL
         let encodedState = prepared.encodedState
         do {
@@ -199,11 +215,12 @@ final class RoundStore {
                 }
             }
         } catch {
-            if accountID == owner { lastError = "Couldn't save downloaded golf data." }
+            if accountID == owner { lastError = "Couldn't save pending golf changes." }
             return .failed
         }
-        guard dataGeneration == expectedGeneration, accountID == owner else { return .superseded }
+        guard dataGeneration == expectedGeneration, accountID == owner, pendingUpload == nil else { return .superseded }
         cloudSkippedRecords = prepared.undecodableKeys.count
+        cloudSkipReport = prepared.skipReport
         if prepared.dataChanged {
             install(prepared.merged, activeID: prepared.activeID)
             notifyRoundEnded()
@@ -213,6 +230,40 @@ final class RoundStore {
         cloudCheckpoint = prepared.checkpoint
         persistedHistoryGeneration = historyGeneration; persistedActiveID = activeRound?.id
         return .applied
+    }
+
+    /// A receipt acknowledges the submitted snapshot, even if newer edits now
+    /// exist. Persist those edits against that baseline before releasing the batch.
+    @discardableResult
+    func advanceCloudBase(to merged: GolfCloudState, owner: UUID?) -> Bool {
+        guard accountID == owner else { return false }
+        return persistUploadState(base: merged, pending: pendingUpload)
+    }
+
+    func enqueueUpload(_ upload: GolfPendingUpload, owner: UUID?) -> Bool {
+        guard accountID == owner, pendingUpload == nil else { return false }
+        return persistUploadState(base: cloudBase, pending: upload)
+    }
+
+    func resolveUpload(id: UUID, accepted: Bool, owner: UUID?) -> Bool {
+        guard accountID == owner, let pending = pendingUpload, pending.id == id else { return false }
+        return persistUploadState(base: accepted ? pending.snapshot : cloudBase, pending: nil)
+    }
+
+    private func persistUploadState(base: GolfCloudState, pending: GolfPendingUpload?) -> Bool {
+        let previous = pendingUpload
+        pendingUpload = pending
+        let state = GolfLocalState(data: cloudData, activeID: activeRound?.id,
+                                   revision: cloudRevision, base: base, checkpoint: cloudCheckpoint)
+        do { try writeState(state, to: stateURL) }
+        catch {
+            pendingUpload = previous
+            lastError = "Couldn't save the upload acknowledgement. Your pending changes have been kept."
+            return false
+        }
+        cloudBase = base
+        persistedHistoryGeneration = historyGeneration; persistedActiveID = activeRound?.id
+        return true
     }
 
     @discardableResult
@@ -362,8 +413,10 @@ final class RoundStore {
     /// All canonical writes share an ordered queue: an older background GPS
     /// snapshot can never overwrite a newer score edit or cloud checkpoint.
     private func writeState(_ state: GolfLocalState, to url: URL) throws {
+        var state = state
+        state.pendingUpload = pendingUpload
         try persistenceQueue.sync {
-            try JSONEncoder().encode(state).write(to: url, options: [.atomic])
+            try JSONEncoder().encode(state.localCache()).write(to: url, options: [.atomic])
             try? FileManager.default.removeItem(at: url.appendingPathExtension("round"))
         }
     }
@@ -424,7 +477,7 @@ final class RoundStore {
             else if Set(numbers) == Set(10...18) { round.roundType = .back9 }
         }
         round.status = saveAsNine || round.holeScores.allSatisfy(\.hasScore) ? .finished : .unfinished
-        round.finishedAt = Date()
+        round.finishedAt = Date().golfRoundedToMilliseconds
         if let recap { round.recap = recap }
         let previous = activeRound; let history = pastRounds
         pastRounds = [round] + pastRounds.filter { $0.id != round.id }

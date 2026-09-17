@@ -5,6 +5,7 @@ struct GolfInsightsView: View {
     @Environment(RoundStore.self) private var store
     @Environment(SwingLibraryStore.self) private var library
     @State private var scope = 5
+    @State private var benchmark: BenchmarkLevel = .default
     @State private var question = ""
     @State private var messages: [CoachMessage] = []
     @State private var busy = false
@@ -14,11 +15,23 @@ struct GolfInsightsView: View {
     @State private var showBag = false
     @FocusState private var composing: Bool
 
+    private var allSorted: [GolfRound] {
+        (store.pastRounds + (store.activeRound.map { [$0] } ?? [])).sorted { $0.startedAt > $1.startedAt }
+    }
     private var selected: [GolfRound] {
-        let all = (store.pastRounds + (store.activeRound.map { [$0] } ?? [])).sorted { $0.startedAt > $1.startedAt }
-        return scope == 0 ? all : Array(all.prefix(scope))
+        scope == 0 ? allSorted : Array(allSorted.prefix(scope))
+    }
+    private var priorTen: [GolfRound] {
+        scope == 0 ? [] : Array(allSorted.dropFirst(selected.count).prefix(10))
     }
     private var evidence: GolfEvidence { GolfEvidence(rounds: selected) }
+    private var core: Core11 { evidence.core11(level: benchmark) }
+    private var plan: PracticeRecommendation {
+        evidence.practiceRecommendation(level: benchmark)
+    }
+    private var handicapValue: Double? {
+        HandicapEstimate(rounds: store.pastRounds).value
+    }
 
     var onShowRounds: (() -> Void)? = nil
     var embedded = false
@@ -39,7 +52,14 @@ struct GolfInsightsView: View {
                             Text("Last 5").tag(5)
                             Text("All rounds").tag(0)
                         }.pickerStyle(.segmented).disabled(busy)
-                        if let focus = evidence.focus.first {
+                        if let primary = plan.primary {
+                            PlayUI.card {
+                                Label("YOUR NEXT OPPORTUNITY", systemImage: "sparkles").font(.caption.bold()).foregroundStyle(PinpointTheme.accentText)
+                                Text(primary.title).font(.title2.bold())
+                                Text(primary.cause).foregroundStyle(PinpointTheme.secondaryText)
+                                Text("Explore the drill and track a session in Improve.").font(.caption)
+                            }
+                        } else if let focus = evidence.focus.first {
                             PlayUI.card {
                                 Label("YOUR NEXT OPPORTUNITY", systemImage: "sparkles").font(.caption.bold()).foregroundStyle(PinpointTheme.accentText)
                                 Text(focus.title).font(.title2.bold())
@@ -60,6 +80,8 @@ struct GolfInsightsView: View {
                             StatTile(title: "Fairways", value: GolfEvidence.percentage(evidence.fairways), subtitle: "\(evidence.fairways.count) recorded")
                             StatTile(title: "Greens", value: GolfEvidence.percentage(evidence.greens), subtitle: "\(evidence.greens.count) inferred")
                         }
+                        strokesGainedCard
+                        coreElevenCard
                         trendCard
                         if !evidence.completed.isEmpty {
                             PlayUI.card {
@@ -156,6 +178,131 @@ struct GolfInsightsView: View {
                     .frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 8)
             }.buttonStyle(.plain)
         }
+    }
+
+    private var strokesGainedCard: some View {
+        PlayUI.card {
+            HStack {
+                Text("Strokes gained").font(.headline)
+                Spacer()
+                Picker("Benchmark", selection: $benchmark) {
+                    ForEach(BenchmarkLevel.allCases) { level in
+                        Text(level.label).tag(level)
+                    }
+                }.pickerStyle(.menu).disabled(busy)
+            }
+            Text(benchmark == .default
+                 ? "Vs scratch — the goal. Peer levels show where you are."
+                 : "Vs \(benchmark.label) peers — switch back to scratch for the goal view.")
+                .font(.caption).foregroundStyle(PinpointTheme.secondaryText)
+            if let peer = handicapValue, BenchmarkLevel.suggested(forHandicap: peer) != .scratch {
+                Text("Your estimated handicap is \(HandicapEstimate(rounds: store.pastRounds).displayValue); peer view ≈ \(BenchmarkLevel.suggested(forHandicap: peer).label).")
+                    .font(.caption).foregroundStyle(PinpointTheme.secondaryText)
+            }
+            if core.hasSG {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(signed(core.sgTotal.perRound)).font(.system(size: 36, weight: .semibold)).monospacedDigit()
+                    Text("per round · \(core.sgTotal.rounds) rounds with shot data")
+                        .font(.caption).foregroundStyle(PinpointTheme.secondaryText)
+                }
+                ForEach(ShotCategory.allCases) { category in
+                    sgBar(category: category, value: core.sg(category).perRound)
+                }
+                if let delta = sgDeltaVsPriorTen {
+                    Text(delta).font(.caption).foregroundStyle(PinpointTheme.secondaryText)
+                }
+                Text(plan.takeaway).font(.subheadline)
+                if let leak = plan.primary {
+                    Text("Priority leak: \(leak.title) — \(leak.cause)").font(.caption).foregroundStyle(PinpointTheme.secondaryText)
+                }
+                Text("Baseline \(ExpectedStrokes.modelVersion) · needs shot distances to value holes.")
+                    .font(.caption2).foregroundStyle(PinpointTheme.secondaryText)
+            } else {
+                Text("Record shot distances to unlock strokes gained.").font(.subheadline.weight(.semibold))
+                Text("Add start and finish distances to your shots (\(core.sgTotal.shots) valued so far) and each hole will split into Off the tee, Approach, Around the green and Putting vs \(benchmark.label).")
+                    .font(.caption).foregroundStyle(PinpointTheme.secondaryText)
+            }
+        }
+    }
+
+    private func sgBar(category: ShotCategory, value: Double?) -> some View {
+        HStack {
+            Text(category.shortLabel).font(.caption.bold().monospacedDigit()).frame(width: 36, alignment: .leading)
+            if let value {
+                Capsule().fill(value >= 0 ? Color.green : Color.red)
+                    .frame(width: max(4, min(90, abs(value) * 22)), height: 8)
+                Text(signed(value)).font(.subheadline.monospacedDigit())
+            } else {
+                Text("–").font(.subheadline).foregroundStyle(PinpointTheme.secondaryText)
+                Text("low sample").font(.caption).foregroundStyle(PinpointTheme.secondaryText)
+            }
+            Spacer()
+        }
+    }
+
+    private var sgDeltaVsPriorTen: String? {
+        guard let current = core.sgTotal.perRound, !priorTen.isEmpty else { return nil }
+        let prior = Core11.compute(rounds: priorTen, level: benchmark)
+        guard let base = prior.sgTotal.perRound else { return nil }
+        let delta = current - base
+        return "Change vs prior 10-round average: \(signed(delta)) per round."
+    }
+
+    private func signed(_ value: Double?) -> String {
+        guard let value else { return "–" }
+        return String(format: "%+.1f", value)
+    }
+
+    private var coreElevenCard: some View {
+        PlayUI.card {
+            Text("Core 11").font(.headline)
+            HStack(spacing: 10) {
+                StatTile(title: "Driving dist", value: core.effectiveDrivingDistance.map { "\(Int($0.rounded()))" } ?? "–", subtitle: core.drivingDistanceShots > 0 ? "\(core.drivingDistanceShots) drives · yd" : "no measured drives")
+                StatTile(title: "Damaging", value: pct(core.damaging.value), subtitle: "\(core.damagingPenalties) pen · \(core.damagingRecoveries) rec")
+                StatTile(title: "GIR", value: pct(core.girOverall.value), subtitle: "\(core.girOverall.opportunities) holes")
+            }
+            HStack(spacing: 10) {
+                StatTile(title: "Up & down", value: pct(core.upAndDown.value), subtitle: "\(core.upAndDown.opportunities) chances <50y")
+                StatTile(title: "Three-putt", value: pct(core.threePutt.value), subtitle: "\(core.threePutt.opportunities) known holes")
+                StatTile(title: "Double+", value: pct(core.doublePlus.value), subtitle: "\(core.doublePlus.opportunities) holes")
+            }
+            DisclosureGroup("GIR by distance band") {
+                ForEach(ApproachBand.allCases) { band in
+                    let rate = core.girByBand[band] ?? Core11.Rate(made: 0, opportunities: 0)
+                    HStack {
+                        Text("\(band.label) yd").font(.subheadline)
+                        Spacer()
+                        Text(rate.opportunities == 0 ? "no data" : "\(pct(rate.value)) · n=\(rate.opportunities)")
+                            .font(.subheadline).foregroundStyle(PinpointTheme.secondaryText)
+                    }
+                }
+            }
+            .font(.subheadline)
+            if !evidence.autopsies().isEmpty {
+                DisclosureGroup("Where doubles start (\(evidence.autopsies().count))") {
+                    ForEach(topDoubleCauses, id: \.label) { row in
+                        HStack {
+                            Text(row.label).font(.subheadline)
+                            Spacer()
+                            Text("\(row.count)").font(.subheadline).foregroundStyle(PinpointTheme.secondaryText)
+                        }
+                    }
+                }
+                .font(.subheadline)
+            }
+        }
+    }
+
+    private func pct(_ value: Double?) -> String {
+        guard let value else { return "–" }
+        return "\(Int((value * 100).rounded()))%"
+    }
+
+    private var topDoubleCauses: [(label: String, count: Int)] {
+        Dictionary(grouping: evidence.autopsies(), by: { $0.primary.label })
+            .map { (label: $0.key, count: $0.value.count) }
+            .sorted { $0.count > $1.count }
+            .prefix(4).map { $0 }
     }
 
     private var trendCard: some View {

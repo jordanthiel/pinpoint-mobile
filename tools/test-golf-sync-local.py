@@ -55,7 +55,26 @@ try:
         status, result = call("/rest/v1/rpc/pull_golf_records", {"after_cursor": cursor}, token or tokens[0])
         assert status == 200, (status, result)
         return result
-    assert commit(changes)["accepted"]
+    def commit_batch(batch_id, items, token=None):
+        status, result = call("/rest/v1/rpc/commit_golf_batch",
+                              {"batch_id": batch_id, "changes": items}, token or tokens[0])
+        assert status == 200, (status, result)
+        return result
+    first_batch = str(uuid.uuid4())
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+        receipts = list(pool.map(lambda _: commit_batch(first_batch, changes), range(2)))
+    assert all(r["accepted"] for r in receipts)
+    first_cursor = pull()["cursor"]
+    assert commit_batch(first_batch, changes)["accepted"]
+    assert pull()["cursor"] == first_cursor
+    stale_changes = [dict(change, expected_revision=99999) for change in changes]
+    assert not commit_batch(first_batch, stale_changes, tokens[1])["accepted"]
+    assert pull(token=tokens[1])["records"] == []
+    status, _ = call("/rest/v1/rpc/commit_golf_batch", {"batch_id": first_batch, "changes": changes})
+    assert status in (401, 403)
+    status, _ = call("/rest/v1/golf_upload_receipts?select=*", token=tokens[0], method="GET")
+    assert status in (401, 403)
+    print("PASS concurrent/replayed batches commit once; receipts isolate accounts and deny direct access")
     if "--deployed" not in sys.argv:
         # Exercise the same importer used by the deployment, with no persistent data.
         migration_user = str(uuid.uuid4())
@@ -69,10 +88,27 @@ try:
     assert len(snapshot["records"]) == len(changes)
     Path("/tmp/pinpoint-record-response.json").write_text(json.dumps(snapshot))
     print("PASS full app fixture uploaded as separate rows and downloaded")
+    def paginated_pull(cursor=0, limit=1, token=None):
+        status, result = call("/rest/v1/rpc/pull_golf_records",
+                             {"after_cursor": cursor, "page_limit": limit}, token or tokens[0])
+        assert status == 200, (status, result)
+        return result
+    # All rows in this commit share a revision. A row limit must not cut
+    # off siblings and then advance the cursor past them forever.
+    page = paginated_pull()
+    assert len(page["records"]) == len(changes)
+    assert page["end_cursor"] == snapshot["cursor"] and not page["has_more"]
+    assert paginated_pull(token=tokens[1])["records"] == []
+    print("PASS pagination preserves entire revision groups and account isolation")
+
     assert pull(token=tokens[1])["records"] == []
     for table in ("rounds", "hole_scores", "shots", "clubs", "practice_sessions", "golf_sync_accounts"):
         status, rows = call("/rest/v1/" + table + "?select=*", token=tokens[1], method="GET")
-        assert status == 200 and rows == [], (table, status)
+        assert status == 200, (table, status)
+        if table == "golf_sync_accounts":
+            assert all(row["user_id"] == users[1] for row in rows)
+        else:
+            assert rows == [], table
     status, _ = call("/rest/v1/rounds", {"user_id": users[0]}, tokens[1])
     assert status in (401,403)
     status, _ = call("/rest/v1/rpc/commit_golf_records", {"changes": changes})
@@ -90,6 +126,29 @@ try:
     delta = pull(snapshot["cursor"])
     assert len(delta["records"]) == 2
     print("PASS simultaneous different-record edits both accepted; delta contains only two records")
+    latest = pull()
+    assert commit_batch(first_batch, changes)["accepted"]
+    assert pull() == latest
+    rejected_id = str(uuid.uuid4())
+    assert not commit_batch(rejected_id, changes)["accepted"]
+    assert not commit_batch(rejected_id, changes)["accepted"]
+    assert pull() == latest
+    print("PASS delayed receipt replay cannot overwrite newer data; rejected batches stay rejected")
+    cursor = 0
+    paged_records = []
+    for _ in range(10):
+        page = paginated_pull(cursor)
+        paged_records.extend(page["records"])
+        if not page["has_more"]:
+            break
+        assert page["end_cursor"] > cursor
+        cursor = page["end_cursor"]
+    else:
+        raise AssertionError("Pagination failed to finish")
+    identity = lambda row: (row["kind"], row.get("round_id"), row["id"])
+    assert sorted(paged_records, key=identity) == sorted(pull()["records"], key=identity)
+    print("PASS small-page traversal returns every record without gaps or duplicates")
+
     latest = next(r for r in delta["records"] if r["kind"] == "shot")
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
         receipts = list(pool.map(commit, [[edit(latest, "note", "A")], [edit(latest, "note", "B")]]))

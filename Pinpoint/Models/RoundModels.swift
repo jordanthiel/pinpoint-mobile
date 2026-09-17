@@ -1,5 +1,14 @@
 import Foundation
 
+extension Date {
+    /// Millisecond resolution. The backend stores Apple-epoch seconds at ms
+    /// precision, so synced timestamps are rounded at creation: otherwise
+    /// every sync sees phantom date diffs and the merge mints conflict copies.
+    var golfRoundedToMilliseconds: Date {
+        Date(timeIntervalSinceReferenceDate: (timeIntervalSinceReferenceDate * 1000).rounded() / 1000)
+    }
+}
+
 // MARK: - Clubs
 
 enum GolfClub: String, Codable, CaseIterable, Identifiable, Hashable {
@@ -357,7 +366,7 @@ struct TrackedShot: Identifiable, Codable, Hashable, Equatable {
         self.quality = quality
         self.includeInTrueDistance = includeInTrueDistance && !(club?.isPutter ?? false)
         self.source = source
-        self.timestamp = timestamp
+        self.timestamp = timestamp.golfRoundedToMilliseconds
         self.note = note
     }
 
@@ -664,7 +673,7 @@ struct GolfRound: Identifiable, Codable, Hashable, Equatable {
         holeScores = ordered.map { HoleScore(holeNumber: $0) }
         currentHoleNumber = ordered.first ?? 1
         status = .active
-        startedAt = Date()
+        startedAt = Date().golfRoundedToMilliseconds
         finishedAt = nil
         self.windMph = windMph
         self.windFromDegrees = windFromDegrees

@@ -27,7 +27,7 @@ struct HandicapDetailView: View {
                     Text("Rounds behind your estimate").font(.headline)
                     if estimate.entries.isEmpty { Text("No eligible rounds yet.").foregroundStyle(PinpointTheme.secondaryText) }
                     ForEach(estimate.entries) { entry in
-                        NavigationLink { RoundSummaryView(selectedRound: entry.round) } label: {
+                        NavigationLink { RoundSummaryView(selectedRoundID: entry.round.id) } label: {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(entry.round.courseName).font(.subheadline.weight(.semibold))

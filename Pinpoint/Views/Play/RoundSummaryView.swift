@@ -4,19 +4,21 @@ import SwiftUI
 /// recap, club review prompt, and history entry.
 struct RoundSummaryView: View {
     @Environment(RoundStore.self) private var rounds
+    @Environment(GolfCloudSync.self) private var golfSync
     @Environment(\.dismiss) private var dismiss
 
-    var selectedRound: GolfRound? = nil
+    var selectedRoundID: UUID? = nil
 
     @State private var showEnd = false
     @State private var showScorecard = false
     @State private var recap = ""
     @State private var showClubs = false
+    @State private var benchmark: BenchmarkLevel = .default
 
     var body: some View {
         ZStack {
             PinpointTheme.background.ignoresSafeArea()
-            if let round = selectedRound ?? rounds.activeRound ?? rounds.pastRounds.first {
+            if let round = rounds.round(id: selectedRoundID) {
                 ScrollView {
                     VStack(spacing: 16) {
                         hero(round: round)
@@ -24,9 +26,10 @@ struct RoundSummaryView: View {
                             Label("Scorecard & hole stats", systemImage: "list.bullet.rectangle").frame(maxWidth: .infinity)
                         }.buttonStyle(SecondaryButtonStyle())
                         holeStrip(round: round)
-                        NavigationLink { RoundShotReviewView(round: round, holeNumber: round.holeScores.first?.holeNumber ?? 1) } label: {
-                            Label("Review shots hole by hole", systemImage: "map").frame(maxWidth: .infinity)
+                        NavigationLink { RoundShotReviewView(roundID: round.id, holeNumber: round.holeScores.first?.holeNumber ?? 1) } label: {
+                            Label("\(round.holeScores.reduce(0) { $0 + $1.shots.count }) tracked shots · Review by hole", systemImage: "map").frame(maxWidth: .infinity)
                         }.buttonStyle(PrimaryButtonStyle())
+                        roundStrokesGainedCard(round: round)
                         statsCard(round: round)
                         RoundDetailStatsView(round: round)
                         analysisCard(round: round)
@@ -54,7 +57,7 @@ struct RoundSummaryView: View {
                     .padding(16)
                 }
                 .contentMargins(.bottom, FloatingNavigation.clearance, for: .scrollContent)
-                .sheet(isPresented: $showScorecard) { ScorecardView(selectedRound: round) }
+                .sheet(isPresented: $showScorecard) { ScorecardView(selectedRoundID: round.id) }
                 .navigationTitle("Round Recap")
                 .navigationBarTitleDisplayMode(.inline)
                 .onAppear { recap = round.recap }
@@ -65,8 +68,15 @@ struct RoundSummaryView: View {
                         .presentationDetents([.medium, .large])
                         .presentationDragIndicator(.visible)
                 }
+            } else {
+                ContentUnavailableView("Round unavailable", systemImage: "flag.slash",
+                    description: Text("Return to Rounds and refresh your history."))
             }
         }
+        .task(id: selectedRoundID) {
+            if selectedRoundID != nil { await golfSync.sync() }
+        }
+        .refreshable { await golfSync.sync() }
     }
 
     private func hero(round: GolfRound) -> some View {
@@ -110,7 +120,7 @@ struct RoundSummaryView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
                     ForEach(round.playedHoleScores) { hs in
-                        NavigationLink { RoundShotReviewView(round: round, holeNumber: hs.holeNumber) } label: {
+                        NavigationLink { RoundShotReviewView(roundID: round.id, holeNumber: hs.holeNumber) } label: {
                         VStack(spacing: 2) {
                             Text("\(hs.holeNumber)")
                                 .font(.caption2)
@@ -152,6 +162,107 @@ struct RoundSummaryView: View {
                     .foregroundStyle(PinpointTheme.secondaryText)
             }
         }
+    }
+
+    private func roundStrokesGainedCard(round: GolfRound) -> some View {
+        let core = Core11.compute(rounds: [round], level: benchmark)
+        return PlayUI.card {
+            HStack {
+                Text("Strokes gained · this round").font(.headline)
+                Spacer()
+                Picker("Benchmark", selection: $benchmark) {
+                    ForEach(BenchmarkLevel.allCases) { level in
+                        Text(level.label).tag(level)
+                    }
+                }.pickerStyle(.menu)
+            }
+            Text("Vs \(benchmark.label). Shot positions and GPS origins count — explicit distances win ties.")
+                .font(.caption).foregroundStyle(PinpointTheme.secondaryText)
+            if core.hasSG {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(signed(core.sgTotal.perRound)).font(.system(size: 36, weight: .semibold)).monospacedDigit()
+                    Text("total · \(core.sgTotal.shots) valued shots")
+                        .font(.caption).foregroundStyle(PinpointTheme.secondaryText)
+                }
+                ForEach(ShotCategory.allCases) { category in
+                    roundSGBar(category: category, value: core.sg(category).perRound)
+                }
+                HStack(spacing: 10) {
+                    StatTile(title: "Driving dist", value: core.effectiveDrivingDistance.map { "\(Int($0.rounded())) yd" } ?? "–")
+                    StatTile(title: "Damaging", value: pct(core.damaging.rawValue), subtitle: "\(core.damagingPenalties) pen · \(core.damagingRecoveries) rec")
+                    StatTile(title: "GIR", value: pct(core.girOverall.rawValue), subtitle: "\(core.girOverall.made)/\(core.girOverall.opportunities)")
+                }
+                HStack(spacing: 10) {
+                    StatTile(title: "Up & down", value: pct(core.upAndDown.rawValue), subtitle: "\(core.upAndDown.made)/\(core.upAndDown.opportunities)")
+                    StatTile(title: "Three-putt", value: pct(core.threePutt.rawValue), subtitle: "\(core.threePutt.made)/\(core.threePutt.opportunities)")
+                    StatTile(title: "Double+", value: pct(core.doublePlus.rawValue), subtitle: "\(core.doublePlus.made)/\(core.doublePlus.opportunities)")
+                }
+                DisclosureGroup("Strokes gained by hole") {
+                    ForEach(holeSG(round: round), id: \.number) { row in
+                        HStack {
+                            Text("Hole \(row.number)").font(.subheadline)
+                            Spacer()
+                            Text("\(row.score)").font(.caption).foregroundStyle(PinpointTheme.secondaryText)
+                            Text(signed(row.sg)).font(.subheadline.monospacedDigit())
+                                .foregroundStyle(row.sg >= 0 ? Color.green : Color.red)
+                        }
+                    }
+                }.font(.subheadline)
+                let autopsies = DoubleAutopsy.autopsy(rounds: [round])
+                if !autopsies.isEmpty {
+                    DisclosureGroup("Where the doubles started (\(autopsies.count))") {
+                        ForEach(autopsies) { item in
+                            HStack {
+                                Text("Hole \(item.holeNumber)").font(.subheadline)
+                                Spacer()
+                                Text(item.primary.label + (item.secondary.isEmpty ? "" : " · +" + item.secondary.map(\.label).joined(separator: ", ")))
+                                    .font(.caption).foregroundStyle(PinpointTheme.secondaryText)
+                            }
+                        }
+                    }.font(.subheadline)
+                }
+                Text("Baseline \(ExpectedStrokes.modelVersion).")
+                    .font(.caption2).foregroundStyle(PinpointTheme.secondaryText)
+            } else {
+                Text("No valued shots in this round yet.").font(.subheadline.weight(.semibold))
+                Text("Shots need a start position (GPS origin or distance) and a finish to value — \(core.sgTotal.shots) valued so far. Map shots on the hole view or add distances in the shot editor.")
+                    .font(.caption).foregroundStyle(PinpointTheme.secondaryText)
+            }
+        }
+    }
+
+    private func holeSG(round: GolfRound) -> [(number: Int, score: Int, sg: Double)] {
+        round.playedHoleScores.compactMap { hole in
+            guard hole.isComplete, hole.hasScore, let def = round.hole(hole.holeNumber) else { return nil }
+            let valuation = ShotValuation.value(hole: hole, par: def.par, level: benchmark,
+                                                pin: round.pinCoordinate(for: hole.holeNumber))
+            guard !valuation.shots.isEmpty else { return nil }
+            return (hole.holeNumber, hole.grossScore, valuation.totalSG)
+        }.sorted { $0.number < $1.number }
+    }
+
+    private func roundSGBar(category: ShotCategory, value: Double?) -> some View {
+        HStack {
+            Text(category.shortLabel).font(.caption.bold().monospacedDigit()).frame(width: 36, alignment: .leading)
+            if let value {
+                Capsule().fill(value >= 0 ? Color.green : Color.red)
+                    .frame(width: max(4, min(90, abs(value) * 22)), height: 8)
+                Text(signed(value)).font(.subheadline.monospacedDigit())
+            } else {
+                Text("– low sample").font(.caption).foregroundStyle(PinpointTheme.secondaryText)
+            }
+            Spacer()
+        }
+    }
+
+    private func signed(_ value: Double?) -> String {
+        guard let value else { return "–" }
+        return String(format: "%+.1f", value)
+    }
+
+    private func pct(_ value: Double?) -> String {
+        guard let value else { return "–" }
+        return "\(Int((value * 100).rounded()))%"
     }
 
     private func analysisCard(round: GolfRound) -> some View {

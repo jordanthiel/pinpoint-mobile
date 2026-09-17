@@ -105,7 +105,7 @@ struct PlayStatsView: View {
                 NavigationLink {
                     if round.status == .active {
                         ActiveRoundView().onAppear { rounds.resumeRound(round.id) }
-                    } else { RoundSummaryView(selectedRound: round) }
+                    } else { RoundSummaryView(selectedRoundID: round.id) }
                 } label: {
                     historyRow(title: round.courseName,
                                subtitle: "\(round.startedAt.formatted(date: .abbreviated, time: .omitted)) · \(round.historyLabel)",

@@ -12,3 +12,11 @@ Verified 2026-09-15 with the iOS 26.3 Pinpoint Gesture QA simulator.
 - Existing conflict copies remain available for review and manual deletion. No backend cleanup was performed.
 
 Changes have not been uploaded to App Store Connect.
+
+## Build 29 — live round detail data
+
+Round recap, scorecard, and shot review now resolve the selected round by ID from the observable store instead of retaining a value snapshot. Opening a saved recap requests fresh cloud data. The Rounds list includes tracked-shot count and SG; the recap places round SG next to the shot-review action. Saved scorecard shot counts now open read-only review.
+
+Verified on iPhone 17 Pro simulator with the recovered cloud response: recap showed 39 tracked shots and -2.1 SG versus scratch (38 valued shots). Hole 1 review showed three mapped shots with clubs and distances. Opening the saved scorecard and tapping Hole 1's shot count reached the same three shots. Simulator storage was backed up and restored after the test. The DEBUG-only `--ui-round-review` probe reads a local Documents/round-review-fixture.json; no fixture data is included in the app.
+
+Regression: `PINPOINT_RECORD_RESPONSE=<record-response.json> PINPOINT_SMOKE_MAIN=tools/RoundPresentationSmokeMain.swift tools/run-smoke.sh` verifies a selected round sees later cloud shots/SG and does not substitute another round if deleted. Full smoke suite and simulator build passed.

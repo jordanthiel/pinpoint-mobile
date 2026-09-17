@@ -345,14 +345,14 @@ struct DictationSmokeMain {
         check("unchanged sync produces no mutations", preparedSync.changes.isEmpty && !preparedSync.dataChanged)
         let applied = await performanceStore.applyPreparedCloud(preparedSync, expectedGeneration: syncGeneration, owner: nil)
         check("prepared sync persists without changing observed golf data", applied == .applied && performanceStore.dataGeneration == syncGeneration)
-        check("prepared checkpoint survives restart", RoundStore(storageDirectory: performanceDirectory).cloudCheckpoint?.cursor == 10)
+        check("cloud checkpoint stays in memory", RoundStore(storageDirectory: performanceDirectory).cloudCheckpoint == nil)
         let canonicalFile = performanceDirectory.appendingPathComponent("golf-state.json")
         let checkpointBytes = try! Data(contentsOf: canonicalFile)
         _ = performanceStore.saveScoreEntry(1, score: 7, putts: 2)
         check("score save does not rewrite cloud checkpoint", (try! Data(contentsOf: canonicalFile)) == checkpointBytes)
         let journalReload = RoundStore(storageDirectory: performanceDirectory)
         check("round journal restores newest score", journalReload.activeRound?.score(for: 1)?.recordedScore == 7)
-        check("round journal retains sync cursor", journalReload.cloudCheckpoint?.cursor == 10)
+        check("round journal needs no persisted sync cursor", journalReload.cloudCheckpoint == nil)
 
         _ = performanceStore.saveScoreEntry(1, score: 5, putts: 2)
         let superseded = await performanceStore.applyPreparedCloud(preparedSync, expectedGeneration: syncGeneration, owner: nil)
@@ -583,6 +583,207 @@ struct DictationSmokeMain {
         check("practice priorities have evidence", !facts.focus.isEmpty && facts.focus.allSatisfy { !$0.evidence.isEmpty })
         check("empty sample has no fake percentage", GolfEvidence.percentage([]) == "—")
         check("scoring baseline uses hole par", facts.averageToPar == 1.5)
+
+        check("benchmark defaults to scratch", BenchmarkLevel.default == .scratch)
+        check("unknown handicap falls back to scratch", BenchmarkLevel.suggested(forHandicap: nil) == .scratch)
+        check("peer level follows handicap", BenchmarkLevel.suggested(forHandicap: 11) == .hcp10
+            && BenchmarkLevel.suggested(forHandicap: 0) == .scratch
+            && BenchmarkLevel.suggested(forHandicap: 22) == .hcp20)
+        check("peer offset grows with handicap",
+            abs(ExpectedStrokes.value(distanceYards: 150, lie: .fairway, level: .hcp10)
+                - ExpectedStrokes.value(distanceYards: 150, lie: .fairway, level: .scratch) - (0.25 + 150 * 0.0008)) < 1e-9
+                && ExpectedStrokes.value(distanceYards: 150, lie: .fairway, level: .hcp5) < ExpectedStrokes.value(distanceYards: 150, lie: .fairway, level: .hcp10))
+        check("scratch putting baseline at ten feet", abs(ExpectedStrokes.value(distanceYards: 10.0 / 3.0, lie: .green, level: .scratch) - 1.6) < 1e-9)
+        let textbookTee = StrokesGained.value(startYards: 350, startLie: .tee, endYards: 150, endLie: .fairway, penaltyStrokes: 0, holed: false, level: .scratch)
+        check("tee shot SG matches hand calculation", abs(textbookTee - (-0.12)) < 1e-9)
+        check("penalty costs a full stroke", abs(StrokesGained.value(startYards: 350, startLie: .tee, endYards: 150, endLie: .fairway, penaltyStrokes: 1, holed: false, level: .scratch) - (textbookTee - 1)) < 1e-9)
+        check("holed ten-footer gains", abs(StrokesGained.value(startYards: 10.0 / 3.0, startLie: .green, endYards: 0, endLie: .green, penaltyStrokes: 0, holed: true, level: .scratch) - 0.6) < 1e-9)
+        check("par-4 tee shot is off the tee", ShotCategory.classify(shotNumber: 1, par: 4, startLie: .tee, startDistanceYards: 380, isPutt: false) == .offTee)
+        check("par-3 tee shot is approach", ShotCategory.classify(shotNumber: 1, par: 3, startLie: .tee, startDistanceYards: 160, isPutt: false) == .approach)
+        check("short-game boundary at fifty yards", ShotCategory.classify(shotNumber: 3, par: 4, startLie: .rough, startDistanceYards: 25, isPutt: false) == .aroundGreen)
+        check("putter is putting", ShotCategory.classify(shotNumber: 4, par: 4, startLie: .green, startDistanceYards: 4, isPutt: true) == .putting)
+        check("empty scope has no SG", Core11.compute(rounds: [], level: .scratch).hasSG == false)
+        check("rolling five slices newest first", RollingWindow.last5.slice([analyticsRound, analyticsRound, analyticsRound]).count == 3)
+
+        var sgRound = GolfRound(course: SampleCourses.georgetown, teeName: "Blue", roundType: .eighteen, scoringMode: .smart)
+        for index in [0, 1, 4, 7, 8, 10] { // all par 4: pars keep GIR/up-down comparable
+            var sgHole = sgRound.holeScores[index]
+            sgHole.shots = [
+                TrackedShot(number: 1, club: .driver, lie: .tee, distanceToPinBeforeYards: 380, carryYards: 230),
+                TrackedShot(number: 2, club: .iron7, lie: .fairway, distanceToPinBeforeYards: 150, carryYards: 150),
+                TrackedShot(number: 3, club: .sandWedge, lie: .rough, distanceToPinBeforeYards: 25),
+                TrackedShot(number: 4, club: .putter, lie: .green, distanceToPinBeforeYards: 12),
+            ]
+            sgHole.firstPuttFeet = 36
+            sgHole.applyRecordedScore(score: 4, putts: 1, penalties: 0, fairwayHit: true)
+            sgRound.holeScores[index] = sgHole
+        }
+        let sgCore = Core11.compute(rounds: [sgRound], level: .scratch)
+        check("valued holes unlock SG", sgCore.hasSG && sgCore.sgTotal.rounds == 1 && sgCore.sgTotal.shots == 24)
+        check("hole SG matches hand total", abs(sgCore.sgTotal.total - 6 * 0.22) < 0.05)
+        check("category totals reconcile", abs((sgCore.sg(.offTee).total + sgCore.sg(.approach).total + sgCore.sg(.aroundGreen).total + sgCore.sg(.putting).total) - sgCore.sgTotal.total) < 1e-9)
+        check("scratch tee shot is neutral", abs(sgCore.sg(.offTee).perRound ?? 99) < 0.01)
+        check("GIR band attribution", sgCore.girByBand[.band150to174]?.opportunities == 6 && sgCore.girOverall.value == 0)
+        check("up-and-down needs short-game evidence", sgCore.upAndDown.value == 1)
+        check("effective distance excludes damage silently", sgCore.effectiveDrivingDistance.map { abs($0 - 230) < 1e-9 } ?? false)
+        check("clean drives are not damaging", sgCore.damaging.value == 0 && sgCore.damaging.opportunities == 6)
+        let sgPlan = PracticePlan.recommend(core: sgCore, diagnostics: Tier2Diagnostics.compute(rounds: [sgRound], level: .scratch), autopsies: [])
+        check("practice targets the SG leak", sgPlan.primary?.category == .approach && sgPlan.secondary?.category == .aroundGreen)
+        check("takeaway names the strength", sgPlan.takeaway.contains("Putting"))
+
+        var dblHole = HoleScore(holeNumber: 1)
+        var waterTee = TrackedShot(number: 1, club: .driver, lie: .tee, distanceToPinBeforeYards: 380)
+        waterTee.observations = ShotObservations(finish: .water, lateralMiss: nil, depthMiss: nil, puttBreak: nil, puttMissSide: nil, holed: nil, carryYards: nil, startingDistanceFeet: nil)
+        dblHole.shots = [
+            waterTee,
+            TrackedShot(number: 2, club: .iron7, lie: .recovery, distanceToPinBeforeYards: 200),
+            TrackedShot(number: 3, club: .iron7, lie: .fairway, distanceToPinBeforeYards: 150),
+            TrackedShot(number: 4, club: .sandWedge, lie: .rough, distanceToPinBeforeYards: 25),
+            TrackedShot(number: 5, club: .putter, lie: .green, distanceToPinBeforeYards: 10),
+            TrackedShot(number: 6, club: .putter, lie: .green, distanceToPinBeforeYards: 3),
+        ]
+        dblHole.applyRecordedScore(score: 7, putts: 3, penalties: 1, fairwayHit: false)
+        dblHole.penaltiesByShot = [1: 1]
+        let dblResult = DoubleAutopsy.autopsy(hole: dblHole, par: 4, roundID: sgRound.id)
+        check("double keeps first error primary", dblResult.primary == .teePenalty && dblResult.secondary.contains(.threePutt))
+
+        var backendGood = GolfRound(course: SampleCourses.georgetown, teeName: "Blue", roundType: .eighteen, scoringMode: .smart)
+        backendGood.courseName = "Backend round"
+        backendGood.holeScores[0].applyRecordedScore(score: 4, putts: 2, penalties: 0, fairwayHit: true)
+        backendGood.status = .finished
+        var backendUnreadable = GolfRound(course: SampleCourses.georgetown, teeName: "Blue", roundType: .eighteen, scoringMode: .smart)
+        backendUnreadable.courseName = "Newer-writer round"
+        backendUnreadable.holeScores[0].applyRecordedScore(score: 4, putts: 2, penalties: 0, fairwayHit: true)
+        backendUnreadable.status = .finished
+        var pullRecords = try! GolfRecords.flatten(GolfCloudState(rounds: [backendGood, backendUnreadable], bag: .standard, practice: []))
+        if let badIndex = pullRecords.firstIndex(where: { $0.kind == "round" && $0.id == backendUnreadable.id }) {
+            pullRecords[badIndex].data["status"] = .string("in_progress")
+        }
+        let pullCheckpoint = GolfRecordCheckpoint(cursor: 9, records: pullRecords)
+        let pulled = try! GolfPreparedSync.prepare(local: .empty, base: .empty, checkpoint: pullCheckpoint, activeID: nil)
+        check("one unreadable row does not block the pull", pulled.merged.rounds.map(\.id).contains(backendGood.id))
+        check("unreadable rows are reported", pulled.undecodableKeys.contains(where: { $0.contains(backendUnreadable.id.uuidString) }))
+        let badPullIDs = Set(pullRecords.filter { pulled.undecodableKeys.contains($0.key) }.map(\.id))
+        check("unreadable rows are never tombstoned", !pulled.changes.contains(where: { $0.deleted && badPullIDs.contains($0.id) }))
+        check("clean pull deletes nothing", !pulled.changes.contains(where: { $0.deleted }))
+        let gpsPin = GeoPoint(latitude: 30.66, longitude: -97.67)
+        let gpsDrive = TrackedShot(number: 1, club: .driver, lie: .tee, start: gpsPin.offset(eastYards: 0, northYards: 380))
+        var explicitDrive = gpsDrive
+        explicitDrive.distanceToPinBeforeYards = 100
+        check("explicit distance wins over GPS", ShotValuation.startDistance(of: explicitDrive, pin: gpsPin) == 100)
+        check("GPS origin derives distance", abs((ShotValuation.startDistance(of: gpsDrive, pin: gpsPin) ?? -1) - 380) < 2)
+        check("no position means no distance", ShotValuation.startDistance(of: TrackedShot(number: 1, club: .driver, lie: .tee), pin: gpsPin) == nil)
+        var gpsHole = HoleScore(holeNumber: 1)
+        gpsHole.pinPosition = HoleScore.PinPosition(x: 0.5, y: 0.62, latitude: gpsPin.latitude, longitude: gpsPin.longitude)
+        gpsHole.shots = [gpsDrive, TrackedShot(number: 2, club: .putter, lie: .green, start: gpsPin.offset(eastYards: 0, northYards: 12))]
+        gpsHole.applyRecordedScore(score: 3, putts: 1, penalties: 0, fairwayHit: true)
+        let gpsValued = ShotValuation.value(hole: gpsHole, par: 4, level: .scratch, pin: gpsPin)
+        check("GPS-tracked hole values without typed distances",
+            gpsValued.shots.count == 2 && gpsValued.shots.map(\.category) == [.offTee, .putting])
+        check("GPS drive SG is sane", abs((gpsValued.shots.first?.sg ?? 99) - 1.08) < 0.1)
+        var gpsRound = GolfRound(course: SampleCourses.georgetown, teeName: "Blue", roundType: .eighteen, scoringMode: .smart)
+        for index in [0, 1, 4] {
+            var hole = HoleScore(holeNumber: gpsRound.holeScores[index].holeNumber)
+            hole.pinPosition = HoleScore.PinPosition(x: 0.5, y: 0.62, latitude: gpsPin.latitude, longitude: gpsPin.longitude)
+            hole.shots = [
+                TrackedShot(number: 1, club: .driver, lie: .tee, start: gpsPin.offset(eastYards: 0, northYards: 380)),
+                TrackedShot(number: 2, club: .putter, lie: .green, start: gpsPin.offset(eastYards: 0, northYards: 12)),
+            ]
+            hole.applyRecordedScore(score: 3, putts: 1, penalties: 0, fairwayHit: true)
+            gpsRound.holeScores[index] = hole
+        }
+        check("GPS-only round lights up the round page", Core11.compute(rounds: [gpsRound], level: .scratch).hasSG)
+        // Backend JSON strips nulls: a shot row whose nullable note is missing
+        // must still decode instead of vanishing from the round.
+        var noteStripHole = HoleScore(holeNumber: 1)
+        noteStripHole.applyRecordedScore(score: 4, putts: 2, penalties: 0, fairwayHit: true)
+        noteStripHole.shots = [TrackedShot(number: 1, club: .driver, lie: .tee,
+            distanceToPinBeforeYards: 380, start: gpsPin.offset(eastYards: 0, northYards: 380))]
+        var noteStripRound = GolfRound(course: SampleCourses.georgetown, teeName: "Blue", roundType: .eighteen, scoringMode: .smart)
+        noteStripRound.holeScores[0] = noteStripHole
+        var noteStripRecords = try! GolfRecords.flatten(GolfCloudState(rounds: [noteStripRound], bag: .standard, practice: []))
+        for i in noteStripRecords.indices where noteStripRecords[i].kind == "shot" {
+            noteStripRecords[i].data.removeValue(forKey: "note")
+        }
+        let noteStripped = try! GolfPreparedSync.prepare(local: .empty, base: .empty,
+            checkpoint: GolfRecordCheckpoint(cursor: 3, records: noteStripRecords), activeID: nil)
+        check("stripped shot note still decodes", noteStripped.merged.rounds.first?.holeScores.first?.shots.count == 1)
+        // Duplicate-round regression: consecutive passes over one live round
+        // must never mint conflict copies. Pass 1 commits hole 1; pass 2
+        // corrects it and scores hole 2 with the base advanced to pass 1's
+        // merged state (what advanceCloudBase provides after a commit).
+        var liveRound = GolfRound(course: SampleCourses.georgetown, teeName: "Blue", roundType: .eighteen, scoringMode: .smart)
+        let liveID = liveRound.id
+        let liveBag = ClubBag.standard
+        liveRound.holeScores[0].applyRecordedScore(score: 4, putts: 2, penalties: 0, fairwayHit: true)
+        let pass1 = try! GolfPreparedSync.prepare(local: GolfCloudState(rounds: [liveRound], bag: liveBag, practice: []),
+            base: .empty, checkpoint: GolfRecordCheckpoint(cursor: 0, records: []), activeID: liveID)
+        let committedRows = try! GolfRecords.flatten(pass1.merged).map { row -> GolfRecord in
+            var r = row; r.revision = 1; return r
+        }
+        liveRound.holeScores[0].applyRecordedScore(score: 5, putts: 2, penalties: 0, fairwayHit: true)
+        liveRound.holeScores[1].applyRecordedScore(score: 4, putts: 1, penalties: 0, fairwayHit: true)
+        let pass2 = try! GolfPreparedSync.prepare(local: GolfCloudState(rounds: [liveRound], bag: liveBag, practice: []),
+            base: pass1.merged, checkpoint: GolfRecordCheckpoint(cursor: 1, records: committedRows), activeID: liveID)
+        let pass2Copies = pass2.merged.rounds.filter { $0.courseName.contains("conflict copy") }
+        let pass2Scores = pass2.merged.rounds.first(where: { $0.id == liveID })?.holeScores.filter({ $0.hasScore }).count
+        check("live round converges without copies", pass2Copies.isEmpty && pass2.merged.rounds.count == 1 && pass2Scores == 2)
+        // Acknowledgements advance the submitted baseline and preserve racing edits.
+        let dupeStore = RoundStore(storageDirectory: FileManager.default.temporaryDirectory.appendingPathComponent("pinpoint-dupe-test-\(UUID().uuidString)"))
+        dupeStore.pastRounds = [liveRound]
+        var advancedRound = liveRound
+        advancedRound.recap = "edited elsewhere"
+        dupeStore.advanceCloudBase(to: GolfCloudState(rounds: [advancedRound], bag: .standard, practice: []), owner: dupeStore.accountID)
+        check("base advances on clean generation", dupeStore.cloudBase.rounds.first?.recap == "edited elsewhere")
+        dupeStore.pastRounds = [liveRound]
+        dupeStore.advanceCloudBase(to: GolfCloudState(rounds: [advancedRound], bag: .standard, practice: []), owner: dupeStore.accountID)
+        check("acknowledgement preserves newer local data", dupeStore.cloudBase.rounds.first?.recap == "edited elsewhere" && dupeStore.pastRounds == [liveRound])
+        // Timestamps are millisecond-normalized at creation, matching the
+        // backend, so sync never sees phantom date diffs.
+        let freshShot = TrackedShot(number: 1, club: .driver, lie: .tee)
+        check("new entities carry millisecond dates",
+            freshShot.timestamp.timeIntervalSinceReferenceDate * 1000 == (freshShot.timestamp.timeIntervalSinceReferenceDate * 1000).rounded()
+            && liveRound.startedAt.timeIntervalSinceReferenceDate * 1000 == (liveRound.startedAt.timeIntervalSinceReferenceDate * 1000).rounded())
+        // Rows no build can decode stay server-side, untombstoned, with a
+        // report naming the problem instead of silent absence.
+        var badEnumRecords = noteStripRecords
+        for i in badEnumRecords.indices where badEnumRecords[i].kind == "shot" {
+            badEnumRecords[i].data["note"] = .string("")
+            badEnumRecords[i].data["contact"] = .string("whiffled")
+        }
+        let badEnum = try! GolfPreparedSync.prepare(local: .empty, base: .empty,
+            checkpoint: GolfRecordCheckpoint(cursor: 3, records: badEnumRecords), activeID: nil)
+        let badEnumIDs = Set(badEnumRecords.filter { badEnum.undecodableKeys.contains($0.key) }.map(\.id))
+        check("undecodable shot is reported with its field",
+            (badEnum.skipReport ?? "").contains("shot") && (badEnum.skipReport ?? "").contains("contact"))
+        check("reported rows are never tombstoned",
+            !badEnum.changes.contains(where: { $0.deleted && badEnumIDs.contains($0.id) }))
+        check("offline maps to no-connection advice", GolfSyncFailure.reason(for: URLError(.notConnectedToInternet)).contains("No connection"))
+        check("timeout keeps data local", GolfSyncFailure.reason(for: URLError(.timedOut)).contains("saved on this device"))
+        struct MissingFunction: Error, CustomStringConvertible {
+            var description: String { "Could not find the function public.pull_golf_records in the schema cache" }
+        }
+        check("missing RPC maps to migrations advice", GolfSyncFailure.reason(for: MissingFunction()).contains("migrations"))
+        struct ExpiredSession: Error, CustomStringConvertible {
+            var description: String { "AuthApiError: refresh token expired" }
+        }
+        check("expired session maps to sign-in advice", GolfSyncFailure.reason(for: ExpiredSession()).contains("Sign-in expired"))
+        struct Mystery: Error, CustomStringConvertible { var description: String { "quux-7 overloaded" } }
+        check("unknown failures stay visible", GolfSyncFailure.reason(for: Mystery()).contains("quux-7"))
+        struct StatementTimeout: Error, CustomStringConvertible {
+            var description: String { "PostgrestError(code: Optional(\"57014\"), message: \"canceling statement due to statement timeout\")" }
+        }
+        check("statement timeout maps to retry advice", GolfSyncFailure.reason(for: StatementTimeout()).contains("timed out"))
+        check("client timeout maps to retry advice", GolfSyncFailure.reason(for: GolfSyncTimeout.timedOut).contains("Try Sync now"))
+        let fastResult = try! await withGolfSyncTimeout(seconds: 30) { 42 }
+        check("fast work beats the timeout", fastResult == 42)
+        let slowStart = Date()
+        do {
+            try await withGolfSyncTimeout(seconds: 1) { try await Task.sleep(nanoseconds: 30_000_000_000) }
+            check("hung work times out instead of spinning", false)
+        } catch {
+            check("hung work times out instead of spinning", error is GolfSyncTimeout && Date().timeIntervalSince(slowStart) < 10)
+        }
 
         #if PINPOINT_STORE_SMOKE
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pinpoint-store-\(UUID().uuidString)")
@@ -944,7 +1145,25 @@ struct DictationSmokeMain {
         let checkpoint = GolfRecordCheckpoint(cursor: 42, records: flat.map { $0.key == dead.key ? dead : $0 })
         check("record checkpoint saves atomically with local data", cache.applyCloud(restored, revision: 42, base: restored, checkpoint: checkpoint))
         let reloadedCache = RoundStore(storageDirectory: checkpointDirectory)
-        check("record cursor and tombstones survive restart", reloadedCache.cloudCheckpoint == checkpoint && reloadedCache.cloudData == restored)
+        check("history mirror and tombstones are not persisted", reloadedCache.cloudCheckpoint == nil && reloadedCache.pastRounds.isEmpty)
+
+        var completedState = restored
+        completedState.rounds[0].status = .finished
+        completedState.bag = GolfCloudState.initialBag
+        let tolerantState = GolfRecords.assembleTolerant(try! GolfRecords.flatten(completedState)).state
+        check("cloud reader attaches each shot to its parent hole", tolerantState.rounds[0].holeScores[0].shots == completedState.rounds[0].holeScores[0].shots)
+        let cleanCache = GolfLocalState(data: completedState, activeID: nil, base: completedState).localCache()
+        check("acknowledged history is absent from disk", cleanCache.data.rounds.isEmpty && cleanCache.base.rounds.isEmpty && cleanCache.checkpoint == nil)
+        var pendingState = completedState
+        pendingState.rounds[0].recap = "Offline correction"
+        let pendingCache = GolfLocalState(data: pendingState, activeID: nil, base: completedState).localCache()
+        check("unsent history correction keeps its merge base", pendingCache.data.rounds == pendingState.rounds && pendingCache.base.rounds == completedState.rounds)
+        let pendingDelete = GolfLocalState(data: .empty, activeID: nil, base: completedState).localCache()
+        check("pending deletion survives without keeping visible history", pendingDelete.data.rounds.isEmpty && pendingDelete.base.rounds == completedState.rounds)
+        let currentRecords = try! GolfRecords.flatten(completedState)
+        let freshRequest = try! GolfPreparedSync.prepare(local: cleanCache.data, base: cleanCache.base,
+            checkpoint: GolfRecordCheckpoint(cursor: 1, records: currentRecords), activeID: nil)
+        check("fresh cloud response restores history without upload or disk mirror", (try! GolfRecords.flatten(freshRequest.merged)) == currentRecords && freshRequest.changes.isEmpty && (try! JSONDecoder().decode(GolfLocalState.self, from: freshRequest.encodedState)).data.rounds.isEmpty)
 
         if let path = ProcessInfo.processInfo.environment["PINPOINT_RECORD_RESPONSE"],
            let response = try? Data(contentsOf: URL(fileURLWithPath: path)) {
