@@ -48,9 +48,16 @@ final class CameraService: NSObject, @unchecked Sendable {
     private var rotationCoordinator: AVCaptureDevice.RotationCoordinator?
     private var rotationObservation: NSKeyValueObservation?
 
-    /// Hard cap on a single swing recording. Long enough to set the phone down,
-    /// take practice swings, and hit without the session cutting off mid-routine.
-    static let maxRecordingDuration: TimeInterval = 120
+    /// Hard cap on a single swing-recording clip. When the cap is reached while
+    /// recording manually, the service rolls straight into a new clip instead
+    /// of stopping, so long sessions keep capturing without the user noticing.
+    static let maxRecordingDuration: TimeInterval = 300
+
+    /// Set when a finished segment clip is ready to be saved while the next
+    /// clip is already recording.
+    var completedSegmentURL: URL?
+
+    private var rolloverInProgress = false
 
     var isCameraAvailable: Bool {
         cameraUnavailableReason == nil && authorizationStatus == .authorized && isConfigured && isRunning
@@ -267,6 +274,18 @@ final class CameraService: NSObject, @unchecked Sendable {
                 self.recordingContinuation = continuation
                 self.movieOutput.stopRecording()
             }
+        }
+    }
+
+    /// Finalizes the current clip and immediately starts a new one, so manual
+    /// recordings keep capturing past the segment cap. The finished clip is
+    /// handed off through `completedSegmentURL` once it lands on disk.
+    func rollOverToNewClip() {
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+            guard self.movieOutput.isRecording, !self.rolloverInProgress else { return }
+            self.rolloverInProgress = true
+            self.movieOutput.stopRecording()
         }
     }
 
@@ -760,12 +779,33 @@ extension CameraService: AVCaptureFileOutputRecordingDelegate {
         error: Error?
     ) {
         stopTimer()
-        if let error {
-            recordingContinuation?.resume(throwing: error)
+        if rolloverInProgress {
+            rolloverInProgress = false
+            if let error {
+                recordingContinuation?.resume(throwing: error)
+                recordingContinuation = nil
+                DispatchQueue.main.async {
+                    self.errorMessage = error.localizedDescription
+                }
+            } else {
+                let finished = outputFileURL
+                DispatchQueue.main.async {
+                    self.completedSegmentURL = finished
+                }
+                // Begin the next clip on the session queue to stay clear of
+                // the delegate callback's reentrancy window.
+                sessionQueue.async { [weak self] in
+                    self?.beginRecording()
+                }
+            }
         } else {
+            if let error {
+                recordingContinuation?.resume(throwing: error)
+            } else {
                 recordingContinuation?.resume(returning: outputFileURL)
+            }
+            recordingContinuation = nil
         }
-        recordingContinuation = nil
         autoOwnsRecording = false
     }
 }

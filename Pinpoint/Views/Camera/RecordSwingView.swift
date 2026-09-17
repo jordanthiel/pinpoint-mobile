@@ -9,8 +9,8 @@ struct RecordSwingView: View {
 
     @State private var camera = CameraService()
     @State private var showSettings = false
-    @State private var captureAngle = "Down the line"
     @State private var isStopping = false
+    @State private var isRollingOver = false
     @State private var saveError: String?
     @State private var isAutoMode = false
     @State private var countdownValue: Int?
@@ -56,18 +56,6 @@ struct RecordSwingView: View {
 
             VStack(spacing: 0) {
                 topBar
-                if !camera.isRecording && !isCountingDown {
-                    VStack(spacing: 8) {
-                        Picker("Camera angle", selection: $captureAngle) {
-                            Text("Down the line").tag("Down the line")
-                            Text("Face on").tag("Face on")
-                        }.pickerStyle(.segmented)
-                        Text(captureAngle == "Down the line"
-                             ? "Place your phone at hand height, behind you along your target line. Keep your full body and club in frame."
-                             : "Place your phone at hand height, facing your chest. Keep your full body and club in frame.")
-                            .font(.caption).multilineTextAlignment(.center).foregroundStyle(.white)
-                    }.padding(12).background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: 16)).padding(.horizontal, 20).padding(.top, 10)
-                }
                 Spacer()
                 if camera.isRecording {
                     recordingBadge
@@ -85,9 +73,19 @@ struct RecordSwingView: View {
             await camera.requestAccessAndConfigure()
         }
         .onChange(of: camera.recordingDuration) { _, duration in
-            if camera.isRecording, !isStopping, !isAutoMode, duration >= CameraService.maxRecordingDuration {
-                Task { await toggleRecording() }
+            if camera.isRecording, !isStopping, !isRollingOver, !isAutoMode,
+               duration >= CameraService.maxRecordingDuration {
+                isRollingOver = true
+                camera.rollOverToNewClip()
             }
+        }
+        .onChange(of: camera.completedSegmentURL) { _, url in
+            guard let url else { return }
+            camera.completedSegmentURL = nil
+            Task { await saveSegment(url: url) }
+        }
+        .onChange(of: camera.isRecording) { _, recording in
+            if recording { isRollingOver = false }
         }
         .onChange(of: camera.autoFinishedURL) { _, url in
             guard let url else { return }
@@ -118,7 +116,7 @@ struct RecordSwingView: View {
             )
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
-            .preferredColorScheme(.light)
+            .preferredColorScheme(.dark)
         }
         .alert("Couldn't save swing", isPresented: Binding(
             get: { saveError != nil },
@@ -273,7 +271,7 @@ struct RecordSwingView: View {
                 }
             }
         }
-        .disabled(!camera.isCameraAvailable || isStopping)
+        .disabled(!camera.isCameraAvailable || isStopping || isRollingOver)
         .opacity(camera.isCameraAvailable ? 1 : 0.4)
         .accessibilityLabel(recordAccessibilityLabel)
     }
@@ -330,6 +328,7 @@ struct RecordSwingView: View {
     }
 
     private func toggleRecording() async {
+        guard !isRollingOver else { return }
         if camera.isRecording {
             isStopping = true
             defer { isStopping = false }
@@ -411,21 +410,32 @@ struct RecordSwingView: View {
     }
 
     private func finishRecording(url: URL) async {
-        guard let preset = camera.selectedPreset else { return }
+        guard let swing = await importSwing(from: url) else { return }
+        camera.stop()
+        onCaptured?(swing)
+    }
+
+    /// Saves a rolled-over segment as its own swing while the next clip keeps
+    /// recording in the background.
+    private func saveSegment(url: URL) async {
+        _ = await importSwing(from: url)
+    }
+
+    private func importSwing(from url: URL) async -> Swing? {
+        guard let preset = camera.selectedPreset else { return nil }
         do {
             let swing = try await library.importRecording(
                 from: url,
                 preset: preset,
-                title: Self.defaultTitle(),
-                tags: [(captureAngle == "Face on" ? CameraAngle.faceOn : .downTheLine).makeTag(source: .user)]
+                title: Self.defaultTitle()
             )
             if library.isSignedIn {
                 Task { await library.upload(swing) }
             }
-            camera.stop()
-            onCaptured?(swing)
+            return swing
         } catch {
             saveError = error.localizedDescription
+            return nil
         }
     }
 
@@ -540,7 +550,7 @@ struct CaptureSettingsSheet: View {
                 } label: {
                     Text(item)
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(PinpointTheme.primaryText)
+                        .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                         .background(
@@ -554,3 +564,20 @@ struct CaptureSettingsSheet: View {
     }
 }
 
+struct PrimaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(.white)
+            .padding(.vertical, 14)
+            .background(PinpointTheme.accent.opacity(configuration.isPressed ? 0.75 : 1), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+}
+
+struct SecondaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(.white)
+            .padding(.vertical, 14)
+            .background(PinpointTheme.surfaceElevated.opacity(configuration.isPressed ? 0.75 : 1), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+}
